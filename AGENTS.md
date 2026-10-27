@@ -21,11 +21,14 @@ raw-text query path or retrieval engine exists yet.
 read `engineering/decisions/lexical-ranking.md`. Keep all-passage statistics within
 the selected edition, distinct-query semantics, complete bounded output and stable
 input-position ties. No field weights, top-k, persisted index or query CLI yet.
-The user chose borrowed input for the proposed search snapshot; read
-`engineering/decisions/snapshot-ownership.md`. Document all aliases, nested slice
-sharing, unchanged-data lifetimes and owned versus borrowed results. Go reachability
-keeps storage alive but does not prevent mutation. The snapshot is not implemented;
-current retrieval calls borrow only until return.
+`internal/htmlsearch` now builds a borrowed retained-HTML search snapshot and
+resolves bounded quotes on demand; read `engineering/decisions/snapshot-ownership.md`
+and `engineering/decisions/search-results.md`. Keep all input aliases unchanged
+through dependent use. It owns prepared terms/locations; hit references retain that
+state, while quote strings own assembled storage. Zero/cross-state references fail.
+Go reachability keeps storage alive but does not prevent mutation. This is not a
+persisted citation schema, raw-query CLI or published generation. Standalone
+`termsearch` calls still retain no input after return.
 `internal/textterms` now prepares bounded, owned lowercase technical terms separately
 from passage-field projection and matching.
 `internal/htmlterms` now builds the canonical HTML passage plan and prepares separate

@@ -3,17 +3,17 @@
 ## Decision and scope
 
 The user chose borrowing caller data (option B) over copying the entire input for
-the proposed in-memory search snapshot. This records ownership direction, not an
-implemented snapshot constructor, a persistent schema or a publication guarantee.
+the in-memory search snapshot. `internal/htmlsearch.New` now implements that
+direction; it is not a persistent schema or a publication guarantee.
 Current `MatchAll` and `RankBM25` borrow only until their calls return; they retain
-no input afterward. The proposed snapshot would extend the borrowing period across
-calls, so that difference must be visible in its API documentation.
+no input afterward. The snapshot extends borrowing across calls; its API documents
+that difference.
 
-The caller supplies authorized data, controls all aliases and keeps borrowed
-articles, plans, term fields and source associations unchanged for every use that
-relies on them. The exact set retained by the eventual constructor must be stated;
-newly computed internal buffers may still be owned by the snapshot. Borrowing does
-not mean every allocation disappears or that all outputs are borrowed.
+The caller supplies authorized editions/articles, controls all aliases, and keeps
+borrowed block/group arrays and source associations unchanged for every dependent
+use. The constructor retains its edition/article input. It owns newly computed term
+arrays/strings and compact location tables. Borrowing does not mean every allocation
+disappears or that all outputs are borrowed.
 
 ## What Go copies
 
@@ -43,19 +43,19 @@ keep their backing storage reachable for garbage collection; an original variabl
 may leave scope or be reassigned without erasing the storage referenced elsewhere.
 Lifetime is not a requirement to keep that variable in scope or manually free memory.
 
-Keep shared contents unchanged from construction through the last use of the
-snapshot and any returned borrowed views. Discarding the snapshot variable alone
-is not enough if a result still depends on shared data. Owned result copies can
-have independent lifetimes; the eventual API must explicitly distinguish them.
-Do not recycle an input buffer, mutate an alias, or return borrowed storage to a
-pool while readers or borrowed results can still use it. Cancellation requests do
-not establish that a reader has finished; wait for completion before reuse.
+Keep shared contents unchanged through the last dependent use of the snapshot or
+its references. Discarding the snapshot variable alone is not enough if a reference
+still needs that state. The accepted [result contract](search-results.md) returns
+owned hit slices with opaque references retaining the state, and independent quote
+strings on demand. No mutable block views escape through these operations.
+Do not recycle input storage or mutate another alias while readers still use it.
+Cancellation requests do not establish completion; wait before reuse.
 
-Read-only concurrent use can be safe when all shared contents are unchanged and
-each operation owns its mutable scratch. This decision does not certify a future
-snapshot's concurrency safety. Concurrent writes can cause data races; even a
-sequential write between preparation and quotation can silently mismatch terms,
-locations and cited text. The race detector cannot enforce the entire contract.
+`htmlsearch` supports concurrent read-only operations with unchanged input and
+independent per-call scratch. This does not make arbitrary future mutable caches
+safe. Concurrent writes can cause data races; even a sequential write between
+preparation and quotation can silently mismatch terms, locations and cited text.
+The race detector cannot enforce the entire contract.
 
 ## Why borrow first
 
@@ -80,8 +80,9 @@ readers when real callers require mutation/reuse or retained memory measurements
 show a problem. Define persisted reader lifetimes and deletion safety separately
 before relying on this direction for R2/catalog retention.
 
-Tests for the eventual implementation must check that construction/search leave
-input unchanged, returned views/copies follow their documented lifetimes, and
-concurrent readers own independent scratch if concurrency is supported. A small
+Tests exercise unchanged input, cross-state reference rejection, owned result
+storage, quote limits and concurrent read-only search/quotation under the race
+detector. The [component reference](../experiments/search-snapshot.md) records their
+scope; tests do not enforce the caller's lifetime discipline. A small
 private executable used for the book demonstrates shared and shallow-copied slices;
 it is an illustrative language experiment, not snapshot runtime coverage.
