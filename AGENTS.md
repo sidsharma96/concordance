@@ -143,6 +143,11 @@ this review-and-merge workflow; do not leave completed work in draft PRs or requ
 merge permission again. Drafts are for work in progress. This does not authorize
 book deployment or settling unresolved design checkpoints without discussion.
 
+After every PR merge, update local `main`, remove the merged feature branch from
+GitHub and the local checkout, and prune stale remote-tracking references. Confirm
+the branch contains no unmerged work and is not checked out in another worktree
+before deleting it. Keep GitHub's automatic deletion of merged head branches enabled.
+
 Review decisions and experimental conclusions at meaningful checkpoints. Supply a
 concrete workload, invariant, simplest credible alternative, cost model, failure
 sequence, observed evidence and revisit condition. Resolve supported material findings
