@@ -47,6 +47,9 @@ identity. A format adapter still chooses body, headings and labels and preserves
 their association with exact retained locations; this decision does not select that
 projection or implement a CLI search command.
 
+The [HTML field adapter](passage-fields.md) now supplies that format's projection;
+the text preparer itself stays independent of HTML and source identity.
+
 The caller supplies positive input-byte, occurrence-count, per-term-byte and total
 output-term-byte ceilings and a context with a deadline. Per-term bytes bound both
 raw spans and lowercase output; total output counts term bytes, not slice overhead
