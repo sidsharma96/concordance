@@ -17,6 +17,10 @@ references. `internal/htmlpassage` builds bounded structure-first block ranges w
 heading and group references. `internal/termsearch` now supplies a bounded, edition-scoped
 match-all scan over prepared terms. No complete importer, Markdown processor,
 raw-text query path or retrieval engine exists yet.
+`internal/termsearch.RankBM25` now orders complete matches with combined-field BM25;
+read `engineering/decisions/lexical-ranking.md`. Keep all-passage statistics within
+the selected edition, distinct-query semantics, complete bounded output and stable
+input-position ties. No field weights, top-k, persisted index or query CLI yet.
 `internal/textterms` now prepares bounded, owned lowercase technical terms separately
 from passage-field projection and matching.
 `internal/htmlterms` now builds the canonical HTML passage plan and prepares separate

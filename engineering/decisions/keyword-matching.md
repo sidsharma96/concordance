@@ -73,8 +73,10 @@ association with source/document identity, revision, processing versions, retain
 article locations and generation. The matching component neither authorizes those
 bytes nor establishes that a generation was published.
 
-The separate text preparer does not change this matching contract. No ranker,
-inverted index, persisted matching format or CLI search command is included.
+The separate text preparer does not change this matching contract. The separate
+[BM25 operation](lexical-ranking.md) now orders these complete matches without
+changing eligibility. No inverted index, persisted matching format or CLI search
+command is included.
 Revisit the baseline with explicit alternative matching,
 new queries/sources and reader judgments; preserve the scan as a correctness oracle
 before optimizing with sorted postings.

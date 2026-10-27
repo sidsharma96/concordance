@@ -14,7 +14,8 @@ bounded match-all candidate selection over caller-prepared terms within one exac
 edition. `internal/textterms` prepares owned lowercase technical terms with a bounded,
 Unicode-versioned grammar. `internal/htmlterms` connects retained HTML to separate
 body, all-ancestor heading and notice-label term fields with a canonical passage plan.
-These components do not supply durable asset retention
+`termsearch.RankBM25` now orders complete matches using combined-field counts and
+selected-edition statistics. These components do not supply durable asset retention
 or publication.
 Provider fault and full
 recovery experiments remain open. The complete importer, Markdown processor, index,
@@ -157,8 +158,9 @@ metadata and oversized bodies with no partial plan. Admission ceilings are calle
 configured; no automatic splitting or permanent product-size limit is implied.
 The caller must retain the exact unchanged article for all use of the returned
 indices. The [experiment](experiments/structured-passages.md) records the current
-38-page partition and limits. Context scoring, persisted passage formats and ranking
-remain open; preserving context does not establish relevance. Text preparation is
+38-page partition and limits. Persisted passage formats remain open; preserving context does not establish
+relevance. The separate baseline ranker counts supplied context equally with body
+terms. Text preparation is
 a separate component and does not decide which article fields to supply.
 
 The accepted [keyword matching](decisions/keyword-matching.md) baseline requires
@@ -179,12 +181,17 @@ separately through `htmlterms.Build`. It counts repeated projected bytes before
 joining views; aggregate output bounds are checked after each bounded field. The
 caller retains exact article/source associations and chooses editions. The raw-text
 query command and published-generation integration remain unimplemented. Field
-scoring and ranked retrieval are separate.
+weights remain deferred. The accepted [ranking baseline](decisions/lexical-ranking.md)
+uses `termsearch.RankBM25` with combined-field counts, fixed k1/b, positive IDF,
+all-passage statistics within the selected edition, and full-sort output. Matching
+still requires every distinct query term. Query permutations and duplicates do not
+change scores; exact ties use input position. Scores and positions are temporary,
+not durable citations or confidence. All errors return no partial ranked result.
 See the [matching component](experiments/keyword-matching.md) for invariants and limits.
 
 Begin with a small judged documentation corpus and an exact scan baseline. Then
-build sorted inverted postings and a lexical ranker, with an explicit tokenizer and
-version-filter semantics. Compare intersections and bounded top-k selection against
+compare sorted inverted postings against the current scan/ranking baseline, keeping
+its explicit term grammar and edition semantics. Compare intersections and bounded top-k selection against
 simple scans/full sorts on the same inputs. Use uncompressed postings before deciding
 whether gap/varint encoding or skip data materially helps.
 
