@@ -21,6 +21,11 @@ raw-text query path or retrieval engine exists yet.
 read `engineering/decisions/lexical-ranking.md`. Keep all-passage statistics within
 the selected edition, distinct-query semantics, complete bounded output and stable
 input-position ties. No field weights, top-k, persisted index or query CLI yet.
+The user chose borrowed input for the proposed search snapshot; read
+`engineering/decisions/snapshot-ownership.md`. Document all aliases, nested slice
+sharing, unchanged-data lifetimes and owned versus borrowed results. Go reachability
+keeps storage alive but does not prevent mutation. The snapshot is not implemented;
+current retrieval calls borrow only until return.
 `internal/textterms` now prepares bounded, owned lowercase technical terms separately
 from passage-field projection and matching.
 `internal/htmlterms` now builds the canonical HTML passage plan and prepares separate

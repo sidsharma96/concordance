@@ -189,6 +189,17 @@ change scores; exact ties use input position. Scores and positions are temporary
 not durable citations or confidence. All errors return no partial ranked result.
 See the [matching component](experiments/keyword-matching.md) for invariants and limits.
 
+The accepted [snapshot ownership direction](decisions/snapshot-ownership.md) borrows
+caller data rather than making a whole-input defensive copy. The caller controls
+all aliases and keeps shared contents unchanged through the last dependent read,
+including any returned borrowed views. Reachable references keep Go storage alive;
+the rule concerns mutation and reuse, not variable scope or manual memory release.
+A copied outer slice/struct does not copy nested arrays. Current retrieval calls
+retain no input after return; the longer-lived snapshot API is not implemented.
+Its exact retained data, source associations and result ownership still need an
+explicit contract. No R2 reader-retention or publication behavior follows from this
+in-memory choice.
+
 Begin with a small judged documentation corpus and an exact scan baseline. Then
 compare sorted inverted postings against the current scan/ranking baseline, keeping
 its explicit term grammar and edition semantics. Compare intersections and bounded top-k selection against
