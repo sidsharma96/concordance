@@ -13,7 +13,9 @@ exists, `internal/gitsource` captures bounded committed Markdown bytes, and
 Live R2 smoke testing covers creation, reuse and a fresh-client read; provider
 fault and complete recovery experiments remain open. `internal/htmlarticle` now
 extracts bounded text/structure from retained HTML with explicit profiles and image
-references. No complete importer, Markdown processor or retrieval engine exists yet.
+references. `internal/htmlpassage` builds bounded structure-first block ranges with
+heading and group references. No complete importer, Markdown processor or retrieval
+engine exists yet.
 
 ## Design and implementation
 
@@ -50,6 +52,11 @@ Read `engineering/decisions/passage-citations.md`: a rendered-document citation 
 resolve to the retained article; original Git file/line ranges are optional verified
 metadata. A generated passage can have several origins. Do not guess a line range
 or make Git locations mandatory for other content formats.
+Read `engineering/decisions/passage-grouping.md`: the user chose structure-first
+passages. The bounded HTML builder keeps outer containers whole, assigns blocks
+without overlap, and retains heading/group references. Oversized units fail explicitly;
+no splitting, tokenizer, context scoring, ranking or persisted passage codec is
+implemented. Preserve group labels separately from verbatim body quotes.
 
 Preserve source identity, logical document identity, product version, exact source
 revision, passage location, content hash, processing version and index generation

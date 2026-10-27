@@ -8,7 +8,9 @@ and a live R2 creation/reuse/fresh-client-read smoke probe. Bounded in-memory HT
 structure extraction now exists in `internal/htmlarticle`; the Kubernetes reference
 profile extracts all 38 selected articles with image references. The Git adapter also captures explicit file dependencies;
 the Kubernetes audit tool can acquire referenced original images locally at an
-exact commit. This is not durable asset retention or publication.
+exact commit. `internal/htmlpassage` now forms bounded structure-first ranges in
+these articles, with heading and group references. This is not durable asset
+retention or publication.
 Provider fault and full
 recovery experiments remain open. The complete importer, Markdown processor, index,
 crawler, query API and shared library are not implemented.
@@ -141,6 +143,18 @@ work, retries, remote reads and cache memory. Start with one publishing writer u
 measurements justify coordinating more.
 
 ## Retrieval and algorithm progression
+
+The accepted [passage direction](decisions/passage-grouping.md) follows authored
+structure. The first in-memory HTML builder partitions blocks without overlap,
+keeps outer containers intact, and preserves group labels and common enclosing
+headings by reference. It rejects malformed ranges, crossing groups, excessive
+metadata and oversized bodies with no partial plan. Admission ceilings are caller
+configured; no automatic splitting or permanent product-size limit is implied.
+The caller must retain the exact unchanged article for all use of the returned
+indices. The [experiment](experiments/structured-passages.md) records the current
+38-page partition and limits. Context scoring, a tokenizer, persisted passage
+formats and ranking remain open; preserving context does not establish matching
+or relevance.
 
 Begin with a small judged documentation corpus and an exact scan baseline. Then
 build sorted inverted postings and a lexical ranker, with an explicit tokenizer and
