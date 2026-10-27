@@ -4,7 +4,10 @@ This describes the architecture direction. The command-line runtime provides hel
 and version only. PostgreSQL import-catalog operations now exist as an internal
 component, and bounded Git object capture exists in `internal/gitsource`. An internal
 S3 adapter implements verified immutable-object reuse, tested against HTTP fixtures
-and a live R2 creation/reuse/fresh-client-read smoke probe. Provider fault and full
+and a live R2 creation/reuse/fresh-client-read smoke probe. Bounded in-memory HTML
+structure extraction now exists in `internal/htmlarticle`; the Kubernetes reference
+profile extracts all 38 selected articles while leaving images as references.
+Provider fault and full
 recovery experiments remain open. The complete importer, Markdown processor, index,
 crawler, query API and shared library are not implemented.
 
@@ -79,8 +82,10 @@ The accepted [citation decision](decisions/passage-citations.md) makes the retai
 article the quote authority for rendered HTML. Verified original Git file/line ranges
 are optional additional provenance and may name several inputs. Missing mappings
 are valid; invented mappings are not. Keep article identity, block locations, source
-revision and processing version separate. The HTML processor and persisted article
-schema are not implemented yet.
+revision and processing version separate. The bounded HTML processor now returns
+owned blocks and nested container intervals. The persisted article schema and
+citation API are not implemented. See the [extraction experiment](experiments/html-extraction.md)
+for supported structures, parser limits and unresolved image coverage.
 
 ## Storage from the first milestone
 

@@ -33,7 +33,9 @@ The [render experiment](../experiments/kubernetes-rendering.md) produced all sel
 10/13/15 article pages and verified two changing feature notices and an included
 YAML example. It also found one generated print page per edition. These observations
 do not establish full extraction coverage, determinism, production build equivalence,
-search relevance or citation recovery. No importer or common HTML processor exists yet.
+search relevance or citation recovery. A [bounded extraction follow-up](../experiments/html-extraction.md)
+now exercises HTML profiles and structure in memory. There is no production
+preparation/import pipeline or complete media processing.
 
 Do not let a build see application credentials or execute templates in a query
 process. Pin and bound each experimental build; missing inputs or failed rendering

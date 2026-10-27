@@ -137,10 +137,10 @@ only. Its normalized SHA-256 was
 `bb20e960b6a7b12a687a7a9f5d14f68e06adf930b1e688ad9c67c53f6919c389`.
 
 Raw HTML includes substantial navigation and page chrome. Do not index the entire
-HTML text. Main-content extraction still needs heading/code/table preservation,
-duplicate handling, retained-representation citation coordinates and honest coverage
-errors before it can become an importer. Source Git line locations cannot simply
-be assigned to template-expanded HTML passages.
+HTML text. The [bounded extraction follow-up](html-extraction.md) now preserves
+headings/code/tables under an explicit profile. Duplicate handling, persisted
+citation coordinates and declared media coverage still need a complete importer.
+Source Git line locations cannot simply be assigned to template-expanded HTML passages.
 
 ## Retained evidence and remaining work
 
@@ -158,6 +158,7 @@ retention or remote backup. Local artifact/image loss remains possible.
 This experiment supports using upstream rendering as a Kubernetes reference for
 the checked content. It does not establish a generic scraper, complete HTML/PDF/code
 support, safe arbitrary builds, a durable input fingerprint or successful publication.
-Next, define passage extraction/citation behavior using the retained representation
-and synthetic invariants. Keep site-specific preparation outside ranking and choose
+The extraction follow-up uses the retained representation and synthetic invariants;
+passage grouping and the persisted citation format remain open. Keep site-specific
+preparation outside ranking and choose
 an actual consumer-owned interface only when a concrete substitution needs one.

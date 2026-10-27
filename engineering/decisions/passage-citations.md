@@ -1,8 +1,9 @@
 # Cite retained articles, with optional source locations
 
 Status: accepted direction. The user chose to keep original Git file/line locations
-optional. The first HTML processor, persisted article format and citation API are
-not implemented. The sketches below illustrate the choice rather than fix a schema.
+optional. A bounded in-memory HTML structure processor now exists; the persisted
+article format and citation API are not implemented. The sketches below illustrate
+the choice rather than fix a schema.
 
 ## Required quote, optional origins
 
@@ -61,6 +62,7 @@ before catalog publication. No automatic deletion or complete citation recovery 
 implemented. Displaying a quote does not authorize executing retained HTML.
 
 Revisit mandatory original-source mapping if exact edit/blame navigation becomes a
-primary workflow. Next implement bounded structure extraction and define the concrete
+primary workflow. Bounded structure extraction now has a concrete
+[experiment](../experiments/html-extraction.md). Next define visual coverage, the
 article/location format and passage grouping through their own workload and review.
 The complete input fingerprint and generation manifest schema remain open.

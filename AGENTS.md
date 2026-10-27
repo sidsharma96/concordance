@@ -11,8 +11,9 @@ The current runtime is only a CLI entry point. An internal PostgreSQL import cat
 exists, `internal/gitsource` captures bounded committed Markdown bytes, and
 `internal/objectstore` verifies collection-scoped immutable objects through S3.
 Live R2 smoke testing covers creation, reuse and a fresh-client read; provider
-fault and complete recovery experiments remain open. No complete importer, Markdown
-processor or retrieval engine exists yet.
+fault and complete recovery experiments remain open. `internal/htmlarticle` now
+extracts bounded text/structure from retained HTML with explicit profiles and image
+references. No complete importer, Markdown processor or retrieval engine exists yet.
 
 ## Design and implementation
 
@@ -38,6 +39,9 @@ Hugo dependencies explicitly before claiming complete searchable content.
 Read `engineering/decisions/source-preparation.md`: Kubernetes rendering is a
 source-specific offline reference experiment, outside core search. It does not
 require every source to build a website or establish a production HTML processor.
+The bounded extraction follow-up is in `engineering/experiments/html-extraction.md`.
+Keep image references distinct from retained image bytes or interpreted visual content;
+media coverage remains a user checkpoint before complete searchable publication.
 Read `engineering/decisions/passage-citations.md`: a rendered-document citation must
 resolve to the retained article; original Git file/line ranges are optional verified
 metadata. A generated passage can have several origins. Do not guess a line range
