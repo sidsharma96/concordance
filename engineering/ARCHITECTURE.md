@@ -12,7 +12,9 @@ exact commit. `internal/htmlpassage` now forms bounded structure-first ranges in
 these articles, with heading and group references. `internal/termsearch` supplies
 bounded match-all candidate selection over caller-prepared terms within one exact
 edition. `internal/textterms` prepares owned lowercase technical terms with a bounded,
-Unicode-versioned grammar. These components do not supply durable asset retention
+Unicode-versioned grammar. `internal/htmlterms` connects retained HTML to separate
+body, all-ancestor heading and notice-label term fields with a canonical passage plan.
+These components do not supply durable asset retention
 or publication.
 Provider fault and full
 recovery experiments remain open. The complete importer, Markdown processor, index,
@@ -170,9 +172,14 @@ and punctuation-bearing names without adding their parts. `textterms.Prepare`
 lowercases compatible source/query text with an explicit grammar and a tag including
 the Unicode table version. It admits byte/count ceilings before allocating owned
 output strings; every error returns no partial result. It does not perform full case
-folding, canonical normalization or stemming. The real-article projection and raw-text
-query command remain unimplemented; private field projections are not an adopted
-adapter. Field scoring and ranked retrieval are separate.
+folding, canonical normalization or stemming. The accepted
+[HTML projection](decisions/passage-fields.md) now builds its canonical passage plan
+and prepares body text, every referenced ancestor heading and nonempty group labels
+separately through `htmlterms.Build`. It counts repeated projected bytes before
+joining views; aggregate output bounds are checked after each bounded field. The
+caller retains exact article/source associations and chooses editions. The raw-text
+query command and published-generation integration remain unimplemented. Field
+scoring and ranked retrieval are separate.
 See the [matching component](experiments/keyword-matching.md) for invariants and limits.
 
 Begin with a small judged documentation corpus and an exact scan baseline. Then

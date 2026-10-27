@@ -19,6 +19,9 @@ match-all scan over prepared terms. No complete importer, Markdown processor,
 raw-text query path or retrieval engine exists yet.
 `internal/textterms` now prepares bounded, owned lowercase technical terms separately
 from passage-field projection and matching.
+`internal/htmlterms` now builds the canonical HTML passage plan and prepares separate
+body, all-ancestor heading and notice-label fields, keeping returned positions tied
+to the caller's exact retained article.
 
 ## Design and implementation
 
@@ -69,8 +72,11 @@ Read `engineering/decisions/text-preparation.md`: the user chose whole CamelCase
 names and punctuation-preserving lowercase technical terms without component words.
 `textterms.Prepare` implements the bounded grammar with a Unicode-versioned tag;
 source/query preparation must stay compatible. It is not a code/URL parser or full
-case folding/canonical normalization. Real-article field projection and a raw-text
-query command remain separate work; do not silently adopt private probe projections.
+case folding/canonical normalization. Read `engineering/decisions/passage-fields.md`:
+the user chose all ancestor headings. `htmlterms.Build` implements that HTML field
+projection with explicit aggregate/per-field bounds. Keep source identities, exact
+article associations, edition selection and published-generation integration with
+the caller; prepared fields and indices do not establish citations or authorization.
 
 Preserve source identity, logical document identity, product version, exact source
 revision, passage location, content hash, processing version and index generation
@@ -184,6 +190,9 @@ without assuming Go knowledge. Follow one concrete execution; explain terms and
 syntax when first needed. Show ownership, waiting, durable state and partial failures.
 Compare plausible alternatives with the same example. Label illustrative examples,
 proposals and measurements honestly.
+Explain non-obvious Go/library calls where they first matter: what they consume and
+return, why they fit this operation, and ownership, blocking and failure behavior.
+Distinguish actual calls from teaching alternatives such as buffered file I/O.
 
 Read changed pages in learning order with source closed, then verify claims and
 excerpts against code/evidence. Inspect changed rendered diagrams, navigation and
