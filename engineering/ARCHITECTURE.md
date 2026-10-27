@@ -75,6 +75,13 @@ Define replacement/deletion visibility and reader lifetimes before adding compac
 Captured revisions still need a retention contract; citations cannot promise bytes
 forever if garbage collection removes them.
 
+The accepted [citation decision](decisions/passage-citations.md) makes the retained
+article the quote authority for rendered HTML. Verified original Git file/line ranges
+are optional additional provenance and may name several inputs. Missing mappings
+are valid; invented mappings are not. Keep article identity, block locations, source
+revision and processing version separate. The HTML processor and persisted article
+schema are not implemented yet.
+
 ## Storage from the first milestone
 
 Use external object storage from the first write/read/recovery slice, not as a final

@@ -2,7 +2,13 @@
 
 The private runner is adapted from Turnstile's staged-source reviewer. Roles and
 upstream observations are local configuration. They are not required for builds
-or CI and are never staged. Provision them separately in a fresh clone.
+or ordinary checks and are never staged. Provision them separately in a fresh clone.
+
+GitHub Actions is disabled for this repository. Run `make verify` with a dedicated
+local test database before opening or updating a pull request, and record the exact
+revision, environment, results and skipped checks in its description. Verify the
+independent reviews separately; a passing local command is not a review approval.
+Local results do not establish cross-platform or other PostgreSQL-version coverage.
 
 Stage only intended public source. Put scope, checks actually run, results, skipped
 checks and unresolved questions in `.tools/reviews/evidence.txt`. Never put secrets

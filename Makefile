@@ -1,4 +1,10 @@
-.PHONY: check fmt-check test race build artifacts docs hooks-install
+.PHONY: verify check fmt-check test race build artifacts docs hooks-install
+
+verify:
+	@test -n "$${CONCORDANCE_TEST_DATABASE_URL:-}" || { echo "Set CONCORDANCE_TEST_DATABASE_URL to a dedicated test database before make verify." >&2; exit 1; }
+	$(MAKE) check
+	go test -count=1 -race ./...
+	$(MAKE) build
 
 check: fmt-check
 	go vet ./...

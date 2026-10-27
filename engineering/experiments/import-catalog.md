@@ -8,8 +8,10 @@ before calling the first storage milestone complete.
 The concrete Go catalog uses the pinned pgx/v5 PostgreSQL client and pool instead of
 a custom SQL driver or generic repository framework. Tests use an isolated schema
 in an explicitly selected local test database. Ordinary source tests can run without
-a database; CI is configured to supply PostgreSQL18 and run the integration cases.
-The local experiment uses PostgreSQL14.17; the configured remote CI has not run.
+a database; `make verify` requires the database setting and runs the integration cases
+locally. The observed experiment uses PostgreSQL14.17. No remote or PostgreSQL18
+validation was obtained; repository checks now run locally rather than through
+GitHub Actions.
 
 ## Operations and representation
 

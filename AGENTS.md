@@ -38,6 +38,10 @@ Hugo dependencies explicitly before claiming complete searchable content.
 Read `engineering/decisions/source-preparation.md`: Kubernetes rendering is a
 source-specific offline reference experiment, outside core search. It does not
 require every source to build a website or establish a production HTML processor.
+Read `engineering/decisions/passage-citations.md`: a rendered-document citation must
+resolve to the retained article; original Git file/line ranges are optional verified
+metadata. A generated passage can have several origins. Do not guess a line range
+or make Git locations mandatory for other content formats.
 
 Preserve source identity, logical document identity, product version, exact source
 revision, passage location, content hash, processing version and index generation
@@ -168,7 +172,7 @@ rather than scattering hashes through teaching prose.
 ## Privacy and publication
 
 `docs/` and `design/` are private and ignored; never force-add them or copy them into
-public-source review snapshots. Normal builds, tests and CI must work without them.
+public-source review snapshots. Normal builds and tests must work without them.
 Edit book sources in this project; `../learning-docs/concordance/` is a private backup,
 not the editing source. `make docs` checks/builds locally without commits or uploads.
 Read `docs/src/reference/publishing.md` before backup or deployment. The sibling
@@ -184,7 +188,10 @@ ordinary checks must not require Claude or these files.
 ## Checks and hygiene
 
 Run `make check` for source changes, `make race` for concurrent changes, and `make docs`
-for book changes. Record checks actually run and their limits. Maintained repository
+for book changes. Before opening or updating a PR, run `make verify` with an explicit
+dedicated local test database; it includes check, uncached race tests and build.
+GitHub Actions is disabled: do not introduce hosted workflows or required remote
+checks without user agreement. Record checks actually run and their limits. Maintained repository
 tools use Go; disposable probes may use ignored `scripts/utils/`, but shared workflows
 must not depend on them. Keep JSON/JSONL/NDJSON, profiler captures, credentials and
 build output out of source history. This policy does not dictate runtime formats.
