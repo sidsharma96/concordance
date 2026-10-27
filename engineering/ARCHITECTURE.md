@@ -9,8 +9,9 @@ structure extraction now exists in `internal/htmlarticle`; the Kubernetes refere
 profile extracts all 38 selected articles with image references. The Git adapter also captures explicit file dependencies;
 the Kubernetes audit tool can acquire referenced original images locally at an
 exact commit. `internal/htmlpassage` now forms bounded structure-first ranges in
-these articles, with heading and group references. This is not durable asset
-retention or publication.
+these articles, with heading and group references. `internal/termsearch` supplies
+bounded match-all candidate selection over caller-prepared terms within one exact
+edition. Neither component supplies durable asset retention or publication.
 Provider fault and full
 recovery experiments remain open. The complete importer, Markdown processor, index,
 crawler, query API and shared library are not implemented.
@@ -153,8 +154,17 @@ configured; no automatic splitting or permanent product-size limit is implied.
 The caller must retain the exact unchanged article for all use of the returned
 indices. The [experiment](experiments/structured-passages.md) records the current
 38-page partition and limits. Context scoring, a tokenizer, persisted passage
-formats and ranking remain open; preserving context does not establish matching
-or relevance.
+formats and ranking remain open; preserving context does not establish relevance.
+
+The accepted [keyword matching](decisions/keyword-matching.md) baseline requires
+all distinct query terms within one passage's supplied body/heading/label union.
+`termsearch.MatchAll` validates bounded prepared inputs, selects an exact edition,
+and scans its passages. It distinguishes missing and explicitly empty editions,
+rejects incompatible term-version tags and returns no partial result on failure.
+Returned positions belong to this exact input, not a persisted passage identity.
+The tokenizer and raw-text adapter remain open; private experiment rules are not
+an adopted production normalizer. Field scoring and ranked retrieval are separate.
+See the [matching component](experiments/keyword-matching.md) for invariants and limits.
 
 Begin with a small judged documentation corpus and an exact scan baseline. Then
 build sorted inverted postings and a lexical ranker, with an explicit tokenizer and

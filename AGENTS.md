@@ -14,8 +14,9 @@ Live R2 smoke testing covers creation, reuse and a fresh-client read; provider
 fault and complete recovery experiments remain open. `internal/htmlarticle` now
 extracts bounded text/structure from retained HTML with explicit profiles and image
 references. `internal/htmlpassage` builds bounded structure-first block ranges with
-heading and group references. No complete importer, Markdown processor or retrieval
-engine exists yet.
+heading and group references. `internal/termsearch` now supplies a bounded, edition-scoped
+match-all scan over prepared terms. No complete importer, Markdown processor,
+raw-text query path or retrieval engine exists yet.
 
 ## Design and implementation
 
@@ -56,7 +57,12 @@ Read `engineering/decisions/passage-grouping.md`: the user chose structure-first
 passages. The bounded HTML builder keeps outer containers whole, assigns blocks
 without overlap, and retains heading/group references. Oversized units fail explicitly;
 no splitting, tokenizer, context scoring, ranking or persisted passage codec is
-implemented. Preserve group labels separately from verbatim body quotes.
+implemented by the passage builder. Preserve group labels separately from verbatim body quotes.
+Read `engineering/decisions/keyword-matching.md`: the user chose every-keyword
+matching for the first baseline. `termsearch.MatchAll` consumes compatible caller-prepared
+terms, keeps edition selection exact and returns complete temporary passage positions
+or an error. It does not select a product tokenizer, field weights, persisted IDs,
+raw-text projection or search command. Keep these remaining decisions explicit.
 
 Preserve source identity, logical document identity, product version, exact source
 revision, passage location, content hash, processing version and index generation
