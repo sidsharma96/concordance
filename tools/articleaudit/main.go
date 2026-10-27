@@ -17,6 +17,7 @@ import (
 
 	"github.com/sidsharma96/concordance/internal/gitsource"
 	"github.com/sidsharma96/concordance/internal/htmlarticle"
+	"github.com/sidsharma96/concordance/internal/htmlpassage"
 )
 
 func main() {
@@ -41,10 +42,21 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 	file := f.String("file", "", "trusted, stable, retained Kubernetes article HTML file")
 	repository := f.String("repository", "", "optional trusted local Kubernetes source repository; requires -commit")
 	commit := f.String("commit", "", "exact source commit for optional image capture; requires -repository")
+	passages := f.Bool("passages", false, "also build a local structure-first passage plan")
+	maxPassage := f.Int("max-passage-bytes", 8<<10, "passage body byte ceiling; requires -passages")
 	maxInput := f.Int("max-input-bytes", 4<<20, "input byte ceiling for this audit, not a product limit")
 	timeout := f.Duration("timeout", 15*time.Second, "extraction/capture deadline; regular file reads are not preemptive")
 	if err := f.Parse(args); err != nil {
 		return err
+	}
+	passageLimitSet := false
+	f.Visit(func(flag *flag.Flag) {
+		if flag.Name == "max-passage-bytes" {
+			passageLimitSet = true
+		}
+	})
+	if *maxPassage <= 0 || passageLimitSet && !*passages {
+		return errors.New("provide a positive -max-passage-bytes with -passages")
 	}
 	if f.NArg() != 0 || *file == "" || *maxInput <= 0 || *maxInput == int(^uint(0)>>1) || *timeout <= 0 {
 		return errors.New("provide -file and positive audit limits")
@@ -71,6 +83,16 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("extract retained article: %w", err)
 	}
+	var passagePlan htmlpassage.Plan
+	if *passages {
+		passagePlan, err = htmlpassage.Build(ctx, a, htmlpassage.Limits{
+			MaxBlocks: 20000, MaxGroups: 40000, MaxInputBytes: 8 << 20,
+			MaxPassages: 20000, MaxBodyBytes: *maxPassage, MaxReferences: 200000, MaxContextBytes: 8 << 20,
+		})
+		if err != nil {
+			return fmt.Errorf("build local passage plan: %w", err)
+		}
+	}
 	var images gitsource.FilesSnapshot
 	if *repository != "" {
 		images, err = captureImages(ctx, a, *repository, *commit)
@@ -95,6 +117,24 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 		for _, file := range images.Files {
 			fmt.Fprintf(&report, "asset\t%s\t%d\t%x\n", file.Path, len(file.Body), file.SHA256)
 		}
+	}
+	if *passages {
+		bodyMax, references, contextBytes := 0, 0, 0
+		for _, p := range passagePlan.Passages {
+			bodyBytes := p.Body.After - p.Body.First - 1
+			for _, b := range a.Blocks[p.Body.First:p.Body.After] {
+				bodyBytes += len(b.Text)
+			}
+			bodyMax = max(bodyMax, bodyBytes)
+			references += len(p.Headings) + len(p.Groups)
+			for _, i := range p.Headings {
+				contextBytes += len(a.Blocks[i].Text)
+			}
+			for _, i := range p.Groups {
+				contextBytes += len(a.Groups[i].Label)
+			}
+		}
+		fmt.Fprintf(&report, "passage_processor\t%s\npassages\t%d\nmax_passage_body_bytes\t%d\npassage_references\t%d\npassage_context_bytes\t%d\n", passagePlan.Processor, len(passagePlan.Passages), bodyMax, references, contextBytes)
 	}
 	report.WriteString("published\tfalse\n")
 	if err := ctx.Err(); err != nil {
