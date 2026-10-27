@@ -128,12 +128,16 @@ unnecessary. Revisit it if larger pages exceed admission budgets or measured par
 allocation/latency dominates; do not infer scale from company headcount.
 
 Synthetic tests cover ownership, inline spacing, code, nested intervals, main-container
-selection, unsupported structures, inclusive/admission/output bounds, invalid input,+cancellation and CLI file/report boundaries. A short two-worker fuzz run exercised
+selection, unsupported structures, inclusive/admission/output bounds, invalid input,
+cancellation and CLI file/report boundaries. A short two-worker fuzz run exercised
 184,565 inputs without a failure; this is not proof about all malformed HTML.
 The full local verification includes PostgreSQL and uncached race tests. GitHub
 Actions stays disabled. Independent implementation review is separate from the
 earlier approved design plan and from private book review.
 
-Next decide the visual-content scope, then passage grouping and the concrete
-article/citation encoding. A complete searchable generation must declare and satisfy
-that scope; reference-only images must not silently be described as understood.
+The accepted [media scope](../decisions/media-coverage.md) retains original figures
+and searches authored text first. Visual contents remain uninterpreted. The
+Kubernetes audit tool can now optionally capture these references from an exact
+local Git commit, as described in the [asset experiment](figure-capture.md).
+Next decide passage grouping and the concrete article/citation encoding. A complete
+searchable generation must declare and satisfy its coverage.

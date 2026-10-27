@@ -41,7 +41,11 @@ source-specific offline reference experiment, outside core search. It does not
 require every source to build a website or establish a production HTML processor.
 The bounded extraction follow-up is in `engineering/experiments/html-extraction.md`.
 Keep image references distinct from retained image bytes or interpreted visual content;
-media coverage remains a user checkpoint before complete searchable publication.
+read `engineering/decisions/media-coverage.md`: retain original figures and search
+authored alt text, captions and prose first. Figure contents remain uninterpreted;
+optional interpretation of informative diagrams is deferred. The audit tool can
+capture bounded exact-commit images locally; durable retention and publication
+remain importer work.
 Read `engineering/decisions/passage-citations.md`: a rendered-document citation must
 resolve to the retained article; original Git file/line ranges are optional verified
 metadata. A generated passage can have several origins. Do not guess a line range

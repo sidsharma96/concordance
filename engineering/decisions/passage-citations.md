@@ -63,6 +63,8 @@ implemented. Displaying a quote does not authorize executing retained HTML.
 
 Revisit mandatory original-source mapping if exact edit/blame navigation becomes a
 primary workflow. Bounded structure extraction now has a concrete
-[experiment](../experiments/html-extraction.md). Next define visual coverage, the
-article/location format and passage grouping through their own workload and review.
+[experiment](../experiments/html-extraction.md). The accepted
+[media scope](media-coverage.md) retains originals while searching authored text
+first. Next define the article/location format and passage grouping through their
+own workload and review.
 The complete input fingerprint and generation manifest schema remain open.

@@ -1,10 +1,9 @@
-// Package gitsource captures Markdown bytes from committed objects in a trusted
-// local Git repository. It does not fetch, process Markdown, authorize access,
+// Package gitsource captures committed Markdown and explicit file dependencies
+// from a trusted local Git repository. It does not fetch, process content, authorize access,
 // fingerprint import requests or publish durable snapshots.
 package gitsource
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"errors"
@@ -75,20 +74,9 @@ func Capture(ctx context.Context, request Request, limits Limits) (Snapshot, err
 		limits.MaxDocumentBytes <= 0 || limits.MaxTotalBytes < limits.MaxDocumentBytes || limits.MaxTotalBytes > maxInt {
 		return Snapshot{}, ErrInvalid
 	}
-	typeName, err := run(ctx, request.Repository, 16, "cat-file", "-t", request.Commit)
+	treeID, err := commitTree(ctx, request.Repository, request.Commit)
 	if err != nil {
-		return Snapshot{}, fmt.Errorf("inspect capture commit: %w", err)
-	}
-	if string(typeName) != "commit\n" {
-		return Snapshot{}, ErrInvalid
-	}
-	tree, err := run(ctx, request.Repository, 80, "rev-parse", "--verify", request.Commit+"^{tree}")
-	if err != nil {
-		return Snapshot{}, fmt.Errorf("resolve capture tree: %w", err)
-	}
-	treeID := strings.TrimSuffix(string(tree), "\n")
-	if !objectID(treeID, len(request.Commit)) {
-		return Snapshot{}, ErrCorrupt
+		return Snapshot{}, err
 	}
 	if request.Directory != "." {
 		listing, err := run(ctx, request.Repository, limits.MaxListingBytes, "ls-tree", "--full-tree", "-z", "-l", treeID, "--", request.Directory)
@@ -144,18 +132,11 @@ func Capture(ctx context.Context, request Request, limits Limits) (Snapshot, err
 		if !strings.HasSuffix(entry.name, ".md") {
 			continue
 		}
-		body, err := run(ctx, request.Repository, entry.size, "cat-file", "blob", entry.id)
+		file, err := captureBlob(ctx, request.Repository, entry, result.Documents[selected].Path)
 		if err != nil {
-			return Snapshot{}, fmt.Errorf("read captured blob: %w", err)
+			return Snapshot{}, err
 		}
-		if int64(len(body)) != entry.size || !matchesBlob(body, entry.id) {
-			return Snapshot{}, ErrCorrupt
-		}
-		if bytes.HasPrefix(body, []byte("version https://git-lfs.github.com/spec/")) {
-			return Snapshot{}, ErrUnsupported
-		}
-		result.Documents[selected].Body = body
-		result.Documents[selected].SHA256 = sha256.Sum256(body)
+		result.Documents[selected] = file
 		selected++
 	}
 	if err := ctx.Err(); err != nil {

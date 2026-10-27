@@ -1,5 +1,6 @@
 // Command articleaudit inspects one retained Kubernetes reference article.
-// It does not build a website, acquire dependencies, fetch images or publish data.
+// It optionally captures referenced images from pinned local Git objects.
+// It does not build a website, fetch from the network or publish data.
 package main
 
 import (
@@ -14,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sidsharma96/concordance/internal/gitsource"
 	"github.com/sidsharma96/concordance/internal/htmlarticle"
 )
 
@@ -37,13 +39,18 @@ func referenceProfile() htmlarticle.Profile {
 func run(ctx context.Context, args []string, out io.Writer) error {
 	f := flag.NewFlagSet("articleaudit", flag.ContinueOnError)
 	file := f.String("file", "", "trusted, stable, retained Kubernetes article HTML file")
+	repository := f.String("repository", "", "optional trusted local Kubernetes source repository; requires -commit")
+	commit := f.String("commit", "", "exact source commit for optional image capture; requires -repository")
 	maxInput := f.Int("max-input-bytes", 4<<20, "input byte ceiling for this audit, not a product limit")
-	timeout := f.Duration("timeout", 15*time.Second, "extraction deadline; regular file reads are not preemptive")
+	timeout := f.Duration("timeout", 15*time.Second, "extraction/capture deadline; regular file reads are not preemptive")
 	if err := f.Parse(args); err != nil {
 		return err
 	}
 	if f.NArg() != 0 || *file == "" || *maxInput <= 0 || *maxInput == int(^uint(0)>>1) || *timeout <= 0 {
 		return errors.New("provide -file and positive audit limits")
+	}
+	if (*repository == "") != (*commit == "") {
+		return errors.New("provide both -repository and -commit for image capture")
 	}
 	if filepath.Base(filepath.Dir(filepath.Clean(*file))) == "_print" {
 		return errors.New("exclude the generated _print aggregate from this audit")
@@ -64,6 +71,13 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("extract retained article: %w", err)
 	}
+	var images gitsource.FilesSnapshot
+	if *repository != "" {
+		images, err = captureImages(ctx, a, *repository, *commit)
+		if err != nil {
+			return fmt.Errorf("capture referenced images: %w", err)
+		}
+	}
 	counts := make(map[htmlarticle.Kind]int)
 	textBytes := 0
 	for _, b := range a.Blocks {
@@ -74,6 +88,15 @@ func run(ctx context.Context, args []string, out io.Writer) error {
 	fmt.Fprintf(&report, "processor\t%s\nprofile\t%s\nhtml_sha256\t%x\nhtml_bytes\t%d\n", a.Processor, a.Profile, a.HTMLSHA256, a.HTMLBytes)
 	fmt.Fprintf(&report, "blocks\t%d\ngroups\t%d\nblock_text_bytes\t%d\nheadings\t%d\ncode_blocks\t%d\nimage_references\t%d\n", len(a.Blocks), len(a.Groups), textBytes, counts[htmlarticle.Heading], counts[htmlarticle.Code], counts[htmlarticle.Image])
 	report.WriteString("image_content_interpreted\tfalse\n")
+	if *repository == "" {
+		report.WriteString("image_capture\tnot_requested\n")
+	} else {
+		fmt.Fprintf(&report, "image_capture\tlocal_only\nasset_commit\t%s\nunique_assets\t%d\n", images.Commit, len(images.Files))
+		for _, file := range images.Files {
+			fmt.Fprintf(&report, "asset\t%s\t%d\t%x\n", file.Path, len(file.Body), file.SHA256)
+		}
+	}
+	report.WriteString("published\tfalse\n")
 	if err := ctx.Err(); err != nil {
 		return err
 	}

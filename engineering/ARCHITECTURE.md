@@ -6,7 +6,9 @@ component, and bounded Git object capture exists in `internal/gitsource`. An int
 S3 adapter implements verified immutable-object reuse, tested against HTTP fixtures
 and a live R2 creation/reuse/fresh-client-read smoke probe. Bounded in-memory HTML
 structure extraction now exists in `internal/htmlarticle`; the Kubernetes reference
-profile extracts all 38 selected articles while leaving images as references.
+profile extracts all 38 selected articles with image references. The Git adapter also captures explicit file dependencies;
+the Kubernetes audit tool can acquire referenced original images locally at an
+exact commit. This is not durable asset retention or publication.
 Provider fault and full
 recovery experiments remain open. The complete importer, Markdown processor, index,
 crawler, query API and shared library are not implemented.
@@ -85,7 +87,12 @@ are valid; invented mappings are not. Keep article identity, block locations, so
 revision and processing version separate. The bounded HTML processor now returns
 owned blocks and nested container intervals. The persisted article schema and
 citation API are not implemented. See the [extraction experiment](experiments/html-extraction.md)
-for supported structures, parser limits and unresolved image coverage.
+for supported structures and parser limits. The accepted
+[media scope](decisions/media-coverage.md) retains original figures and searches
+authored text first; visual contents remain uninterpreted. Later descriptions of
+informative diagrams require separately labeled derived content in a new
+processing version and generation. Fingerprint/manifest coverage fields and durable
+asset retention remain unimplemented.
 
 ## Storage from the first milestone
 
