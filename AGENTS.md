@@ -17,6 +17,8 @@ references. `internal/htmlpassage` builds bounded structure-first block ranges w
 heading and group references. `internal/termsearch` now supplies a bounded, edition-scoped
 match-all scan over prepared terms. No complete importer, Markdown processor,
 raw-text query path or retrieval engine exists yet.
+`internal/textterms` now prepares bounded, owned lowercase technical terms separately
+from passage-field projection and matching.
 
 ## Design and implementation
 
@@ -63,9 +65,12 @@ matching for the first baseline. `termsearch.MatchAll` consumes compatible calle
 terms, keeps edition selection exact and returns complete temporary passage positions
 or an error. It does not select a product tokenizer, field weights, persisted IDs,
 raw-text projection or search command. Keep these remaining decisions explicit.
-The subsequent identifier choice keeps CamelCase technical names whole without
-adding their parts. This is accepted preparation policy, not an implemented tokenizer;
-case, Unicode and punctuation rules still need discussion before raw-text integration.
+Read `engineering/decisions/text-preparation.md`: the user chose whole CamelCase
+names and punctuation-preserving lowercase technical terms without component words.
+`textterms.Prepare` implements the bounded grammar with a Unicode-versioned tag;
+source/query preparation must stay compatible. It is not a code/URL parser or full
+case folding/canonical normalization. Real-article field projection and a raw-text
+query command remain separate work; do not silently adopt private probe projections.
 
 Preserve source identity, logical document identity, product version, exact source
 revision, passage location, content hash, processing version and index generation

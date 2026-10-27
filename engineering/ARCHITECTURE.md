@@ -11,7 +11,9 @@ the Kubernetes audit tool can acquire referenced original images locally at an
 exact commit. `internal/htmlpassage` now forms bounded structure-first ranges in
 these articles, with heading and group references. `internal/termsearch` supplies
 bounded match-all candidate selection over caller-prepared terms within one exact
-edition. Neither component supplies durable asset retention or publication.
+edition. `internal/textterms` prepares owned lowercase technical terms with a bounded,
+Unicode-versioned grammar. These components do not supply durable asset retention
+or publication.
 Provider fault and full
 recovery experiments remain open. The complete importer, Markdown processor, index,
 crawler, query API and shared library are not implemented.
@@ -153,8 +155,9 @@ metadata and oversized bodies with no partial plan. Admission ceilings are calle
 configured; no automatic splitting or permanent product-size limit is implied.
 The caller must retain the exact unchanged article for all use of the returned
 indices. The [experiment](experiments/structured-passages.md) records the current
-38-page partition and limits. Context scoring, a tokenizer, persisted passage
-formats and ranking remain open; preserving context does not establish relevance.
+38-page partition and limits. Context scoring, persisted passage formats and ranking
+remain open; preserving context does not establish relevance. Text preparation is
+a separate component and does not decide which article fields to supply.
 
 The accepted [keyword matching](decisions/keyword-matching.md) baseline requires
 all distinct query terms within one passage's supplied body/heading/label union.
@@ -162,10 +165,14 @@ all distinct query terms within one passage's supplied body/heading/label union.
 and scans its passages. It distinguishes missing and explicitly empty editions,
 rejects incompatible term-version tags and returns no partial result on failure.
 Returned positions belong to this exact input, not a persisted passage identity.
-The accepted preparation policy keeps CamelCase technical names whole without adding
-their component words. The tokenizer and raw-text adapter remain unimplemented;
-case, Unicode and punctuation rules remain open. Private experiment rules are not
-an adopted production normalizer. Field scoring and ranked retrieval are separate.
+The accepted [text preparation](decisions/text-preparation.md) keeps whole CamelCase
+and punctuation-bearing names without adding their parts. `textterms.Prepare`
+lowercases compatible source/query text with an explicit grammar and a tag including
+the Unicode table version. It admits byte/count ceilings before allocating owned
+output strings; every error returns no partial result. It does not perform full case
+folding, canonical normalization or stemming. The real-article projection and raw-text
+query command remain unimplemented; private field projections are not an adopted
+adapter. Field scoring and ranked retrieval are separate.
 See the [matching component](experiments/keyword-matching.md) for invariants and limits.
 
 Begin with a small judged documentation corpus and an exact scan baseline. Then
