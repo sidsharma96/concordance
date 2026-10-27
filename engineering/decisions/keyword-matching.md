@@ -24,6 +24,26 @@ rules apply, or whether to stem words or remove common words. The private compar
 rules are not automatically a product tokenizer. Format processors and their adapters
 still own passage structure, source locations and which context is supplied.
 
+The user subsequently chose to keep technical names such as `ContainerRestartRules`
+whole in the first text-preparation policy. Do not add `Container`, `Restart` and
+`Rules` as searchable terms merely because capital letters mark their boundaries.
+This is an accepted policy for future preparation, not a tokenizer implementation
+inside `MatchAll`. It settles capital-boundary splitting only; case handling,
+Unicode equivalence and punctuation boundaries remain open.
+
+Keeping the name whole gives a simple baseline for explicit feature-name queries.
+A query for the separate words `restart rules` cannot match that name alone; those
+words must occur elsewhere in the supplied passage fields. The alternative keeps
+the whole name and adds its parts, making partial-name discovery possible while
+also admitting more matches. No experiment establishes a precision, storage or
+latency advantage for either policy. Revisit with new questions where readers do
+not know the feature name, and assess useful answers as well as added matches.
+
+Apply compatible preparation to source and query terms outside the matcher. A later
+policy adding name parts needs its own term-version identity and newly prepared
+data; do not reinterpret existing prepared terms under an unchanged tag. This does
+not define source-code parsing or commit to a universal tokenizer for future formats.
+
 Body, heading and label terms remain separate in the input. Matching uses their
 union; no scoring weights or body-evidence gate are selected. A query's term-version
 tag must match the corpus tag. This guards against accidental incompatible inputs,

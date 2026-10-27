@@ -63,6 +63,9 @@ matching for the first baseline. `termsearch.MatchAll` consumes compatible calle
 terms, keeps edition selection exact and returns complete temporary passage positions
 or an error. It does not select a product tokenizer, field weights, persisted IDs,
 raw-text projection or search command. Keep these remaining decisions explicit.
+The subsequent identifier choice keeps CamelCase technical names whole without
+adding their parts. This is accepted preparation policy, not an implemented tokenizer;
+case, Unicode and punctuation rules still need discussion before raw-text integration.
 
 Preserve source identity, logical document identity, product version, exact source
 revision, passage location, content hash, processing version and index generation

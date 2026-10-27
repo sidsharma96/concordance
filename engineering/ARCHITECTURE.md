@@ -162,7 +162,9 @@ all distinct query terms within one passage's supplied body/heading/label union.
 and scans its passages. It distinguishes missing and explicitly empty editions,
 rejects incompatible term-version tags and returns no partial result on failure.
 Returned positions belong to this exact input, not a persisted passage identity.
-The tokenizer and raw-text adapter remain open; private experiment rules are not
+The accepted preparation policy keeps CamelCase technical names whole without adding
+their component words. The tokenizer and raw-text adapter remain unimplemented;
+case, Unicode and punctuation rules remain open. Private experiment rules are not
 an adopted production normalizer. Field scoring and ranked retrieval are separate.
 See the [matching component](experiments/keyword-matching.md) for invariants and limits.
 
