@@ -15,7 +15,9 @@ edition. `internal/textterms` prepares owned lowercase technical terms with a bo
 Unicode-versioned grammar. `internal/htmlterms` connects retained HTML to separate
 body, all-ancestor heading and notice-label term fields with a canonical passage plan.
 `termsearch.RankBM25` now orders complete matches using combined-field counts and
-selected-edition statistics. These components do not supply durable asset retention
+selected-edition statistics. `internal/htmlsearch` now binds those fields to borrowed
+retained articles and resolves snapshot-bound references into owned quotes on demand.
+These components do not supply durable asset retention
 or publication.
 Provider fault and full
 recovery experiments remain open. The complete importer, Markdown processor, index,
@@ -189,16 +191,25 @@ change scores; exact ties use input position. Scores and positions are temporary
 not durable citations or confidence. All errors return no partial ranked result.
 See the [matching component](experiments/keyword-matching.md) for invariants and limits.
 
-The accepted [snapshot ownership direction](decisions/snapshot-ownership.md) borrows
-caller data rather than making a whole-input defensive copy. The caller controls
-all aliases and keeps shared contents unchanged through the last dependent read,
-including any returned borrowed views. Reachable references keep Go storage alive;
-the rule concerns mutation and reuse, not variable scope or manual memory release.
-A copied outer slice/struct does not copy nested arrays. Current retrieval calls
-retain no input after return; the longer-lived snapshot API is not implemented.
-Its exact retained data, source associations and result ownership still need an
-explicit contract. No R2 reader-retention or publication behavior follows from this
-in-memory choice.
+The accepted [snapshot ownership direction](decisions/snapshot-ownership.md) is now
+implemented by `htmlsearch.New`. It borrows edition/article input and owns freshly
+prepared terms and compact canonical body-location tables. The caller controls all
+aliases and keeps the input and source associations unchanged through dependent use.
+Reachability keeps storage alive but does not prevent mutation. Copies of the wrapper
+share one state; separately built states reject one another's references.
+
+The accepted [result contract](decisions/search-results.md) returns opaque temporary
+references from ranked searches, then assembles an owned quote only when requested.
+Location returns scalar input ordinals/body ranges; source/document/revision metadata
+and persisted citation identity still belong to the caller. No mutable block slices
+escape. Quote admission counts retained text plus LF separators before allocation;
+labels/context outside the canonical body are excluded. Each reference can retain the
+whole state; only owned quote strings have independent lifetimes. Read-only methods
+use per-call scratch and support concurrent readers with unchanged input. All workful
+operations require deadlines and return no partial output on errors. The
+[component reference](experiments/search-snapshot.md) describes bounds and evidence.
+No R2 reader-retention, persisted identity or publication behavior follows from this
+in-memory composition.
 
 Begin with a small judged documentation corpus and an exact scan baseline. Then
 compare sorted inverted postings against the current scan/ranking baseline, keeping
