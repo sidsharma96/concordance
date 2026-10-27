@@ -1,5 +1,5 @@
-// Package termsearch finds passage candidates in caller-prepared terms.
-// It does not tokenize raw text, rank answers, persist an index or publish data.
+// Package termsearch matches and ranks passages in caller-prepared terms.
+// It does not tokenize raw text, persist an index or publish data.
 package termsearch
 
 import (
