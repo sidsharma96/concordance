@@ -236,10 +236,12 @@ not the editing source. `make docs` checks/builds locally without commits or upl
 Read `docs/src/reference/publishing.md` before backup or deployment. The sibling
 script's `--no-deploy` still commits and pushes; it is not a local check.
 
-The empty Cloudflare Pages project is `concordance-docs`, production branch `main`.
-The production address redirects to Access; preview coverage still needs verification
-with a real preview. Creation of the project is not a book deployment or blanket
-authorization to publish. Keep review roles (`.claude/`), catalog (`review/`), runner
+The book is deployed to Cloudflare Pages project `concordance-docs`, production
+branch `main`, at `concordance-docs.sidsharma.dev`. Unauthenticated requests to the
+custom domain, Pages domain, real preview hash/alias and production deployment hash
+redirect to Access; authenticated policy coverage is not an exhaustive audit.
+Recheck coverage when domains or policies change. This deployment is not blanket
+authorization for later uploads. Keep review roles (`.claude/`), catalog (`review/`), runner
 and reports (`.tools/`) private. Fresh clones need these provisioned separately;
 ordinary checks must not require Claude or these files.
 
