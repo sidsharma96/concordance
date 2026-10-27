@@ -121,6 +121,12 @@ changes and `architecture-reviewer` before substantial designs and again for the
 implementation. Both use `claude-opus-5-5` at low effort, with read-only tools. Never
 silently substitute a model. Missing access or evidence is not approval.
 
+For authorized source work, use normal pull requests and merge completed changes
+once the required independent reviews and local checks pass. The user has authorized
+this review-and-merge workflow; do not leave completed work in draft PRs or request
+merge permission again. Drafts are for work in progress. This does not authorize
+book deployment or settling unresolved design checkpoints without discussion.
+
 Review decisions and experimental conclusions at meaningful checkpoints. Supply a
 concrete workload, invariant, simplest credible alternative, cost model, failure
 sequence, observed evidence and revisit condition. Resolve supported material findings
