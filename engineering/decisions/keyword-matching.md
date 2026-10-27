@@ -27,9 +27,9 @@ still own passage structure, source locations and which context is supplied.
 The user subsequently chose to keep technical names such as `ContainerRestartRules`
 whole in the first text-preparation policy. Do not add `Container`, `Restart` and
 `Rules` as searchable terms merely because capital letters mark their boundaries.
-This is an accepted policy for future preparation, not a tokenizer implementation
-inside `MatchAll`. It settles capital-boundary splitting only; case handling,
-Unicode equivalence and punctuation boundaries remain open.
+This policy is implemented by the separate [text preparer](text-preparation.md),
+not inside `MatchAll`. The user also chose lowercase, punctuation-preserving
+technical terms; that decision specifies the bounded grammar and Unicode limits.
 
 Keeping the name whole gives a simple baseline for explicit feature-name queries.
 A query for the separate words `restart rules` cannot match that name alone; those
@@ -73,7 +73,8 @@ association with source/document identity, revision, processing versions, retain
 article locations and generation. The matching component neither authorizes those
 bytes nor establishes that a generation was published.
 
-No tokenizer, ranker, inverted index, persisted matching format or CLI search command
-is included in this slice. Revisit the baseline with explicit alternative matching,
+The separate text preparer does not change this matching contract. No ranker,
+inverted index, persisted matching format or CLI search command is included.
+Revisit the baseline with explicit alternative matching,
 new queries/sources and reader judgments; preserve the scan as a correctness oracle
 before optimizing with sorted postings.
