@@ -81,8 +81,7 @@ Revisit sharing granularity and read-before-write verification after measuring
 unchanged bytes, request counts, transferred bytes and recovery work on a real corpus.
 The accepted [article layout](article-storage.md) now chooses separate bounded
 article-data objects. It also records necessary scaling work. The user selected the
-direction to design [verification receipts](verification-receipts.md); the proposed
-protocol and persistence do not change this adapter's full-read guarantee.
+direction to design [verification receipts](verification-receipts.md); the PostgreSQL-backed reuse component does not change strict Ensure/Read guarantees.
 Define safe retention and reader lifetimes before deleting anything. Later streaming,
 multipart or range reads require their own bounds/integrity contracts; a full-object
 hash cannot validate an arbitrary isolated range by itself.

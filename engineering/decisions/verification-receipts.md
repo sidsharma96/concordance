@@ -1,13 +1,13 @@
 # Verified receipts and HEAD checks
 
-Status: accepted direction to design. The user selected prior full verification,
-durable trusted receipts and HEAD checks for later reuse, with full verification
-on subsequent body reads. The protocol below is a concrete proposal for that
-direction, not implemented behavior or approval of a persistence schema. Receipt
-placement is the next user checkpoint: PostgreSQL is recommended over R2 sidecars.
-The existing `objectstore.Ensure` keeps its full-read guarantee.
+Status: accepted PostgreSQL receipt direction, now implemented as a bounded internal
+component. Read the [implementation and limits](../experiments/postgres-receipts.md).
+The full importer, persisted content formats, audit and recovery/retention operations
+remain open. Existing `objectstore.Ensure` and `Read` retain strict full verification;
+`objectreuse` explicitly uses the accepted prior-verification contract on receipt hits.
+No comparative benchmark establishes a speedup over R2 markers.
 
-## One object through the proposed path
+## One object through the selected path
 
 An import needs the same saved article bytes as an earlier import. Its authorized
 collection and exact-byte hash select the same immutable object. Rather than read
@@ -28,7 +28,7 @@ Any later body read
   bounded GET -> exact length + raw SHA-256
 ```
 
-The proposed extra ETag check can detect some replacements which length alone
+The extra ETag check can detect some replacements which length alone
 misses. It is an opaque provider validator, not our SHA-256, an unforgeable object
 incarnation or protection against every same-tag/same-size corruption. This path
 trusts prior verification and continued immutability. It deliberately does not
@@ -36,7 +36,7 @@ provide a fresh full-body integrity check during every import.
 
 ## Receipt identity and trust
 
-A receipt would bind a trusted storage-namespace identity, globally qualified
+A receipt binds a trusted storage-namespace identity, globally qualified
 collection, key-layout version, raw byte digest, byte length, verification-policy
 version, current trust epoch and the ETag returned by the verified GET. Namespace
 identity must bind the actual account/endpoint, bucket and physical key namespace;
@@ -50,9 +50,8 @@ same response; a separate later HEAD cannot establish which body was verified.
 Missing/malformed ETags prevent recording a fast-reuse receipt, without invalidating
 an otherwise successful strict verified read. Such an object must continue to use
 the strict path; publication may rely on that current full verification, not on
-invented receipt evidence. The existing Ensure API returns only
-a reference; exposing verified response evidence requires a deliberately reviewed
-adapter operation. A plain reference, caller-provided digest, object metadata,
+invented receipt evidence. The existing Ensure API returns only a reference; EnsureVerified now exposes
+opaque verified evidence from the same response. A plain reference, caller-provided digest, object metadata,
 published manifest or untrusted serialized struct must not construct a receipt.
 
 Authorize the collection before receipt lookup and object access. Receipts are
@@ -60,14 +59,13 @@ neither authorization capabilities nor proof of publication. Do not share them
 across collections or let a caller choose a storage target by submitting a receipt.
 Keep proof persistence and trust policy with Concordance, not a shared Rewind library.
 
-## Recommended persistence, not yet selected
+## Selected persistence
 
-PostgreSQL is the recommended receipt store. It already owns durable coordination;
+PostgreSQL is the selected receipt store. It already owns durable coordination;
 indexed records can identify prior verified objects and a separate namespace guard
-can disable reuse. These would be separate from import bindings: one receipt per
+can disable reuse. These are separate from import bindings: one receipt per
 distinct scoped object, not per passage or generation reference. This adds database
-rows, indexes, migrations, authoritative lookups and backup/recovery work. Exact SQL,
-field limits and Go operations remain open until placement is selected.
+rows, indexes, migrations, authoritative lookups and backup/recovery work. Exact SQL, field limits and Go operations are described in the implementation reference.
 
 Use bounded batches of receipt lookups rather than a separate database round trip
 for every article. Validate every returned association and retain only a bounded
@@ -82,7 +80,7 @@ can outlive a body, so it still requires an object HEAD and trusted write paths.
 It does not remove PostgreSQL publication or the need to coordinate trust revocation.
 Neither alternative has measured throughput or storage overhead yet.
 
-## Failure and concurrency rules proposed for implementation
+## Failure and concurrency rules
 
 Remote operations run outside short database transactions. Reuse needs a supported
 receipt policy, active namespace/epoch, a positive conditional HEAD and matching
@@ -112,11 +110,11 @@ verification. Namespace state and receipt insertion must then be checked togethe
 in a short transaction against that exact original epoch; never retag old work
 with a newer epoch. This prevents an old verifier from committing usable proof
 after a concurrent invalidation. Compatible duplicate inserts are idempotent;
-conflicting evidence must not be replaced by an unconditional upsert. Any proposed
+conflicting evidence must not be replaced by an unconditional upsert. A receipt-based
 publication coordinator must recheck the active namespace/epoch in its publication
 transaction, using a lock shared with trust invalidation. This fences old proof
 from new publication; it does not lock R2 or guarantee perpetual availability.
-The complete importer and these guard operations do not yet exist.
+The guard operations now exist; the complete importer does not.
 
 ## Immutability, incidents and deletion
 
@@ -157,8 +155,8 @@ receipt persistence. Exact operation counts need implementation evidence.
 
 The [read-only provider experiment](../experiments/verification-receipts.md) checked
 conditional HEAD against one existing synthetic R2 object. It did not exercise
-receipt persistence, invalidation, concurrent writers, publication or scale. Before
-implementation approval, specify exact APIs/schema/bounds and test at least:
+receipt persistence, invalidation, concurrent writers, publication or scale. The implementation reference distinguishes tested APIs/bounds from remaining work,
+including:
 same-response ETag binding, forged/wrong-scope/old-epoch receipts, generic HEAD errors,
 size/tag changes, failed close, receipt-write ambiguity, invalidation races, restored
 catalogs and fresh-client recovery. Keep strict full reads as the integrity oracle.

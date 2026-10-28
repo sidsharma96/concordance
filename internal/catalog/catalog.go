@@ -141,8 +141,22 @@ func (s *Store) LookupGeneration(ctx context.Context, collection, id string) (Ge
 // attempts return the same winning result, even if their candidate IDs differ.
 // Returning a prior result never reactivates it. The candidate must be valid even
 // on this low-level duplicate path; a coordinator should Lookup before rebuilding.
+// Receipt-based callers must use PublishInNamespace instead of this strict path.
 // Any commit error is conservatively uncertain. Callers must reuse the key.
-func (s *Store) Publish(ctx context.Context, request Request, candidate Generation) (result Publication, resultErr error) {
+func (s *Store) Publish(ctx context.Context, request Request, candidate Generation) (Publication, error) {
+	return s.publish(ctx, request, candidate, nil)
+}
+
+// PublishInNamespace fences new receipt-based publication against quarantine.
+// The caller still confirms EVERY required object and manifest before calling.
+// Existing completed imports remain recoverable even after quarantine.
+func (s *Store) PublishInNamespace(ctx context.Context, request Request, candidate Generation, n Namespace) (Publication, error) {
+	if !s.validNamespace(n) || n.binding.Collection != request.Collection {
+		return Publication{}, ErrInvalid
+	}
+	return s.publish(ctx, request, candidate, &n)
+}
+func (s *Store) publish(ctx context.Context, request Request, candidate Generation, namespace *Namespace) (result Publication, resultErr error) {
 	if err := validateRequest(request); err != nil {
 		return result, err
 	}
@@ -170,6 +184,11 @@ func (s *Store) Publish(ctx context.Context, request Request, candidate Generati
 	}
 	if record.Generation != nil {
 		return Publication{Generation: *record.Generation, Duplicate: true}, nil
+	}
+	if namespace != nil {
+		if err := s.checkNamespace(ctx, tx, *namespace, true); err != nil {
+			return result, err
+		}
 	}
 	_, err = tx.Exec(ctx, `UPDATE concordance_imports SET generation_id=$3,
 		manifest_key=$4, manifest_sha256=$5, manifest_bytes=$6

@@ -44,6 +44,7 @@ type Store struct {
 	bucket   string
 	prefix   string
 	maxBytes int64
+	binding  Binding
 }
 
 // New binds one already-authorized, globally unique collection ID to one bucket.
@@ -54,7 +55,8 @@ func New(client *s3.Client, bucket, collection string, maxBytes int64) (*Store, 
 	if client == nil || !opaque(bucket, 63) || !opaque(collection, 256) || maxBytes <= 0 || maxBytes >= maxInt {
 		return nil, ErrInvalid
 	}
-	return &Store{client: client, bucket: bucket, maxBytes: maxBytes,
+	binding := Binding{Endpoint: aws.ToString(client.Options().BaseEndpoint), Bucket: bucket, Collection: collection, KeyVersion: "v1"}
+	return &Store{client: client, bucket: bucket, maxBytes: maxBytes, binding: binding,
 		prefix: "v1/collections/" + hex.EncodeToString([]byte(collection)) + "/sha256/"}, nil
 }
 
@@ -73,20 +75,29 @@ func (s *Store) Key(ref Ref) (string, error) {
 // Each call uses at most three SDK operations with SDK retries disabled. A caller
 // may retry the same bytes/scope after an unresolved outcome; it must not delete.
 func (s *Store) Ensure(ctx context.Context, body []byte) (Ref, error) {
-	if err := boundedContext(ctx); err != nil {
+	v, err := s.EnsureVerified(ctx, body)
+	if err != nil {
 		return Ref{}, err
+	}
+	return v.ref, nil
+}
+
+// EnsureVerified preserves Ensure's strict protocol and returns opaque evidence.
+func (s *Store) EnsureVerified(ctx context.Context, body []byte) (Verified, error) {
+	if err := boundedContext(ctx); err != nil {
+		return Verified{}, err
 	}
 	if int64(len(body)) > s.maxBytes {
-		return Ref{}, ErrInvalid
+		return Verified{}, ErrInvalid
 	}
 	ref := Ref{SHA256: sha256.Sum256(body), Bytes: int64(len(body))}
-	if stored, err := s.Read(ctx, ref); err == nil {
+	if stored, proof, err := s.readVerified(ctx, ref); err == nil {
 		if !bytes.Equal(stored, body) {
-			return Ref{}, ErrIntegrity
+			return Verified{}, ErrIntegrity
 		}
-		return ref, nil
+		return proof, nil
 	} else if !errors.Is(err, ErrNotFound) {
-		return Ref{}, err
+		return Verified{}, err
 	}
 	key, _ := s.Key(ref) // ref was constructed within this store's size bound.
 	_, putErr := s.client.PutObject(ctx, &s3.PutObjectInput{
@@ -96,10 +107,10 @@ func (s *Store) Ensure(ctx context.Context, body []byte) (Ref, error) {
 	}, attemptOptions(controlBodyLimit))
 	// A negative read is not proof that no other write is in flight. Even a lost
 	// or rejected create reply is reconciled by reading the expected immutable key.
-	stored, err := s.Read(ctx, ref)
+	stored, proof, err := s.readVerified(ctx, ref)
 	if err != nil {
 		if errors.Is(err, ErrIntegrity) {
-			return Ref{}, errors.Join(err, safeError("create", putErr))
+			return Verified{}, errors.Join(err, safeError("create", putErr))
 		}
 		// Absence observed after a create attempt is not a no-write guarantee.
 		// Preserve the provider cause without returning Read's absence sentinel.
@@ -107,54 +118,65 @@ func (s *Store) Ensure(ctx context.Context, body []byte) (Ref, error) {
 		if errors.Is(err, ErrNotFound) && errors.As(err, &failure) {
 			err = failure
 		}
-		return Ref{}, errors.Join(ErrOutcomeUnknown, safeError("create", putErr), err)
+		return Verified{}, errors.Join(ErrOutcomeUnknown, safeError("create", putErr), err)
 	}
 	if !bytes.Equal(stored, body) {
-		return Ref{}, ErrIntegrity
+		return Verified{}, ErrIntegrity
 	}
-	return ref, nil
+	return proof, nil
 }
 
 // Read returns caller-owned bytes after bounded length/hash verification. It never
 // substitutes another object or trusts ETag/custom metadata as a raw SHA-256 value.
 // Every successful GetObject body is closed, including malformed/error paths.
-func (s *Store) Read(ctx context.Context, ref Ref) (body []byte, resultErr error) {
+func (s *Store) Read(ctx context.Context, ref Ref) ([]byte, error) {
+	body, _, err := s.readVerified(ctx, ref)
+	return body, err
+}
+
+func (s *Store) readVerified(ctx context.Context, ref Ref) (body []byte, proof Verified, resultErr error) {
 	if err := boundedContext(ctx); err != nil {
-		return nil, err
+		return nil, Verified{}, err
 	}
 	key, err := s.Key(ref)
 	if err != nil {
-		return nil, err
+		return nil, Verified{}, err
 	}
 	output, err := s.client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket), Key: aws.String(key),
 	}, attemptOptions(ref.Bytes+1))
 	if err != nil {
-		return nil, readError(err)
+		return nil, Verified{}, readError(err)
 	}
 	if output == nil || output.Body == nil {
-		return nil, ErrIntegrity
+		return nil, Verified{}, ErrIntegrity
 	}
 	defer func() {
 		if err := output.Body.Close(); err != nil {
 			body = nil
+			proof = Verified{}
 			resultErr = errors.Join(resultErr, safeError("close read", err))
+		}
+		if err := ctx.Err(); err != nil {
+			body = nil
+			proof = Verified{}
+			resultErr = errors.Join(resultErr, err)
 		}
 	}()
 	if output.ContentLength != nil && *output.ContentLength != ref.Bytes {
-		return nil, ErrIntegrity
+		return nil, Verified{}, ErrIntegrity
 	}
 	data, err := io.ReadAll(io.LimitReader(output.Body, ref.Bytes+1))
 	if err != nil {
-		return nil, safeError("read body", err)
+		return nil, Verified{}, safeError("read body", err)
 	}
 	if int64(len(data)) != ref.Bytes || sha256.Sum256(data) != ref.SHA256 {
-		return nil, ErrIntegrity
+		return nil, Verified{}, ErrIntegrity
 	}
 	if err := ctx.Err(); err != nil {
-		return nil, err
+		return nil, Verified{}, err
 	}
-	return data, nil
+	return data, Verified{store: s, ref: ref, tag: aws.ToString(output.ETag)}, nil
 }
 
 func attemptOptions(successBodyLimit int64) func(*s3.Options) {
@@ -170,6 +192,9 @@ func attemptOptions(successBodyLimit int64) func(*s3.Options) {
 }
 
 func boundedContext(ctx context.Context) error {
+	if ctx == nil {
+		return ErrInvalid
+	}
 	if err := ctx.Err(); err != nil {
 		return err
 	}
