@@ -55,12 +55,13 @@ with exact index/table/article/source bindings and compatible processing version
 This choice does not change `NewIndex`'s validation of every edition in its supplied
 Corpus or its cached original-input query limits.
 
-The count-only index cannot reconstruct the ordered fields checked by
-`htmlpassagemap.Open`. Decide whether to retain those fields or introduce a separately
-specified verified artifact-binding protocol before implementing persistent recovery.
-Never replace the check with an unchecked caller-asserted hash. The
-[payload experiment](../experiments/edition-index-payload.md) measures a sample of
-ordered fields and describes this remaining design checkpoint.
+The accepted [artifact-binding direction](edition-artifact-binding.md) keeps counts
+and saved passage locations together without an additional ordered-word copy. The
+existing `htmlpassagemap.Open` stays unchanged; counts cannot reconstruct its ordered
+field fingerprint. The new reader must check actual artifact bytes against the
+published generation reference and validate structure and bindings. Its concrete
+codec and recovery design remain open. The [payload experiment](../experiments/edition-index-payload.md)
+measures the illustrative ordered-field alternative.
 
 A single edition can still be too large. Persistent index blocks, paged metadata,
 bounded selective readers and safe retention/deletion remain necessary scaling work.
