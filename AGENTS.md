@@ -166,6 +166,15 @@ complete index, source association, generation manifest or authorization. Keep
 future published metadata responsible for exact table/index/edition/document pins;
 never serialize temporary snapshot references or treat field hashes as identity.
 
+The user chose per-field counts rather than word positions for the first postings;
+read `engineering/decisions/posting-counts.md` and its experiment. `termsearch.Index`
+owns an immutable in-memory index; keep the original scans as oracles. Preserve
+exact edition statistics, lexical BM25 sum order, full output and stable ties.
+Do not reject oversized intermediate intersections under a final-match limit.
+The index is not persisted, does not replace `htmlsearch`, and cannot reconstruct
+ordered fields for `htmlpassagemap.Open`. Phrase/proximity positions are deferred;
+semantic embeddings can consume retained text independently.
+
 The user and agent build together through decision checkpoints. Proceed with routine
 implementation until a consequential choice needs the user's input. Present the
 concrete problem, a few credible alternatives with small Go snippets, trade-offs and
