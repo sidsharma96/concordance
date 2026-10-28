@@ -1,8 +1,8 @@
 # What counts preserve, and what ordered fields cost
 
 The accepted [index layout](../decisions/edition-index-layout.md) is one bounded
-object per exact edition under one generation manifest. Neither the index codec
-nor complete recovery bindings are implemented. This experiment informed the accepted
+object per exact edition under one generation manifest. The bounded HTML binary codec now exists; complete published-generation
+recovery bindings remain open. This experiment informed the accepted
 [artifact-binding direction](../decisions/edition-artifact-binding.md):
 keep counts and saved locations together without another ordered-word copy. It does
 not choose a format or implement a loader.
@@ -64,7 +64,8 @@ reference from the published generation, then validate its schema, counts/statis
 locations, article bindings and versions before exposing search/quote data. It must
 not accept an unchecked caller's field hash as a replacement for the old check.
 The existing `htmlpassagemap.Open` remains unchanged as the ordered-field baseline.
-A new reader and its compatibility rules need concrete design and review first.
+The selected [binary component](binary-edition.md) now supplies the bounded reader;
+its caller must still establish trusted generation associations.
 
 That second design avoids an additional ordered-field copy. It relies on the
 canonical writer's preparation association and the integrity of the pinned artifact;
@@ -74,8 +75,8 @@ Independent rebuild/audit comparisons remain necessary evidence. Both approaches
 already require correct preparation; neither matching hashes nor retained fields
 alone authenticate the publisher or authorize access.
 
-The agreement selects the recovery direction. A concrete new reader and persistent
-schema still require design and review; this experiment implements neither. Counts
+The agreement selects the recovery direction. The separate [binary experiment](binary-edition.md) describes the implemented
+bounded reader. This earlier experiment implements no loader itself. Counts
 preserve current keyword/BM25 behavior; exact quoted text still comes from the
 retained article. Query preparation needs compatible term rules
 under either design. A single edition can still exceed budgets: persistent index

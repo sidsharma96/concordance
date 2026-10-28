@@ -2,8 +2,9 @@
 
 Status: accepted option B. Save one bounded index object for each exact edition,
 referenced by the existing single generation manifest. This settles index granularity,
-not a persistent codec, loader, complete manifest schema or implemented publication.
-`termsearch.Index` remains an in-memory component.
+not a complete manifest schema or implemented publication. The bounded
+[HTML binary codec/reader](edition-binary.md) now implements one edition artifact;
+`termsearch.Index` remains its in-memory query component.
 
 ## Follow one version-scoped search
 
@@ -16,8 +17,8 @@ An edition key is opaque, not necessarily a SemVer string. Source, logical docum
 captured revision, generation identity and authorization remain separate metadata.
 An absent edition means no eligible edition, preserving the current found/not-found
 distinction. A missing or corrupt object for a declared edition is an error, not an
-empty edition. A known-empty edition must remain distinguishable; its wire
-representation still needs specification.
+empty edition. A known-empty edition remains distinguishable; the bounded HTML binary format
+encodes it with empty tables.
 
 ## Alternative and costs
 
@@ -59,8 +60,8 @@ The accepted [artifact-binding direction](edition-artifact-binding.md) keeps cou
 and saved passage locations together without an additional ordered-word copy. The
 existing `htmlpassagemap.Open` stays unchanged; counts cannot reconstruct its ordered
 field fingerprint. The new reader must check actual artifact bytes against the
-published generation reference and validate structure and bindings. Its concrete
-codec and recovery design remain open. The [payload experiment](../experiments/edition-index-payload.md)
+published generation reference and validate structure and bindings. The bounded [binary reader](edition-binary.md) now implements these checks; complete
+published-generation recovery remains open. The [payload experiment](../experiments/edition-index-payload.md)
 measures the illustrative ordered-field alternative.
 
 A single edition can still be too large. Persistent index blocks, paged metadata,

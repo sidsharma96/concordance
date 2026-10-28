@@ -1,7 +1,9 @@
 # Compare two explicit edition-index encoding samples
 
 The user accepted [counts and saved locations together](../decisions/edition-artifact-binding.md)
-without another ordered-word copy. The physical index encoding is still open.
+without another ordered-word copy. The user selected binary with JSON inspection. The follow-up cost comparison below
+informed that choice; the [binary component experiment](binary-edition.md) describes
+the separately implemented codec.
 The retained-article JSON decision does not choose an index encoding. This comparison
 uses disposable valid-input samples, not a production codec or recovered generation.
 
@@ -58,9 +60,9 @@ block joins after article JSON verification and decoding. Known-empty and absent
 editions remain distinct. This is local comparison evidence, not a new published
 reference trust path, persistent index loader or remote recovery drill.
 
-## Proposed choice, not an implemented conclusion
+## Alternatives and follow-up costs
 
-Versioned JSON is the proposed first baseline: explicit records are easy to inspect,
+The initial recommendation favored versioned JSON: explicit records are easy to inspect,
 and the existing article/location work already exercises strict JSON parsing and
 compatibility lessons. Its measured sample cost is more encoded bytes. A production
 reader still needs all schema, bounds, arithmetic, binding and ownership checks;
@@ -72,15 +74,47 @@ The binary sample demonstrates a real byte reduction on this workload and offers
 integer-encoding learning. It also introduces a custom diagnostic/compatibility
 surface and needs independent malformed/truncation/overflow tests and inspection
 tools. It is a credible alternative if smaller edition files are worth that work
-now. It is not evidence of faster decoding or querying: neither CPU, allocations,
-retained heap, cold-open latency nor compressed sizes were measured. The JSON baseline
-recommendation is an engineering trade-off, not a performance result.
+now. The initial size-only comparison measured no CPU, allocations, retained heap,
+cold-open latency or compressed sizes. The follow-up below adds scoped prototype
+measurements, not a production speed guarantee. The initial JSON baseline recommendation was an engineering trade-off, not a
+performance result. It was revised after the follow-up measurements and user
+discussion; the selected binary format includes readable JSON inspection.
 
-Before choosing, compare readability and implementation/recovery work against these
+The user chose binary after comparing readability, implementation/recovery work and
 observed bytes. Revisit compact encoding when measured edition sizes, cold-open costs
 or an explicit learning goal justify it. Neither encoding addresses a huge single
 edition, paged metadata, reader lifetime or safe deletion by itself. Do not extrapolate
 this small corpus to a million-document storage bill.
+
+## Follow-up prototype measurements
+
+A separate valid-input cost probe compressed these same samples with Go's default
+gzip level, then verified exact decompression and equivalent records. Across all
+three editions, gzip JSON totals 189,938 bytes and gzip binary 163,693 bytes: binary
+is 13.8% smaller after both are compressed. Compression remains unselected; these
+are not the slightly different implemented v1 file sizes.
+
+Five 200 ms local benchmark samples on Go 1.27.2 darwin/arm64, Apple M1, default
+GOMAXPROCS 8 measured checksum plus prototype decoding of the largest edition:
+
+| Sample | Time, ms/op | Allocated MB/op |
+| --- | ---: | ---: |
+| JSON | 4.817–5.143 | 2.36 |
+| Binary | 0.614–0.619 | 2.36 |
+| Gzip JSON | 5.861–5.899 | 3.33 |
+| Gzip binary | 1.470–1.481 | 2.76 |
+
+These valid-input parsers do not perform equivalent complete production validation,
+construct the query index or read R2. Allocation totals are not retained/peak heap.
+The binary prototype writer also allocated more bytes than JSON despite smaller
+output, due to its buffer growth. Neither file size nor this prototype establishes
+production memory or full search speed. With the same in-memory query representation,
+encoding affects cold load work rather than BM25's query algorithm. Request counts,
+article bytes, full manifests and retained generations remain separate costs.
+
+Private probe `.tools/probes/edition-codec-cost/` and raw compression/decode/encode
+logs `.tools/reviews/edition-codec-compression.txt`, `edition-codec-decode-bench.txt`
+and `edition-codec-encode-bench.txt` preserve this follow-up. No remote writes occurred.
 
 ## Reproducibility
 

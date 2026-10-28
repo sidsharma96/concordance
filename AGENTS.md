@@ -20,7 +20,7 @@ raw-text query path or retrieval engine exists yet.
 `internal/termsearch.RankBM25` now orders complete matches with combined-field BM25;
 read `engineering/decisions/lexical-ranking.md`. Keep all-passage statistics within
 the selected edition, distinct-query semantics, complete bounded output and stable
-input-position ties. No field weights, top-k, persisted index or query CLI yet.
+input-position ties. No field weights, top-k, published generation or query CLI yet.
 `internal/htmlsearch` now builds a borrowed retained-HTML search snapshot and
 resolves bounded quotes on demand; read `engineering/decisions/snapshot-ownership.md`
 and `engineering/decisions/search-results.md`. Keep all input aliases unchanged
@@ -171,13 +171,14 @@ read `engineering/decisions/posting-counts.md` and its experiment. `termsearch.I
 owns an immutable in-memory index; keep the original scans as oracles. Preserve
 exact edition statistics, lexical BM25 sum order, full output and stable ties.
 Do not reject oversized intermediate intersections under a final-match limit.
-The index is not persisted, does not replace `htmlsearch`, and cannot reconstruct
+The generic index remains in-memory and does not replace `htmlsearch` or reconstruct
 ordered fields for `htmlpassagemap.Open`. Phrase/proximity positions are deferred;
 semantic embeddings can consume retained text independently.
 
 The user chose one bounded index object per exact edition under the existing
 single generation manifest; read `engineering/decisions/edition-index-layout.md`.
-The codec/loader and complete generation schema are not implemented. Confirm all
+The bounded HTML codec/reader is in `internal/htmledition`; the complete generation
+schema and publication integration remain open. Confirm all
 required artifacts before publication; loading one edition does not validate every
 other object's body. Preserve absent vs known-empty editions and treat a missing
 object for a declared edition as an error. The user chose counts and saved locations
@@ -186,8 +187,18 @@ together without another ordered-word copy; read
 the authorized generation reference, validate structural/count/location bindings,
 and verify exact article bodies before quoting. Trust canonical preparation, with
 independent scan/rebuild oracles; checksums do not prove semantic correctness. Keep
-`htmlpassagemap.Open` unchanged. Encoding and concrete reader design remain open;
-never substitute a caller-asserted field hash for the old check.
+`htmlpassagemap.Open` unchanged. The user selected versioned binary with bounded
+JSON inspection; read `engineering/decisions/edition-binary.md` and
+`engineering/experiments/binary-edition.md`. `htmledition.Build` derives fields and
+ranges together; `Open` verifies independent expected bytes/edition, minimal varints,
+closed tags, counts/statistics, budgets and complete range coverage. It owns immutable
+state and verifies supplied article bytes before LF-joined quotes without regrouping.
+`termsearch.ExportEdition` and `NewCountIndex` provide bounded owned count transport,
+with selected-edition occurrence-weighted input admission; generation admission is
+still separate. Keep shared article bytes distinct from logical slots. Inspection
+is diagnostic, not publication/authentication. No compression, full manifest/importer,
+article cache or source identity is implemented; never substitute a caller-asserted
+field hash for the old check.
 
 The user and agent build together through decision checkpoints. Proceed with routine
 implementation until a consequential choice needs the user's input. Present the
