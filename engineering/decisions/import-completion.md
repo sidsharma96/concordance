@@ -18,6 +18,11 @@ and writes is an implementation detail; incomplete generations must stay unpubli
 A successful return must not depend on uncompleted background indexing or a local
 cache that is the only copy of required data.
 
+The [snapshot decision](import-snapshots.md) defines the request: select the complete
+intended scope and let the source adapter capture its inventory. A fetch failure
+fails the import; omission under a deliberately narrower scope changes only the new
+generation's membership. Patch requests are deferred.
+
 This illustrates the intended caller contract; names and types are API sketches:
 
 ```go

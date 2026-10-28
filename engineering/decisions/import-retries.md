@@ -23,6 +23,11 @@ description. A public caller cannot establish equality merely by supplying a dig
 The source adapter and processing contract must define that description; a mutable
 URL or branch name alone cannot identify the captured revision.
 
+The [snapshot contract](import-snapshots.md) selects the complete intended scope;
+the adapter derives its captured inventory. Include that actual inventory, pinned
+selection and settings in the trusted input description. The full fingerprint
+encoding remains open.
+
 The following is a sketch of caller intent, not a finalized API:
 
 ```go

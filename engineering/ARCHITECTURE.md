@@ -170,6 +170,11 @@ matrix and required experiments.
 
 The accepted [import completion decision](decisions/import-completion.md) is synchronous
 publication: success returns a complete generation ready for queries selecting its ID.
+The [snapshot request contract](decisions/import-snapshots.md) selects the complete
+intended source/edition/path scope. The adapter captures its full inventory; a failed
+fetch fails the import rather than removing a document. Deliberate omission affects
+only the new generation, without physical deletion. Patches are deferred; unchanged
+compatible objects can still be reused.
 The first recovery drill must reconstruct that generation and fetch its cited bytes
 without the writer's local files. The accepted [retry contract](decisions/import-retries.md)
 uses a saved operation key: identical retries recover the original result; changed
