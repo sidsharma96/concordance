@@ -230,9 +230,15 @@ operations require deadlines and return no partial output on errors. The
 No R2 reader-retention, persisted identity or publication behavior follows from this
 in-memory composition.
 
-Begin with a small judged documentation corpus and an exact scan baseline. Then
-compare sorted inverted postings against the current scan/ranking baseline, keeping
-its explicit term grammar and edition semantics. Compare intersections and bounded top-k selection against
+The accepted [posting-count decision](decisions/posting-counts.md) now has an
+in-memory `termsearch.Index` with sorted unique passage lists and separate field
+frequencies. Queries intersect lists and rank with the same edition-local BM25,
+using cached input admission and statistics. The original scans remain unchanged
+oracles; `htmlsearch` still uses its original scan path. This index does not persist
+search artifacts or replace source/citation/generation associations. See the
+[posting experiment](experiments/counted-postings.md) for ownership, costs and evidence.
+Begin with a small judged documentation corpus and keep the explicit term grammar
+and edition semantics while comparing representations. Compare intersections and bounded top-k selection against
 simple scans/full sorts on the same inputs. Use uncompressed postings before deciding
 whether gap/varint encoding or skip data materially helps.
 
