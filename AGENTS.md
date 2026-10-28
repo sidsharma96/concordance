@@ -149,6 +149,15 @@ migration or hosted PostgreSQL. A read-only R2/local-PostgreSQL probe passes; ne
 commit ambiguity, restored-state recovery, audits and scale evidence remain open.
 Do not substitute ETags for SHA-256 or treat design reviews as change approvals.
 
+The user selected versioned JSON for retained article files. `internal/htmlarticlejson`
+now implements the bounded HTML v1 codec; read `engineering/decisions/article-json.md`
+and `engineering/experiments/article-json.md`. Preserve explicit wire fields, closed
+versions/kinds, exact text, required/default field presence and independent ownership.
+Reject duplicates, nulls, unknown fields, malformed Unicode, integer coercion and
+invalid ranges. Canonical bytes and input-representation metadata affect exact-byte
+reuse. The codec is not a complete manifest, citation schema, source association,
+importer or index. Other formats need deliberate typed schemas, not HTML coercion.
+
 The user and agent build together through decision checkpoints. Proceed with routine
 implementation until a consequential choice needs the user's input. Present the
 concrete problem, a few credible alternatives with small Go snippets, trade-offs and
