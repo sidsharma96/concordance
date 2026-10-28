@@ -8,8 +8,9 @@ This is a layout decision, not an implemented codec or a finalized persisted sch
 
 PostgreSQL publishes one manifest reference with its SHA-256 and byte length. R2
 stores the manifest and separately stored source, passage and index objects. Source
-bodies are not embedded in the manifest. Object presence alone does not publish a
-generation; all required remote objects must be confirmed before catalog publication.
+bodies are not embedded in the manifest. The later [index-layout decision](edition-index-layout.md)
+chooses one bounded index object per exact edition under this same manifest.
+Object presence alone does not publish a generation; all required remote objects must be confirmed before catalog publication.
 
 Preserve logical identity, product version, exact captured revision, processing and
 format versions, passage locations and content references as separate concepts. The
