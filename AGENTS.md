@@ -117,6 +117,13 @@ and unresolved storage choices. It is an accepted design, not implemented behavi
 Generation IDs in the API sketches do not require users to supply them in searches.
 A small initial corpus is a starting experiment, not a permanent product limit.
 
+The accepted request contract is a complete snapshot; read
+`engineering/decisions/import-snapshots.md`. The request selects the full intended
+scope and the adapter captures its complete inventory. Acquisition failure fails
+the import; deliberate omission changes only new-generation membership, with no
+physical deletion. Preserve exact compatible reuse and bind the actual captured
+inventory, pinned scope and settings before remote writes. Patch requests are deferred.
+
 The accepted retry contract in `engineering/decisions/import-retries.md` uses a saved
 operation key. Bind it to trusted versioned input identity before remote writes.
 Identical retries recover the original result; different inputs under that key
