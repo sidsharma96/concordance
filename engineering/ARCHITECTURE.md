@@ -135,7 +135,13 @@ index objects by exact edition under that same single generation manifest. A
 version-scoped reader can select one edition's artifact; comparisons may need
 several reads. This is not an implemented codec/loader or manifest schema. Keep
 all required objects confirmed before publication and define generation admission,
-selected-index validation and exact location/source bindings before recovery.
+selected-index validation and exact location/source bindings before recovery. The
+accepted [artifact-binding direction](decisions/edition-artifact-binding.md) puts
+count postings and saved passage locations in that edition object without an extra
+ordered-word copy. Its future reader verifies the generation-pinned bytes and
+structural relationships; it relies on the canonical writer for semantic preparation
+agreement. Article bodies are verified before quoting. The old ordered-field location
+reader stays unchanged. Encoding and concrete recovery design remain open.
 
 The accepted [article layout](decisions/article-storage.md) stores separate bounded
 article-data objects so unchanged exact bytes can be reused between generations.

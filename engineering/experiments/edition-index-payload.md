@@ -2,8 +2,10 @@
 
 The accepted [index layout](../decisions/edition-index-layout.md) is one bounded
 object per exact edition under one generation manifest. Neither the index codec
-nor complete recovery bindings are implemented. This experiment informs the next
-data-retention checkpoint; it does not choose a format or implement a loader.
+nor complete recovery bindings are implemented. This experiment informed the accepted
+[artifact-binding direction](../decisions/edition-artifact-binding.md):
+keep counts and saved locations together without another ordered-word copy. It does
+not choose a format or implement a loader.
 
 ## The remaining association
 
@@ -46,7 +48,7 @@ the generation manifest, provider overhead and any compression. They are not a
 production storage forecast, retained heap, latency or a binary-format comparison.
 The input is the existing 38-article Kubernetes sample, not an enterprise corpus.
 
-## Open design checkpoint
+## Accepted direction and remaining design
 
 One credible baseline retains the ordered prepared fields alongside persisted
 postings and locations. Existing field-fingerprint checks remain available; retained
@@ -55,7 +57,7 @@ store and, when using that check, read and hash. Verifying loaded postings again
 those fields would require additional traversal; retaining them alone does not
 prove the postings are semantically correct.
 
-Another design saves count postings and their saved body locations in a single
+The user selected count postings and their saved body locations in a single
 versioned edition artifact, with exact article references. A trusted canonical writer
 produces them together. A reader must verify the actual artifact bytes against its
 reference from the published generation, then validate its schema, counts/statistics,
@@ -72,9 +74,10 @@ Independent rebuild/audit comparisons remain necessary evidence. Both approaches
 already require correct preparation; neither matching hashes nor retained fields
 alone authenticate the publisher or authorize access.
 
-No new reader, bare-hash proof, persistent schema or publication is authorized by
-this experiment. Counts preserve current keyword/BM25 behavior; exact quoted text
-still comes from the retained article. Query preparation needs compatible term rules
+The agreement selects the recovery direction. A concrete new reader and persistent
+schema still require design and review; this experiment implements neither. Counts
+preserve current keyword/BM25 behavior; exact quoted text still comes from the
+retained article. Query preparation needs compatible term rules
 under either design. A single edition can still exceed budgets: persistent index
 blocks, paged metadata, selective readers and safe deletion remain scaling work.
 

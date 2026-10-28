@@ -180,8 +180,14 @@ single generation manifest; read `engineering/decisions/edition-index-layout.md`
 The codec/loader and complete generation schema are not implemented. Confirm all
 required artifacts before publication; loading one edition does not validate every
 other object's body. Preserve absent vs known-empty editions and treat a missing
-object for a declared edition as an error. Resolve ordered-field vs count-only
-recovery bindings before implementing a persisted reader; do not accept bare hashes.
+object for a declared edition as an error. The user chose counts and saved locations
+together without another ordered-word copy; read
+`engineering/decisions/edition-artifact-binding.md`. Verify actual index bytes against
+the authorized generation reference, validate structural/count/location bindings,
+and verify exact article bodies before quoting. Trust canonical preparation, with
+independent scan/rebuild oracles; checksums do not prove semantic correctness. Keep
+`htmlpassagemap.Open` unchanged. Encoding and concrete reader design remain open;
+never substitute a caller-asserted field hash for the old check.
 
 The user and agent build together through decision checkpoints. Proceed with routine
 implementation until a consequential choice needs the user's input. Present the
