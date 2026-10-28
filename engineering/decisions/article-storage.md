@@ -4,7 +4,9 @@ Status: accepted layout (option B). Store derived article data in separate bound
 immutable objects rather than one whole-generation article bundle. Keep one bounded,
 versioned generation manifest, as already chosen. The persisted article schema,
 codec, provenance associations and complete searchable publication remain open.
-The reuse optimization below is a proposal, not an accepted or implemented contract.
+The user has since selected the direction to design
+[verified receipts and HEAD checks](verification-receipts.md). Its detailed protocol
+and persistence are still proposed, not implemented; the current verifier is unchanged.
 
 ## Layout and alternative
 
@@ -77,7 +79,7 @@ optional finishing touches, and this layout does not implement them.
 - Reuse verification must avoid unnecessary full-body transfers under an explicit
   integrity/trust contract, with request counts, recovery and provider tests.
 
-## Proposed next checkpoint: verification receipts
+## Verification direction and remaining checkpoint
 
 A reference already acts as a pointer: collection scope, exact-byte digest and size
 derive an object key. It describes expected bytes, not proof those bytes are there.
@@ -85,13 +87,14 @@ A second marker object or caller-written checksum can also outlive a missing or
 replaced body. HEAD establishes current existence and metadata, not independently
 verified raw SHA-256. An ETag is not our SHA-256.
 
-The recommended direction to discuss is a durable trusted verification receipt:
+The selected direction to design is a durable trusted verification receipt:
 after full verification, record the storage target/namespace, collection, digest,
 length and verification-policy version. Later reuse would require that receipt and
 a metadata/existence check, while normal body reads would still verify length and
 SHA-256. Unknown objects, missing receipts and uncertain first writes would use
-full verification/reconciliation. Receipt persistence and its recovery relationship
-to publication are not designed; a receipt is not publication authority.
+full verification/reconciliation. The linked protocol proposes failure/recovery and
+namespace-trust rules. Receipt persistence remains a user checkpoint; a receipt is
+not publication authority.
 
 This trades a fresh full-body integrity check at import for prior verification plus
 an immutability assumption. It cannot detect same-sized replaced/corrupt bytes merely
