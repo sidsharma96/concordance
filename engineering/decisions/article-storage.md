@@ -5,8 +5,8 @@ immutable objects rather than one whole-generation article bundle. Keep one boun
 versioned generation manifest, as already chosen. The persisted article schema,
 codec, provenance associations and complete searchable publication remain open.
 The user has since selected the direction to design
-[verified receipts and HEAD checks](verification-receipts.md). Its detailed protocol
-and persistence are still proposed, not implemented; the current verifier is unchanged.
+[verified receipts and HEAD checks](verification-receipts.md). PostgreSQL placement and a bounded internal reuse component now exist; strict
+Ensure/Read remain unchanged.
 
 ## Layout and alternative
 
@@ -93,7 +93,7 @@ length and verification-policy version. Later reuse would require that receipt a
 a metadata/existence check, while normal body reads would still verify length and
 SHA-256. Unknown objects, missing receipts and uncertain first writes would use
 full verification/reconciliation. The linked protocol proposes failure/recovery and
-namespace-trust rules. Receipt persistence remains a user checkpoint; a receipt is
+namespace-trust rules. Receipt persistence uses PostgreSQL; a receipt is
 not publication authority.
 
 This trades a fresh full-body integrity check at import for prior verification plus

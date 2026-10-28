@@ -134,8 +134,11 @@ article-data objects so unchanged exact bytes can be reused between generations.
 It keeps that one generation manifest. More objects mean more references and requests;
 the existing adapter still reads every reused body to verify it. The user selected
 the direction to design [verified receipts and HEAD](decisions/verification-receipts.md);
-its detailed protocol and receipt placement remain proposed. A read-only conditional
-HEAD probe passed, but there is no faster implemented path. Persistent indexing,
+PostgreSQL placement is accepted. `objectreuse` now confirms bounded batches through
+catalog receipts and conditional HEAD, while misses and body reads retain full
+verification. Guarded publication rejects stale epochs; strict publication remains
+separate. The [component experiment](experiments/postgres-receipts.md) describes tests,
+read-only live interoperability and unresolved recovery/migration limits. Persistent indexing,
 paged metadata and safe retention/deletion are necessary scaling work before claiming
 million-document support; selective loading and bounded caches also remain open.
 

@@ -138,12 +138,16 @@ metadata alone cannot satisfy the complete searchable-generation import contract
 The accepted `engineering/decisions/article-storage.md` chooses separate bounded
 article-data objects (option B), keeping one generation manifest. Persistent indexing,
 paged metadata and safe retention/deletion are necessary scaling work before claiming
-million-document support. The current verifier still reads whole objects on reuse;
-the user selected the direction to design verified receipts plus HEAD checks in
-`engineering/decisions/verification-receipts.md`. Its detailed protocol and receipt
-placement remain proposed. A read-only R2 conditional HEAD probe passes; there is
-no receipt implementation. Do not silently substitute a marker, HEAD or ETag for
-the current full-read guarantee, or conflate a design review with change approval.
+million-document support. Strict Ensure still reads whole objects on reuse;
+PostgreSQL receipts are accepted and implemented in the bounded `objectreuse` slice;
+read `engineering/experiments/postgres-receipts.md`. `Ensure`/`Read` remain strict;
+receipt hits explicitly use prior verification plus conditional HEAD. Keep proof
+scoped to stable physical bindings and the captured namespace epoch. Receipt-based
+callers must use `PublishInNamespace`; never bypass its quarantine check with strict
+`Publish`. There is no automatic resume/delete, complete importer, production
+migration or hosted PostgreSQL. A read-only R2/local-PostgreSQL probe passes; network
+commit ambiguity, restored-state recovery, audits and scale evidence remain open.
+Do not substitute ETags for SHA-256 or treat design reviews as change approvals.
 
 The user and agent build together through decision checkpoints. Proceed with routine
 implementation until a consequential choice needs the user's input. Present the
