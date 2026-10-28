@@ -158,6 +158,14 @@ invalid ranges. Canonical bytes and input-representation metadata affect exact-b
 reuse. The codec is not a complete manifest, citation schema, source association,
 importer or index. Other formats need deliberate typed schemas, not HTML coercion.
 
+The user chose saved passage locations (option A); read
+`engineering/decisions/saved-passage-locations.md` and its experiment. The bounded
+`htmlpassagemap` component captures body ranges with canonical fields and checks
+exact article/field bindings on open without rebuilding passages. It is not a
+complete index, source association, generation manifest or authorization. Keep
+future published metadata responsible for exact table/index/edition/document pins;
+never serialize temporary snapshot references or treat field hashes as identity.
+
 The user and agent build together through decision checkpoints. Proceed with routine
 implementation until a consequential choice needs the user's input. Present the
 concrete problem, a few credible alternatives with small Go snippets, trade-offs and
