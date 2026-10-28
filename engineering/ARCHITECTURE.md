@@ -174,8 +174,13 @@ metadata and oversized bodies with no partial plan. Admission ceilings are calle
 configured; no automatic splitting or permanent product-size limit is implied.
 The caller must retain the exact unchanged article for all use of the returned
 indices. The [experiment](experiments/structured-passages.md) records the current
-38-page partition and limits. Persisted passage formats remain open; preserving context does not establish
-relevance. The separate baseline ranker counts supplied context equally with body
+38-page partition and limits. The accepted
+[saved-location decision](decisions/saved-passage-locations.md) now has a bounded
+`htmlpassagemap` record: canonical body ranges bind to exact article JSON and prepared
+field contents. Its reader checks those bindings without rebuilding passages; the
+full index, manifest and source/citation associations remain open. See the
+[component experiment](experiments/saved-passage-locations.md). Preserving context
+does not establish relevance. The separate baseline ranker counts supplied context equally with body
 terms. Text preparation is
 a separate component and does not decide which article fields to supply.
 

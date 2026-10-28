@@ -2,7 +2,8 @@
 
 Status: accepted direction. The user chose to keep original Git file/line locations
 optional. A bounded in-memory HTML structure processor now exists; the persisted
-article format and citation API are not implemented. The sketches below illustrate
+[article format](article-json.md) and [saved body locations](saved-passage-locations.md)
+now have bounded components; the complete citation API remains open. The sketches below illustrate
 the choice rather than fix a schema.
 
 ## Required quote, optional origins
@@ -51,7 +52,8 @@ first retrieval experiment. These remain credible options for edit/blame navigat
 Retained-article citations provide a verifiable quote while allowing those maps to
 be added later. Costs include retaining HTML and derived structure and building a
 safe quote reader. The selected article HTML totals about 20.7 MB; derived article
-size and mapping costs are not measured. With H retained HTML bytes, T extracted text,
+JSON size is measured in the [article experiment](../experiments/article-json.md);
+complete provenance-mapping costs remain unmeasured. With H retained HTML bytes, T extracted text,
 K blocks and S origin spans, retained content/metadata grows with H + T + K + S,
 in addition to raw sources and search artifacts. This is a representation cost,
 not an implementation memory bound or performance result.
