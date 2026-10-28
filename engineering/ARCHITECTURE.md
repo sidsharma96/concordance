@@ -95,8 +95,9 @@ article the quote authority for rendered HTML. Verified original Git file/line r
 are optional additional provenance and may name several inputs. Missing mappings
 are valid; invented mappings are not. Keep article identity, block locations, source
 revision and processing version separate. The bounded HTML processor now returns
-owned blocks and nested container intervals. The persisted article schema and
-citation API are not implemented. See the [extraction experiment](experiments/html-extraction.md)
+owned blocks and nested container intervals. A bounded [versioned JSON article codec](decisions/article-json.md) now preserves
+this retained HTML representation through owned bytes and reconstruction. It is
+not the complete manifest, source association or citation API, which remain open. See the [extraction experiment](experiments/html-extraction.md)
 for supported structures and parser limits. The accepted
 [media scope](decisions/media-coverage.md) retains original figures and searches
 authored text first; visual contents remain uninterpreted. Later descriptions of

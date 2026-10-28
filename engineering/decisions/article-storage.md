@@ -2,8 +2,9 @@
 
 Status: accepted layout (option B). Store derived article data in separate bounded
 immutable objects rather than one whole-generation article bundle. Keep one bounded,
-versioned generation manifest, as already chosen. The persisted article schema,
-codec, provenance associations and complete searchable publication remain open.
+versioned generation manifest, as already chosen. The bounded HTML article
+[schema and JSON codec](article-json.md) now exist; provenance associations and
+complete searchable publication remain open.
 The user has since selected the direction to design
 [verified receipts and HEAD checks](verification-receipts.md). PostgreSQL placement and a bounded internal reuse component now exist; strict
 Ensure/Read remain unchanged.
@@ -54,7 +55,9 @@ before reuse. For N calls and B supplied bytes, reused objects still cost N logi
 GET operations and B response bytes, plus hashing/comparison work. New objects use
 an absence GET, conditional PUT and verification GET, at most three SDK operations
 per call with SDK retries disabled. Per-article reuse saves stored bytes; it does
-not currently avoid reading all reused bytes. See the
+not avoid reading all reused bytes on that strict path. The receipt-backed
+`objectreuse` component now uses HEAD for compatible known receipts, with strict
+verification on misses. See the
 [adapter experiment](../experiments/object-storage.md) for exact bounds and limits.
 
 ## Necessary scaling work
@@ -108,8 +111,10 @@ this contract. A lost receipt must cause safe fallback, not invented verificatio
 Keep full verification as the current baseline and oracle. Provider-validated
 checksums are another candidate only after checking supported API/algorithm semantics
 and actual R2 behavior. Custom metadata and multipart/composite checksums are not
-automatically our raw full-object SHA-256. No adapter API, receipt table or faster
-verification path is implemented or authorized by the layout choice.
+automatically our raw full-object SHA-256. The layout choice alone did not authorize a faster verification path. The later
+[receipt decision](verification-receipts.md) records the accepted protocol and the
+now-implemented PostgreSQL/HEAD component; provider-fault and complete recovery
+experiments remain open.
 
 ## Failure sequence and evidence needed
 
