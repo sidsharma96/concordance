@@ -175,6 +175,14 @@ The index is not persisted, does not replace `htmlsearch`, and cannot reconstruc
 ordered fields for `htmlpassagemap.Open`. Phrase/proximity positions are deferred;
 semantic embeddings can consume retained text independently.
 
+The user chose one bounded index object per exact edition under the existing
+single generation manifest; read `engineering/decisions/edition-index-layout.md`.
+The codec/loader and complete generation schema are not implemented. Confirm all
+required artifacts before publication; loading one edition does not validate every
+other object's body. Preserve absent vs known-empty editions and treat a missing
+object for a declared edition as an error. Resolve ordered-field vs count-only
+recovery bindings before implementing a persisted reader; do not accept bare hashes.
+
 The user and agent build together through decision checkpoints. Proceed with routine
 implementation until a consequential choice needs the user's input. Present the
 concrete problem, a few credible alternatives with small Go snippets, trade-offs and

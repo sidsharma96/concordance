@@ -130,6 +130,13 @@ and content representation remain open; source capture alone is not searchable
 publication. Measure metadata before introducing paged layouts and preserve readers
 for retained formats when another layout is introduced.
 
+The accepted [index layout](decisions/edition-index-layout.md) separates bounded
+index objects by exact edition under that same single generation manifest. A
+version-scoped reader can select one edition's artifact; comparisons may need
+several reads. This is not an implemented codec/loader or manifest schema. Keep
+all required objects confirmed before publication and define generation admission,
+selected-index validation and exact location/source bindings before recovery.
+
 The accepted [article layout](decisions/article-storage.md) stores separate bounded
 article-data objects so unchanged exact bytes can be reused between generations.
 It keeps that one generation manifest. More objects mean more references and requests;
