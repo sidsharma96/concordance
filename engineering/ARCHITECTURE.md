@@ -132,8 +132,10 @@ for retained formats when another layout is introduced.
 The accepted [article layout](decisions/article-storage.md) stores separate bounded
 article-data objects so unchanged exact bytes can be reused between generations.
 It keeps that one generation manifest. More objects mean more references and requests;
-the existing adapter still reads every reused body to verify it. Verification receipts
-are a proposed next checkpoint, not a faster implemented path. Persistent indexing,
+the existing adapter still reads every reused body to verify it. The user selected
+the direction to design [verified receipts and HEAD](decisions/verification-receipts.md);
+its detailed protocol and receipt placement remain proposed. A read-only conditional
+HEAD probe passed, but there is no faster implemented path. Persistent indexing,
 paged metadata and safe retention/deletion are necessary scaling work before claiming
 million-document support; selective loading and bounded caches also remain open.
 

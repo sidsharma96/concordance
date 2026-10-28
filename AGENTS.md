@@ -139,8 +139,11 @@ The accepted `engineering/decisions/article-storage.md` chooses separate bounded
 article-data objects (option B), keeping one generation manifest. Persistent indexing,
 paged metadata and safe retention/deletion are necessary scaling work before claiming
 million-document support. The current verifier still reads whole objects on reuse;
-verification receipts are a proposal requiring a separate integrity/trust decision.
-Do not silently substitute a marker, HEAD or ETag for the current full-read guarantee.
+the user selected the direction to design verified receipts plus HEAD checks in
+`engineering/decisions/verification-receipts.md`. Its detailed protocol and receipt
+placement remain proposed. A read-only R2 conditional HEAD probe passes; there is
+no receipt implementation. Do not silently substitute a marker, HEAD or ETag for
+the current full-read guarantee, or conflate a design review with change approval.
 
 The user and agent build together through decision checkpoints. Proceed with routine
 implementation until a consequential choice needs the user's input. Present the
