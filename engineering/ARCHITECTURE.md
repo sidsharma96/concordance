@@ -129,6 +129,14 @@ and content representation remain open; source capture alone is not searchable
 publication. Measure metadata before introducing paged layouts and preserve readers
 for retained formats when another layout is introduced.
 
+The accepted [article layout](decisions/article-storage.md) stores separate bounded
+article-data objects so unchanged exact bytes can be reused between generations.
+It keeps that one generation manifest. More objects mean more references and requests;
+the existing adapter still reads every reused body to verify it. Verification receipts
+are a proposed next checkpoint, not a faster implemented path. Persistent indexing,
+paged metadata and safe retention/deletion are necessary scaling work before claiming
+million-document support; selective loading and bounded caches also remain open.
+
 Write and confirm the required immutable files and manifest before publishing their
 catalog reference in a short PostgreSQL transaction. Uploading an R2 manifest is not
 publication. Queries open one published generation. A failed catalog commit can
