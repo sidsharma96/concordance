@@ -2,8 +2,8 @@
 
 Status: accepted option B. Persist count postings and saved passage locations together
 in each edition's versioned index object, with exact retained-article references.
-Do not retain an additional ordered prepared-word copy for the first reader. This
-settles the recovery direction, not an implemented codec, reader or complete manifest.
+Do not retain an additional ordered prepared-word copy for the first reader. The bounded [binary codec/reader](edition-binary.md) now implements this direction;
+the complete manifest and publication path remain open.
 The [edition layout](edition-index-layout.md) and single generation manifest remain.
 
 ## Follow one recovered result
@@ -33,8 +33,8 @@ Index opening can check article descriptors and ranges against declared block co
 without fetching every article body. Before quoting, fetch the exact referenced
 article, verify its size/hash and supported article format, and check its actual
 block count and the requested range. A missing or mismatched declared body is an
-error, never an empty quote or a fallback to the current website. This is a proposed
-reader sequence; neither it nor its wire schema is implemented. Loading one edition
+error, never an empty quote or a fallback to the current website. The bounded binary reader now implements this sequence; its caller still supplies
+bytes and trusted references. Loading one edition
 does not establish integrity of every other artifact's body.
 
 ## What is trusted, and what is checked
@@ -56,8 +56,8 @@ change cross-store failure handling or permit automatic deletion.
 
 The existing `htmlpassagemap.Open` remains unchanged. It verifies original ordered
 fields, which counts cannot reconstruct. Keep it as a baseline; do not add an entry
-point that accepts an asserted field hash to bypass that check. The new edition
-reader needs its own concrete design, compatibility rules and implementation review.
+point that accepts an asserted field hash to bypass that check. The [binary component](../experiments/binary-edition.md) documents the new edition
+reader and its compatibility/ownership rules.
 
 ## Alternative and cost
 
@@ -86,7 +86,7 @@ on every open or exact intermediate debugging becomes a requirement. An offline
 rebuild audit is a separate alternative to paying that cost on every reader. Revisit
 index blocks/pages when measured edition size or cold opens exceed budgets. Persistent
 indexing, paged metadata and safe retention/deletion remain necessary scaling work.
-The next concrete checkpoint is index encoding and bounded recovery design; the
-article JSON decision does not automatically select an index encoding. The
-[encoding samples](../experiments/edition-index-encoding.md) compare equivalent
-JSON and binary payloads without choosing or implementing the product format.
+The user separately chose binary for the edition index, with JSON inspection;
+article JSON remains unchanged. The [encoding samples](../experiments/edition-index-encoding.md)
+preserve the alternatives and limits of the evidence. Complete published-generation
+bindings and recovery remain the next integration work.

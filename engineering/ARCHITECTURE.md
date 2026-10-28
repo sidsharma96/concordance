@@ -17,10 +17,11 @@ body, all-ancestor heading and notice-label term fields with a canonical passage
 `termsearch.RankBM25` now orders complete matches using combined-field counts and
 selected-edition statistics. `internal/htmlsearch` now binds those fields to borrowed
 retained articles and resolves snapshot-bound references into owned quotes on demand.
-These components do not supply durable asset retention
-or publication.
+The bounded `htmledition` binary codec now recovers one edition
+with counts and saved ranges, verified on-demand article quotes and JSON inspection.
+These components do not supply complete asset retention or publication.
 Provider fault and full
-recovery experiments remain open. The complete importer, Markdown processor, index,
+recovery experiments remain open. The complete importer, Markdown processor, published-generation retrieval engine,
 crawler, query API and shared library are not implemented.
 
 ## Scope and boundaries
@@ -133,15 +134,17 @@ for retained formats when another layout is introduced.
 The accepted [index layout](decisions/edition-index-layout.md) separates bounded
 index objects by exact edition under that same single generation manifest. A
 version-scoped reader can select one edition's artifact; comparisons may need
-several reads. This is not an implemented codec/loader or manifest schema. Keep
+several reads. The bounded HTML codec/reader now exists; the complete manifest schema is open. Keep
 all required objects confirmed before publication and define generation admission,
 selected-index validation and exact location/source bindings before recovery. The
 accepted [artifact-binding direction](decisions/edition-artifact-binding.md) puts
 count postings and saved passage locations in that edition object without an extra
-ordered-word copy. Its future reader verifies the generation-pinned bytes and
+ordered-word copy. Its reader verifies independently expected bytes and
 structural relationships; it relies on the canonical writer for semantic preparation
 agreement. Article bodies are verified before quoting. The old ordered-field location
-reader stays unchanged. Encoding and concrete recovery design remain open.
+reader stays unchanged. The accepted [binary format](decisions/edition-binary.md) has
+a bounded codec and inspection tool; full generation metadata/publication integration
+remains open. See the [component experiment](experiments/binary-edition.md).
 
 The accepted [article layout](decisions/article-storage.md) stores separate bounded
 article-data objects so unchanged exact bytes can be reused between generations.
