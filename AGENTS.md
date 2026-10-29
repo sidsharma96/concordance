@@ -311,7 +311,8 @@ they exercise actual invariants or failure boundaries, not as a quota.
 
 ## Writing and the private book
 
-Read `docs/src/PROSE-STYLE-GUIDE.md` before prose changes. Teach a beginning CS student
+Read `docs/src/PROSE-STYLE-GUIDE.md` and `docs/BOOK-RULES.md` (the rules every learning
+book shares; they win for lessons) before prose changes. Teach a beginning CS student
 without assuming Go knowledge. Follow one concrete execution; explain terms and
 syntax when first needed. Show ownership, waiting, durable state and partial failures.
 Compare plausible alternatives with the same example. Label illustrative examples,
