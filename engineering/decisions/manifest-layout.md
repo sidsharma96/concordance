@@ -2,8 +2,9 @@
 
 Status: accepted design. The user chose one bounded, versioned immutable manifest
 containing the generation's complete document metadata and object references, then
-selected explicit versioned JSON for its encoding. The codec and complete persisted
-schema are not implemented.
+selected explicit versioned JSON for its encoding. A bounded initial Git/HTML
+metadata codec now exists in `internal/generationmanifest`. The complete importer,
+trusted preparation handoff, input fingerprint and publication integration remain open.
 
 ## Layout and invariants
 
@@ -23,9 +24,11 @@ Bound serialized bytes and decoded entries/metadata, validate compatible version
 and cross-field relationships, and reject excessive or incomplete input explicitly.
 A byte cap alone is not a decoded-memory budget. These bounds are application input
 limits; the repository's 1 MiB source-file policy does not set the runtime format.
-The fields, canonical writer, strict codec and numeric limits remain to be specified
-against concrete representations before implementation. JSON is the chosen encoding,
-not permission to accept arbitrary metadata or a default decoder's permissive behavior.
+The initial Git/HTML fields and strict codec are described in the
+[component experiment](../experiments/generation-manifest.md). Caller-supplied logical
+limits are implemented; production admission policy and trusted source-preparation
+semantics remain open. JSON is not permission to accept arbitrary metadata or a
+default decoder's permissive behavior.
 
 One manifest describes a complete generation, not a promise to rebuild everything
 on every query. Opening/caching lifetimes and per-query reads are not fixed by this
@@ -37,8 +40,8 @@ the complete searchable generation promised by the import contract.
 Use explicit versioned JSON for this manifest. Keep the selected retained-article
 JSON and per-edition binary index formats independent. Readable metadata helps the
 first recovery/debugging sequence and needs no new Go dependency or code generator.
-It does not establish smaller files or faster opening; neither has been measured
-for the complete schema, which does not exist yet.
+It does not establish smaller files or faster opening; no comparative format
+measurement exists. A synthetic fixture's encoded size is not a capacity result.
 
 Relevant precedents were researched before this choice:
 
@@ -78,6 +81,15 @@ The catalog's independent exact-byte hash/length must still be checked before
 parsing a fetched manifest. A manifest hash does not replace the separate trusted
 captured-input fingerprint or grant authority to publish or read.
 
+The implemented writer fixes JSON field order and preserves admitted list order,
+including index article slots. It does not canonicalize logically unordered capture
+requests or calculate their fingerprint. The reader checks independently expected
+bytes and collection/generation before exposing immutable state. `Objects` lists
+distinct referenced bytes to confirm; `OpenEdition`, `Resolve` and `VerifyArticle`
+connect selected index slots to exact source metadata and article/image associations.
+These checks cannot certify a producer, infer complete acquisition, confirm remote
+existence or publish the generation.
+
 Revisit binary when measured encoded bytes, decoded allocations/admission or cold
 opens justify its extra workflow, or a concrete shared-schema/language requirement
 appears. Retain readers for retained formats. Changing encoding does not add paging,
@@ -111,7 +123,7 @@ These are not measurements of manifest size, decoded heap, search capacity or an
 enterprise workload. A flat list gives the first publication/recovery experiment a
 simple baseline without cross-page failure and validation machinery.
 
-Measure actual serialized metadata and decoded memory once the schema exists. Revisit
+Measure serialized metadata and decoded memory on real admitted captures. Revisit
 paging when those approach agreed limits or generation-opening cost is unacceptable
 on the representative corpus. Introduce an explicit new format and retain readers
 for retained older generations; a version field does not perform migration for us.

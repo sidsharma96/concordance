@@ -2,8 +2,9 @@
 
 Status: accepted design. The user accepted refined option A after external research:
 separate document identity from location, use reliable source-provided identity where
-available, and start Git with explicit source-plus-path identity. No complete manifest,
-source registration, identity codec or cross-move registry is implemented.
+available, and start Git with explicit source-plus-path identity. The bounded initial
+Git/HTML manifest now records these bindings; source registration, trusted complete
+capture, publication integration and a cross-move registry remain unimplemented.
 
 ## Contract
 
@@ -21,8 +22,9 @@ do not authorize access or guarantee one atomic snapshot across provider reads.
 
 For the first Git profile, native identity is the exact full repository-relative
 path, not a path relative to the selected import directory. Compare path bytes
-case-sensitively without Unicode normalization. Encoding or rejecting non-UTF8 Git
-paths needs an explicit wire rule before implementation. A rename changes this key;
+case-sensitively without Unicode normalization. The initial Git/HTML wire rejects
+non-UTF8, control characters, backslashes and unclean paths explicitly; it never
+normalizes them into another key. A rename changes this key;
 reusing a path retains path identity, not proof of conceptual continuity. Git revision
 and edition are separate from the logical key.
 
@@ -40,8 +42,9 @@ Git's rename classifications. Keep those relationships separate from authorizati
 
 The coordinator's trusted captured-input description must include the resolved
 source/document/location/revision associations and processing settings before binding
-the saved import key and making remote writes. Full canonical encoding, source
-registration and manifest schema remain open; this decision is not their approval.
+the saved import key and making remote writes. The supported manifest binding schema
+now exists, but full captured-input comparison, source registration and preparation
+remain open; metadata encoding does not establish them.
 Bound aggregate and per-source entry counts, per-key/path bytes and total metadata
 before allocation. Exact admission ceilings still need a concrete workload.
 

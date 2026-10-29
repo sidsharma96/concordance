@@ -214,6 +214,16 @@ func (e *Edition) ID() string {
 	}
 	return e.id
 }
+
+// ArticleCount is the number of logical article slots, including shared bytes.
+// A valid known-empty edition has zero slots; Open's error distinguishes absence.
+func (e *Edition) ArticleCount() int {
+	if !e.valid() {
+		return 0
+	}
+	return len(e.articles)
+}
+
 func (e *Edition) Article(position int) (ArticleRef, error) {
 	if !e.valid() || position < 0 || position >= len(e.articles) {
 		return ArticleRef{}, ErrInvalid
