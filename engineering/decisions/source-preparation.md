@@ -3,7 +3,9 @@
 Status: accepted boundary and a Kubernetes-only offline rendering experiment.
 The user agreed that capturing and understanding different sources can vary, while
 retrieval remains shared. Rendering is not a requirement for every future source
-and is not implemented as a production ingestion path.
+and is not implemented as a managed production build runner. The later accepted
+[prepared-capture handoff](prepared-capture.md) lets an internal importer consume
+trusted prepared HTML, retaining this separation.
 
 ## Responsibilities
 
@@ -34,14 +36,16 @@ The [render experiment](../experiments/kubernetes-rendering.md) produced all sel
 YAML example. It also found one generated print page per edition. These observations
 do not establish full extraction coverage, determinism, production build equivalence,
 search relevance or citation recovery. A [bounded extraction follow-up](../experiments/html-extraction.md)
-now exercises HTML profiles and structure in memory. There is no production
-preparation/import pipeline or complete media processing.
+now exercises HTML profiles and structure in memory. `preparedimport` now composes
+trusted prepared HTML with complete Git membership, declared dependency capture,
+processing and publication. A managed preparation runner and complete visual-content
+processing remain open.
 
 Do not let a build see application credentials or execute templates in a query
 process. Pin and bound each experimental build; missing inputs or failed rendering
 are explicit failures. A container is a limited resource/access boundary, not proof
-that arbitrary hostile templates are safe. Production admission and build provenance
-still need a concrete implementation and tests.
+that arbitrary hostile templates are safe. The internal importer admits bounded
+trusted captures; independently verified build execution/provenance remains open.
 
 ## Alternatives, costs and revisit
 

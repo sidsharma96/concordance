@@ -27,9 +27,13 @@ captured inputs and full processing rules separately from generated results.
 validates prospective artifacts, confirms objects and publishes through the guarded
 catalog. `PublishCaptured` derives input identity after those checks; the older
 `Publish` accepts an internal trusted request. It is not the full importer or proof of
-source preparation/completeness.
+source preparation/completeness. `internal/preparedimport` now composes complete
+pinned Git membership, trusted prepared HTML, declared dependency capture, actual
+processing and that publisher. Its in-process source registration is trusted; it
+does not prove rendering provenance or dependency completeness.
 Provider fault and full
-recovery experiments remain open. The complete importer, Markdown processor, published-generation retrieval engine,
+recovery experiments remain open. A managed preparer, durable capture journal,
+import/query CLI, Markdown processor, published-generation retrieval service,
 crawler, query API and shared library are not implemented.
 
 ## Scope and boundaries
@@ -68,7 +72,13 @@ Kubernetes-specific rendering outside core retrieval. A bounded offline referenc
 render verifies selected notices/examples across the three pins, not complete
 extraction or a production ingestion pipeline. Other sources may supply Markdown,
 captured HTML, provider blocks or exports through different acquisition/preparation
-paths. Format processors and site profiles preserve content and citations; ranking
+paths. The accepted [prepared-capture handoff](decisions/prepared-capture.md) now
+lets the first internal importer consume those trusted build outputs. It independently
+checks complete Git Markdown membership and captures declared dependencies, while
+the preparer asserts HTML provenance and complete rendering inputs. Missing, extra
+or duplicate page mappings fail the import. Slots sort by source ID and full Git
+path. A future managed runner must emit this same handoff; it is not an arbitrary
+recipe executor. Format processors and site profiles preserve content and citations; ranking
 does not need to know which builder or provider produced them.
 
 Do not build a dynamic plugin system yet. First demonstrate the boundary with Git
@@ -93,8 +103,9 @@ ID plus exact repository-relative path; future adapters can use reliable native 
 under their own lifecycle contract. Renames are not automatically joined. Complete
 generation metadata must bind article slots to these identities without conflating
 shared bytes or rejecting the same logical key across different editions. Source
-registration, trusted capture and publication integration remain unimplemented; the
-initial Git/HTML manifest codec now preserves and checks these metadata bindings.
+registration remains trusted in-process configuration; the initial Git/HTML manifest
+preserves these bindings, and `preparedimport` constructs them from actual pinned
+capture and processing. External transport and persistent registration remain open.
 
 An explicitly version-scoped query considers eligible passages from that version.
 Do not retrieve one global winner and drop it afterward, leaving an artificial miss.

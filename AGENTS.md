@@ -15,8 +15,8 @@ fault and complete recovery experiments remain open. `internal/htmlarticle` now
 extracts bounded text/structure from retained HTML with explicit profiles and image
 references. `internal/htmlpassage` builds bounded structure-first block ranges with
 heading and group references. `internal/termsearch` now supplies a bounded, edition-scoped
-match-all scan over prepared terms. No complete importer, Markdown processor,
-raw-text query path or retrieval engine exists yet.
+match-all scan over prepared terms. No Markdown processor, import/query CLI or
+public retrieval API exists yet.
 `internal/termsearch.RankBM25` now orders complete matches with combined-field BM25;
 read `engineering/decisions/lexical-ranking.md`. Keep all-passage statistics within
 the selected edition, distinct-query semantics, complete bounded output and stable
@@ -59,6 +59,19 @@ Hugo dependencies explicitly before claiming complete searchable content.
 Read `engineering/decisions/source-preparation.md`: Kubernetes rendering is a
 source-specific offline reference experiment, outside core search. It does not
 require every source to build a website or establish a production HTML processor.
+Read `engineering/decisions/prepared-capture.md`: option A accepts a trusted prepared
+Git/HTML handoff; any future managed runner must produce that same handoff.
+`internal/preparedimport` now independently captures complete selected Markdown,
+checks exact page membership, captures declared dependencies and original images,
+and builds/publishes articles, edition indexes and a manifest. Source registration
+is trusted in-process configuration; HTML provenance and rendering-dependency
+completeness remain preparer assertions. Retain producer/output-exclusion policy in
+the recipe; never execute it. Slots sort by source ID and full Git path. Borrow
+request aliases unchanged through synchronous return; enforce aggregate and component
+budgets and nonwaiting instance admission. Missing inputs fail before binding/writes;
+publication uncertainty still applies afterward. No managed renderer, capture journal,
+public upload API, CLI packaging or automatic resume exists. The synthetic local
+Git/PostgreSQL/HTTP recovery test is not a real-corpus or new live R2 import.
 The bounded extraction follow-up is in `engineering/experiments/html-extraction.md`.
 Keep image references distinct from retained image bytes or interpreted visual content;
 read `engineering/decisions/media-coverage.md`: retain original figures and search
@@ -176,7 +189,8 @@ read `engineering/experiments/generation-publication.md`. It consumes internal t
 `catalog.Request` identity; never expose caller digests as the complete Import API.
 `PublishCaptured` now derives the saved-key fingerprint after full artifact preflight
 from that checked manifest and explicit processing rules. It accepts no caller digest;
-source preparation, complete actual inventory/provenance and the full importer remain
+source provenance remains a trusted producer assertion. `preparedimport` now composes
+complete Git membership and actual processing; transport and a managed preparer remain
 open. Preserve no S3 access on a completed binding, all local checks before binding,
 all artifacts before root before guarded publication, wrapped uncertain errors and
 zero partial results. Inputs are borrowed unchanged through return. One nonwaiting
