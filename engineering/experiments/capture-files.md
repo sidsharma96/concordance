@@ -131,11 +131,9 @@ files account for 875,136,654 reference bytes and an estimated 299,068,899 disti
 bytes. The largest candidate dependency is a 16,483,782-byte unrelated blog photo.
 Mounted files are a conservative superset, not proof every file was read.
 
-This evidence does not justify silently dropping dependency paths or merely raising
-import limits. The original renderer disabled static copying, but templates can have
-other dependencies, and output segmentation is not input isolation. Dependency scope
-and a restricted-input preparation experiment need review before a real-corpus
-publication. No Kubernetes generation was published in this slice.
+The original renderer disabled static copying, but templates can have other
+dependencies, and output segmentation is not input isolation. The restricted trial
+below tests an explicit candidate instead of inferring dependencies from output paths.
 
 The command for an already prepared trusted capture is:
 
@@ -149,3 +147,81 @@ paths, 10,128 file refs, 8 KiB strings, 4 MiB string values and a 15-second coop
 deadline. They are audit ceilings, not importer or production capacity promises.
 Selected private checks, fixtures and reference results remain under ignored
 `.tools/reviews/capture-files-*` and `.tools/reviews/capture-dependency-cost.txt`.
+
+## Restricted inputs reproduced all 38 reference pages
+
+Status: observed local source-preparation experiment, not an accepted retention
+policy or a change to importer limits. No generation was published or R2 object
+written. The [original render reference](kubernetes-rendering.md) still defines the
+three Git pins, toolchain identities, fixed clock and production-equivalence limits.
+
+Before rendering, the disposable probe selected the old archive roots except the
+complete `static` tree, then added back every original figure referenced by the
+selected articles under the existing extraction profile. All other English content,
+templates, assets, data, translations, configuration and lock inputs stayed in scope.
+The resulting exact path/blob/size list was saved before each build. Git exports
+were checked against that list, including every staged file's framed Git blob hash;
+these repositories use SHA-1 Git object IDs, separately from application SHA-256.
+
+Each build reused the recorded cached image, disallowed pulls, ran without network
+and mounted the restricted source read-only. It used the previous two-CPU, 2 GiB,
+180-second ceilings, with 256 MiB scratch/output mounts and a 64 MiB captured output
+tar ceiling. These are configured limits, not measured CPU, latency or peak heap.
+Image-provided tools and cached modules remain inputs identified by the image.
+
+One successful trial per edition produced the same length and SHA-256 for every
+selected HTML page. The original figure was present in each edition's staged Git
+inputs; its two article references per edition remain unchanged. Generated print
+pages stay excluded. Owned containers and source staging were removed after success;
+input lists, commands, output archives, recipes and selected HTML remain private.
+
+| Edition | Declared dependency occurrences | All staged raw bytes | Largest input bytes | Equal HTML pages |
+| --- | ---: | ---: | ---: | ---: |
+| 1.34 | 3,326 | 69,205,324 | 5,605,160 | 10 |
+| 1.35 | 3,441 | 81,742,686 | 5,605,160 | 13 |
+| 1.36 | 3,640 | 91,926,965 | 5,605,160 | 15 |
+
+The following comparison includes selected Markdown **and** dependencies in both
+raw-byte columns. It excludes rendered HTML, recipes, indexes, manifests and metadata.
+Occurrences count a file at each edition/path; distinct bytes group by Git blob ID.
+
+| Input profile | Dependency occurrences | Raw occurrence bytes | Estimated distinct raw bytes |
+| --- | ---: | ---: | ---: |
+| Whole original staged set | 12,830 | 1,117,825,155 | 406,129,047 |
+| Checked restricted set | 10,407 | 242,874,975 | 107,573,369 |
+
+The derived reduction in estimated distinct raw bytes is 73.51%. These Git metadata
+counts estimate byte sharing; they are not R2 measurements, request counts, peak
+memory or a measured import/query speedup. The new 743,407-byte descriptor passes
+`ReadDirectory` with 38 pages and 20,695,889 HTML/recipe reference bytes. The recipe
+and preparation identity differ from the broad candidate; adopting it requires a
+new intended operation key, not replacement inputs under an existing saved key.
+
+As inspected in October 2026, Bazel 8.4.0's
+[`SandboxHelpers.processInputFiles` and `SandboxInputs.limitedCopy`](https://github.com/bazelbuild/bazel/blob/526225e836561307065f2389c9e2163064fda084/src/main/java/com/google/devtools/build/lib/sandbox/SandboxHelpers.java)
+construct/filter sandbox inputs from declared action inputs. Its workload is build
+actions; we borrow the explicit-input principle for an offline documentation trial,
+not Bazel's machinery or a universal hermeticity guarantee. Hugo 0.144.2's
+[`ShouldExcludeCoarse`/`ShouldExcludeFine`](https://github.com/gohugoio/hugo/blob/098c68fd18f48031a7145bedab30cbaede48858f/hugolib/segments/segments.go)
+filter rendered outputs rather than file access; its current
+[segment documentation](https://gohugo.io/configuration/segments/) also preserves
+the full site/page object graph. That is why the trial kept the other English inputs
+instead of assuming only 38 Markdown files suffice.
+
+This result supports the restricted profile at these pins and environments. It
+does not prove a minimal dependency set, repeated-build determinism, a locked cold
+rebuild or equivalence to the public Kubernetes site. Any new pin or preparation
+change needs renewed validation. Retention scope and first-corpus input/object
+budgets remain a user decision before actual import; Concordance still consumes
+trusted prepared captures rather than managing a website builder.
+
+Selected evidence is `.tools/reviews/restricted-render-trial-2.txt` and
+`restricted-render-cost.txt` in the same private directory. The disposable probe
+sources are `.tools/probes/restricted-render/main.go` and
+`.tools/probes/restricted-cost/main.go`; rerunning the former requires the retained
+original capture, pinned Git objects, cached images and local Docker, and creates a
+fresh owned experiment directory. It is not a normal contributor prerequisite.
+The initial harness attempt failed before rendering because Go's tar reader exposes
+Git's global PAX metadata header. The corrected probe accepts its single known
+commit comment while preserving strict payload/path/blob checks; the failed attempt
+is retained separately in `restricted-render-trial.txt`.
