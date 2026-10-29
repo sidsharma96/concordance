@@ -126,8 +126,13 @@ Use external object storage from the first write/read/recovery slice, not as a f
 port of a local-only engine. The accepted [catalog/publication split](decisions/catalog-publication.md)
 uses PostgreSQL as the publication authority and R2 for immutable source, index and
 manifest objects. The private R2 bucket `concordance-data` is provisioned; its live
-creation/reuse/fresh-client-read probe passes. Hosted PostgreSQL is not
-provisioned. Neither backend is required to build the scaffold.
+creation/reuse/fresh-client-read probe passes. A dedicated catalog database now runs
+on the existing droplet PostgreSQL server with a restricted trusted writer, SSH
+access and a small connection pool; see the [hosting decision](decisions/catalog-hosting.md).
+Live synthetic publication and encrypted off-host catalog restore/read pass with
+surviving R2 objects and restored receipts quarantined. This is not production HA,
+unattended backup or restored publication trust. Neither backend is required to build
+the scaffold.
 Verify the operations used through the S3 client adapter on the actual R2 service.
 
 The accepted [object-sharing decision](decisions/object-sharing.md) uses immutable
