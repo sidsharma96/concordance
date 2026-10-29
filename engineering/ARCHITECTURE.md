@@ -132,11 +132,11 @@ deletion remains disabled until shared references, readers and in-flight work ar
 protected. The [adapter experiment](experiments/object-storage.md) describes the
 first bounded implementation and the limited live R2 evidence.
 
-The accepted [manifest layout](decisions/manifest-layout.md) is one bounded,
-versioned manifest per generation. It keeps the first recovery path and validation
-simple. Encoded bytes and decoded metadata need explicit bounds. The full schema
-and content representation remain open; source capture alone is not searchable
-publication. Measure metadata before introducing paged layouts and preserve readers
+The accepted [manifest layout and encoding](decisions/manifest-layout.md) is one
+bounded, versioned JSON manifest per generation. It keeps the first recovery path
+and validation simple. Encoded bytes and decoded metadata need explicit bounds.
+The strict codec, full schema and content representation remain open; source capture
+alone is not searchable publication. Measure metadata before introducing paged layouts and preserve readers
 for retained formats when another layout is introduced.
 
 The accepted [index layout](decisions/edition-index-layout.md) separates bounded
