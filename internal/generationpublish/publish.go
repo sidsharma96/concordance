@@ -1,6 +1,6 @@
 // Package generationpublish composes bounded artifact checks, immutable object
 // confirmation and guarded catalog publication. It is not a complete importer or
-// a constructor of trusted captured-input fingerprints.
+// proof of source completeness or truthful preparation.
 package generationpublish
 
 import (
@@ -74,7 +74,35 @@ func New(c *catalog.Store, o *objectstore.Store, n catalog.Namespace, l Limits) 
 // have committed. Reuse the saved key to discover an uncertain outcome. No retry,
 // resume, activation or deletion runs automatically. Cancellation is cooperative.
 func (p *Publisher) Publish(ctx context.Context, trusted catalog.Request, candidateID string, manifest []byte, artifacts [][]byte) (catalog.Publication, error) {
-	if ctx == nil || p == nil || p.permit == nil || trusted.Collection != p.namespace.Binding().Collection {
+	return p.publish(ctx, trusted, candidateID, manifest, artifacts, nil)
+}
+
+// CapturedRules binds the trusted producer's actual rules to a bounded comparison.
+// MaxHashBytes counts framed input metadata, independently of payload admission.
+type CapturedRules struct {
+	Input        generationmanifest.InputRules
+	MaxHashBytes int
+}
+
+// PublishCaptured derives saved-key input identity from the fully preflighted
+// manifest and actual processing rules. It excludes candidate IDs and derived
+// output bytes. The owner must still authorize access and supply complete truthful
+// captures/provenance and matching rules: this is not a public Import endpoint.
+// Borrowed buffers, rules and aliases must remain unchanged through return.
+// Validation/fingerprinting precedes Bind and all remote work; completed retries
+// retain full local preflight. Failure/uncertainty and admission match Publish.
+func (p *Publisher) PublishCaptured(ctx context.Context, key, candidateID string, manifest []byte, artifacts [][]byte, rules CapturedRules) (catalog.Publication, error) {
+	return p.publish(ctx, catalog.Request{Key: key}, candidateID, manifest, artifacts, &rules)
+}
+
+func (p *Publisher) publish(ctx context.Context, trusted catalog.Request, candidateID string, manifest []byte, artifacts [][]byte, rules *CapturedRules) (catalog.Publication, error) {
+	if ctx == nil || p == nil || p.permit == nil {
+		return catalog.Publication{}, ErrInvalid
+	}
+	if rules != nil {
+		trusted.Collection = p.namespace.Binding().Collection
+	}
+	if trusted.Collection != p.namespace.Binding().Collection {
 		return catalog.Publication{}, ErrInvalid
 	}
 	if err := ctx.Err(); err != nil {
@@ -92,6 +120,14 @@ func (p *Publisher) Publish(ctx context.Context, trusted catalog.Request, candid
 	input, err := p.preflight(ctx, trusted.Collection, candidateID, manifest, artifacts)
 	if err != nil {
 		return catalog.Publication{}, fmt.Errorf("validate publication artifacts: %w", err)
+	}
+	if rules != nil {
+		digest, err := input.manifest.InputFingerprint(ctx, rules.Input, rules.MaxHashBytes)
+		if err != nil {
+			return catalog.Publication{}, fmt.Errorf("compare captured inputs: %w", err)
+		}
+		trusted.FingerprintVersion = generationmanifest.InputFingerprintVersion
+		trusted.Fingerprint = digest
 	}
 	key, err := p.objects.Key(input.root)
 	if err != nil {

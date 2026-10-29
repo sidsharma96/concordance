@@ -21,9 +21,12 @@ The bounded `htmledition` binary codec now recovers one edition
 with counts and saved ranges, verified on-demand article quotes and JSON inspection.
 `internal/generationmanifest` now saves bounded Git/HTML source, edition, capture and
 document bindings and checks selected index/article associations. It does not implement
-the trusted preparer or captured-input fingerprint. `internal/generationpublish` now
+the trusted preparer. Its bounded input-fingerprint method now compares declared
+captured inputs and full processing rules separately from generated results.
+`internal/generationpublish` now
 validates prospective artifacts, confirms objects and publishes through the guarded
-catalog using an internal trusted request. It is not the full importer or proof of
+catalog. `PublishCaptured` derives input identity after those checks; the older
+`Publish` accepts an internal trusted request. It is not the full importer or proof of
 source preparation/completeness.
 Provider fault and full
 recovery experiments remain open. The complete importer, Markdown processor, published-generation retrieval engine,
@@ -329,3 +332,16 @@ cancellation and retention contracts with concrete examples. Preserve
 the accepted import completion promise while choosing those mechanisms. The public
 query API is not fixed to explicit generation IDs, and the initial small corpus is
 not a permanent size limit.
+
+## Captured-input equality
+
+The [input-identity decision](decisions/captured-input-identity.md) compares complete
+captured inputs and processing rules, excluding candidate generation IDs and derived
+article/index bytes. Actual HTML changes conflict under the same saved key, even
+when searchable words do not change. Keep original captures for exact retries.
+`Manifest.InputFingerprint` implements a separate versioned framed comparison;
+`Publisher.PublishCaptured` derives and binds it only after complete artifact checks.
+The [experiment](experiments/captured-input-identity.md) records fields, ordering,
+bounds and local retry evidence. Neither method proves acquisition completeness or
+truthful preparation. The production source preparer and durable capture/resume
+protocol remain separate work.
