@@ -16,6 +16,11 @@ be resolved and retained as a concrete revision before it identifies captured in
 Preserve the captured bytes in our object storage; a Git hash alone does not ensure
 that an upstream repository will keep them available.
 
+The [document-identity decision](document-identity.md) selects configured source ID
+plus exact repository-relative path for initial Git identity. Keep location and
+revision separate so a future source can supply a reliable native ID. Cross-move
+lineage is deferred; content equality and inferred renames do not establish it.
+
 A source adapter answers where material comes from and how it can be acquired:
 authentication, document identity, revision observations, bounded acquisition and
 deletion/permission observations. A processor answers how the captured content is

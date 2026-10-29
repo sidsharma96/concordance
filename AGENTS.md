@@ -96,6 +96,13 @@ as separate concepts. Missing versions must not silently fall back. A content ha
 is not a document ID, release label or authorization check. Immutable objects do
 not make catalog publication or reader lifetimes lock-free.
 
+Read `engineering/decisions/document-identity.md`: keep document key, observed
+location and captured revision separate. Use reliable source-native IDs under an
+explicit adapter contract; Git starts with configured source ID plus exact full
+repository-relative path. No cross-move registry or automatic identity inference.
+Bind each edition-local slot to its logical document and exact representations;
+reject duplicate keys within a source/edition, while allowing keys across editions.
+
 Include external object storage in the first storage milestone. R2 through an S3
 client adapter stores immutable files/manifests; PostgreSQL is the publication
 authority. This split is accepted in `engineering/decisions/catalog-publication.md`;
@@ -211,6 +218,11 @@ The user and agent build together through decision checkpoints. Proceed with rou
 implementation until a consequential choice needs the user's input. Present the
 concrete problem, a few credible alternatives with small Go snippets, trade-offs and
 a recommendation; ask the user to choose and discuss before implementing that choice.
+Before presenting options or recommending one, research relevant established
+open-source projects or documented production systems using primary docs/source.
+Pin implementation references and explain each example's workload, mechanism and
+limits. Distinguish observations, inferences and proposals; popularity is not proof
+of fit. Bring this evidence to the initial comparison, without waiting to be asked.
 Explain checkpoints as if the user is a newcomer: start with one concrete example
 and a small purposeful visual, define new terms, then compare short Go snippets.
 Keep the first explanation simple; introduce deeper detail through the discussion.
