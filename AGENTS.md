@@ -82,6 +82,10 @@ Unreferenced directory files are not read; Git membership remains importer work.
 The 38-page reference audit does not establish a minimal/complete renderer dependency
 inventory or publish a real-corpus generation; read
 `engineering/experiments/capture-files.md` before treating it as import-ready.
+Git blob acquisition now uses one bounded sequential batch process per selection,
+after complete tree/count/byte admission. Read `engineering/experiments/git-capture.md`.
+Preserve exact header/body/hash/separator/EOF checks, independent result buffers and
+waited cancellation/error cleanup. There is no cross-call process cache or parallelism.
 The accepted `engineering/decisions/kubernetes-build-inputs.md` selects the checked
 restricted preparation profile for this first corpus: retain other known build inputs
 and referenced original figures, excluding unrelated static files. Revalidate changed

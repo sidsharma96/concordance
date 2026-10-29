@@ -101,6 +101,7 @@ func Capture(ctx context.Context, request Request, limits Limits) (Snapshot, err
 		return Snapshot{}, err
 	}
 	result := Snapshot{Commit: request.Commit, Directory: request.Directory}
+	selected := []treeEntry{}
 	var total int64
 	for _, entry := range entries {
 		if entry.mode == "160000" || entry.mode == "040000" {
@@ -124,20 +125,13 @@ func Capture(ctx context.Context, request Request, limits Limits) (Snapshot, err
 		if !cleanPath(name, false) {
 			return Snapshot{}, ErrUnsupported
 		}
-		result.Documents = append(result.Documents, Document{Path: name, BlobID: entry.id})
+		entry.name = name
+		selected = append(selected, entry)
 	}
 	// Check every advertised size before reading any selected blob.
-	selected := 0
-	for _, entry := range entries {
-		if !strings.HasSuffix(entry.name, ".md") {
-			continue
-		}
-		file, err := captureBlob(ctx, request.Repository, entry, result.Documents[selected].Path)
-		if err != nil {
-			return Snapshot{}, err
-		}
-		result.Documents[selected] = file
-		selected++
+	result.Documents, err = captureBlobs(ctx, request.Repository, selected)
+	if err != nil {
+		return Snapshot{}, fmt.Errorf("read selected Git blobs: %w", err)
 	}
 	if err := ctx.Err(); err != nil {
 		return Snapshot{}, err
