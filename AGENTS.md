@@ -159,8 +159,12 @@ not proof of existence. `OpenEdition` checks selected index article refs/order;
 `Resolve` copies one slot's provenance without exporting private slices;
 `VerifyArticle` checks exact bytes, HTML/profile and all image block/address bindings.
 These are metadata/structure checks, not acquisition completeness or producer proof.
-Keep captured-input fingerprint, source registration, trusted preparation and actual
-publication with their caller; they remain unimplemented. Recipe bytes are retained
+`Manifest.InputFingerprint` now supplies bounded input comparison for trusted Git/HTML
+metadata and full processing profiles; read `engineering/decisions/captured-input-identity.md`
+and its experiment. It excludes candidate IDs and derived article/index refs,
+normalizes unordered metadata and preserves document slots. Keep actual capture,
+source registration, completeness, provenance and matching processing with the
+trusted producer; metadata hashing cannot establish them. Recipe bytes are retained
 configuration input, never executed here. V1 is Git/HTML only; reject unsupported
 paths/formats instead of normalizing or coercing future sources. Global counts apply
 before decode append; per-source quotas/cross-references follow bounded decode.
@@ -170,7 +174,9 @@ Raw-source archival metadata alone cannot satisfy the searchable import contract
 `catalog.Bind`, receipt-based object/root confirmation and `PublishInNamespace`;
 read `engineering/experiments/generation-publication.md`. It consumes internal trusted
 `catalog.Request` identity; never expose caller digests as the complete Import API.
-Source preparation, actual inventory/fingerprint construction and full importer remain
+`PublishCaptured` now derives the saved-key fingerprint after full artifact preflight
+from that checked manifest and explicit processing rules. It accepts no caller digest;
+source preparation, complete actual inventory/provenance and the full importer remain
 open. Preserve no S3 access on a completed binding, all local checks before binding,
 all artifacts before root before guarded publication, wrapped uncertain errors and
 zero partial results. Inputs are borrowed unchanged through return. One nonwaiting
@@ -311,7 +317,8 @@ they exercise actual invariants or failure boundaries, not as a quota.
 
 ## Writing and the private book
 
-Read `docs/src/PROSE-STYLE-GUIDE.md` before prose changes. Teach a beginning CS student
+Read `docs/src/PROSE-STYLE-GUIDE.md` and `docs/BOOK-RULES.md` (the rules every learning
+book shares; they win for lessons) before prose changes. Teach a beginning CS student
 without assuming Go knowledge. Follow one concrete execution; explain terms and
 syntax when first needed. Show ownership, waiting, durable state and partial failures.
 Compare plausible alternatives with the same example. Label illustrative examples,

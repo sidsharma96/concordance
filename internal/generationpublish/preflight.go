@@ -8,6 +8,7 @@ import (
 )
 
 type prepared struct {
+	manifest  *generationmanifest.Manifest
 	root      objectstore.Ref
 	artifacts []objectstore.Ref
 }
@@ -95,7 +96,7 @@ func (p *Publisher) preflight(ctx context.Context, collection, id string, manife
 	if err := ctx.Err(); err != nil {
 		return prepared{}, err
 	}
-	return prepared{root: root, artifacts: refs}, nil
+	return prepared{manifest: m, root: root, artifacts: refs}, nil
 }
 
 func manifestRef(r objectstore.Ref) generationmanifest.Ref {
