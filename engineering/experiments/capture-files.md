@@ -150,8 +150,9 @@ Selected private checks, fixtures and reference results remain under ignored
 
 ## Restricted inputs reproduced all 38 reference pages
 
-Status: observed local source-preparation experiment, not an accepted retention
-policy or a change to importer limits. No generation was published or R2 object
+Status: observed local source-preparation experiment supporting the accepted
+[restricted-input retention profile](../decisions/kubernetes-build-inputs.md).
+It changes no importer limits. No generation was published or R2 object
 written. The [original render reference](kubernetes-rendering.md) still defines the
 three Git pins, toolchain identities, fixed clock and production-equivalence limits.
 
@@ -211,8 +212,8 @@ instead of assuming only 38 Markdown files suffice.
 This result supports the restricted profile at these pins and environments. It
 does not prove a minimal dependency set, repeated-build determinism, a locked cold
 rebuild or equivalence to the public Kubernetes site. Any new pin or preparation
-change needs renewed validation. Retention scope and first-corpus input/object
-budgets remain a user decision before actual import; Concordance still consumes
+change needs renewed validation. The checked retention scope is now accepted;
+first-corpus input/object budgets still need actual importer evidence. Concordance consumes
 trusted prepared captures rather than managing a website builder.
 
 Selected evidence is `.tools/reviews/restricted-render-trial-2.txt` and

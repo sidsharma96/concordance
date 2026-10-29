@@ -114,5 +114,85 @@ go test -count=1 -v ./internal/preparedimport -run 'TestPreparedMembership'
 Use the dedicated test-database setup in CONTRIBUTING for the full package and
 `make verify`. Never run schema-creating tests on the shared hosted catalog.
 Selected local output/check/review evidence is ignored under
-`.tools/reviews/prepared-import-*`. No new live R2 writes, Kubernetes import,
-performance benchmark or Cloudflare book deployment is claimed.
+`.tools/reviews/prepared-import-*`. No new live R2 writes, Kubernetes publication
+or Cloudflare book deployment is claimed.
+
+## Local construction of the selected Kubernetes corpus
+
+The accepted [restricted build-input profile](../decisions/kubernetes-build-inputs.md)
+now passes the actual local construction step with three editions, all 38 documents
+and six image references. This is preparation and component-reader validation, not
+an invocation of the publisher, its full preflight, catalog or object service.
+
+A disposable Go test overlay calls the existing unexported build method through a
+test-only wrapper, leaving the runtime API and checkout source unchanged. The normal
+constructor checks registrations/limits using an inert publisher that is never called.
+The probe opens the generated manifest and every edition, checks the full referenced
+artifact inventory and all article bindings, derives the captured-input fingerprint,
+then searches `ContainerRestartRules` and verifies quotes in each edition (two matches
+per edition). It checks pipeline associations, not reader-judged retrieval quality.
+
+| Constructed data | Bytes or count |
+| --- | ---: |
+| Distinct staged bodies including root | 5,017 objects |
+| Distinct staged bytes including root | 132,106,434 |
+| Largest staged body | 5,605,160 bytes |
+| Generation manifest | 2,444,076 bytes |
+| Raw file occurrences | 242,874,975 bytes |
+| HTML occurrences | 20,693,182 bytes |
+| Article JSON occurrences | 1,024,848 bytes |
+| Three edition indexes | 368,252 bytes |
+
+The single exploratory run used Go 1.27.2, macOS 26.6.2 arm64, Git 2.54.0
+(Apple Git-157), eight logical CPUs and 16 GiB host memory. The time from starting
+the file read through construction was 218.277 seconds. After a forced GC while
+keeping request and bundle live, Go reported 173,255,360 heap bytes and 185,008,128
+heap-in-use bytes; total allocation through that snapshot was 1,465,123,240 bytes
+across 5,376,697 allocations and 22 GC cycles. One sample gives no spread estimate.
+Caches and host load were uncontrolled. This is not peak RSS, peak live heap,
+end-to-end import latency or a production capacity benchmark.
+
+Caller ceilings for this experiment were 512 MiB input occurrences, 256 MiB distinct
+staging, 10,000 objects including root, 8 MiB per object and a 16 MiB fingerprint
+preimage. The Go runtime had a 768 MiB soft memory target; it is not an OS memory
+limit. Exact component ceilings are retained in `.tools/probes/import-cost/` with
+the overlay and test-only source. These settings admit this experiment, not automatic
+production defaults. The original file handoff and pinned Git objects remain available.
+Raw output is `.tools/reviews/restricted-import-cost-1.txt`.
+
+The current Git reader starts one `cat-file blob` process per raw file occurrence:
+38 selected Markdown plus 10,407 dependencies imply 10,445 blob subprocesses,
+separately from commit/tree metadata commands. This is a derived operation count,
+not a profile proving how much of the 218.277 seconds it caused. A separate disposable
+transport comparison reads the first 128 path-ordered staged inputs of at most
+64 KiB in edition 1.36, totaling 878,317 occurrence bytes. Both paths verify exact
+length and framed Git blob SHA-1. Three alternating-order executions produced:
+
+| Sample | One Git process per file | One `git cat-file --batch` process |
+| --- | ---: | ---: |
+| 1 | 2.630087250 s | 0.068889416 s |
+| 2 | 2.571436833 s | 0.021415209 s |
+| 3 | 2.308249875 s | 0.020930375 s |
+
+Both methods read the same IDs and bytes; the batch prototype checks exact bounded
+headers, body lengths/hashes, separators, final EOF and process success. It uses a
+bounded prebuilt stdin request and drains stdout while Go's exec machinery owns the
+input writer. Cancellation/cleanup is limited exploratory code, not an approved
+runtime reader. The micro-comparison excludes listing, extraction, indexing,
+publication and peak memory; it does not predict a complete-import speedup. Its
+source is `.tools/probes/git-read-cost/main.go`; raw results are
+`.tools/reviews/git-read-cost.txt`.
+
+As inspected in October 2026, Git 2.54.0's
+[`batch_objects`](https://github.com/git/git/blob/94f057755b7941b321fd11fec1b2e3ca5313a4e0/builtin/cat-file.c)
+reads successive requested objects in one process, with header/body framing exercised
+by its [cat-file tests](https://github.com/git/git/blob/94f057755b7941b321fd11fec1b2e3ca5313a4e0/t/t1006-cat-file.sh).
+GitLab's documented [Gitaly cat-file cache](https://docs.gitlab.com/administration/gitaly/configure_gitaly/#cat-file-cache)
+also reuses batch processes across repository RPCs to reduce repeated setup. That
+service workload motivates reuse; a cross-request cache would add process lifetime,
+resource and isolation policy beyond our single synchronous capture. These examples
+support investigating batching, not adopting a long-lived process pool.
+
+Whether to introduce one bounded batch reader per capture is a separate design
+checkpoint. No cross-call process cache, goroutine pool, concurrency change or Git
+transport implementation is accepted by this measurement record.
