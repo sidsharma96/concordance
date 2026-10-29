@@ -144,10 +144,11 @@ use conditional creation and reconcile uncertain writes. Do not overwrite mismat
 or enable automatic deletion. Keep collection policy with Concordance.
 
 The accepted `engineering/decisions/manifest-layout.md` chooses one bounded,
-versioned manifest per generation. Reject excessive or incomplete metadata; keep
-retained-format compatibility explicit. Layout is settled, while the complete
-schema, content representations and fingerprint remain open. Raw-source archival
-metadata alone cannot satisfy the complete searchable-generation import contract.
+versioned JSON manifest per generation. Reject excessive or incomplete metadata;
+use closed versions/fields and strict Unicode, duplicate, null and number validation.
+Keep retained-format compatibility explicit. Layout and encoding are settled; the
+strict codec, complete schema, content representations and fingerprint remain open.
+Raw-source archival metadata alone cannot satisfy the complete searchable-generation import contract.
 
 The accepted `engineering/decisions/article-storage.md` chooses separate bounded
 article-data objects (option B), keeping one generation manifest. Persistent indexing,
