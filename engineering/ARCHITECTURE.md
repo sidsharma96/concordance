@@ -31,6 +31,10 @@ source preparation/completeness. `internal/preparedimport` now composes complete
 pinned Git membership, trusted prepared HTML, declared dependency capture, actual
 processing and that publisher. Its in-process source registration is trusted; it
 does not prove rendering provenance or dependency completeness.
+`internal/capturefiles` now reads that handoff from a bounded versioned JSON
+descriptor and separate regular HTML/recipe files. It verifies and returns the same
+owned payload buffers, leaving source routing and operation identity with its caller.
+`tools/captureaudit` checks these local files without acquiring Git or publishing.
 Provider fault and full
 recovery experiments remain open. A managed preparer, durable capture journal,
 import/query CLI, Markdown processor, published-generation retrieval service,

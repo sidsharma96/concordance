@@ -72,6 +72,16 @@ budgets and nonwaiting instance admission. Missing inputs fail before binding/wr
 publication uncertainty still applies afterward. No managed renderer, capture journal,
 public upload API, CLI packaging or automatic resume exists. The synthetic local
 Git/PostgreSQL/HTTP recovery test is not a real-corpus or new live R2 import.
+`internal/capturefiles` now transports this handoff through bounded versioned JSON
+metadata and root-relative regular HTML/recipe files. Read each unique payload once,
+verify and import the same owned buffer; returned aliases may share that buffer.
+Keep routes/credentials and operation identity outside the descriptor. The native
+`os.Root` boundary is not a filesystem snapshot or hostile-local-filesystem sandbox.
+Unreferenced directory files are not read; Git membership remains importer work.
+`tools/captureaudit` checks the handoff without Git, a renderer or remote stores.
+The 38-page reference audit does not establish a minimal/complete renderer dependency
+inventory or publish a real-corpus generation; read
+`engineering/experiments/capture-files.md` before treating it as import-ready.
 The bounded extraction follow-up is in `engineering/experiments/html-extraction.md`.
 Keep image references distinct from retained image bytes or interpreted visual content;
 read `engineering/decisions/media-coverage.md`: retain original figures and search
@@ -139,8 +149,9 @@ implementation without repeated confirmation.
 The accepted core import contract is synchronous publication: successful return gives
 a complete generation ready for queries selecting its ID. Read
 `engineering/decisions/import-completion.md`; preserve its outcome/cancellation caveats
-and unresolved storage choices. It is an accepted design, not implemented behavior.
-Generation IDs in the API sketches do not require users to supply them in searches.
+and unresolved storage choices. The bounded trusted prepared importer implements this result;
+the public Import/query commands remain open. Generation IDs in the API sketches
+do not require users to supply them in searches.
 A small initial corpus is a starting experiment, not a permanent product limit.
 
 The accepted request contract is a complete snapshot; read
