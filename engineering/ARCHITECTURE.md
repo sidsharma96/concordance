@@ -79,6 +79,14 @@ page may retain its product version while acquiring a new revision. The same byt
 can legitimately occur in several documents or editions. A hash permits integrity
 checks or scoped deduplication; it does not identify or authorize a logical document.
 
+The accepted [document-identity direction](decisions/document-identity.md) separates
+logical key, observed location and exact revision. Git starts with configured source
+ID plus exact repository-relative path; future adapters can use reliable native IDs
+under their own lifecycle contract. Renames are not automatically joined. Complete
+generation metadata must bind article slots to these identities without conflating
+shared bytes or rejecting the same logical key across different editions. Source
+registration, the identity codec and complete manifest remain unimplemented.
+
 An explicitly version-scoped query considers eligible passages from that version.
 Do not retrieve one global winner and drop it afterward, leaving an artificial miss.
 A missing edition returns no eligible results, with an explanation; broader fallback
