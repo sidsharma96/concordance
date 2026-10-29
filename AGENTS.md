@@ -82,6 +82,11 @@ Unreferenced directory files are not read; Git membership remains importer work.
 The 38-page reference audit does not establish a minimal/complete renderer dependency
 inventory or publish a real-corpus generation; read
 `engineering/experiments/capture-files.md` before treating it as import-ready.
+The accepted `engineering/decisions/kubernetes-build-inputs.md` selects the checked
+restricted preparation profile for this first corpus: retain other known build inputs
+and referenced original figures, excluding unrelated static files. Revalidate changed
+pins/preparation; do not infer minimal dependencies from selected output or silently
+omit required inputs. This sets no production admission or heap limits.
 The bounded extraction follow-up is in `engineering/experiments/html-extraction.md`.
 Keep image references distinct from retained image bytes or interpreted visual content;
 read `engineering/decisions/media-coverage.md`: retain original figures and search
@@ -279,6 +284,7 @@ The user and agent build together through decision checkpoints. Proceed with rou
 implementation until a consequential choice needs the user's input. Present the
 concrete problem, a few credible alternatives with small Go snippets, trade-offs and
 a recommendation; ask the user to choose and discuss before implementing that choice.
+Ask questions in plain text; do not use clickable/tappable input widgets.
 Before presenting options or recommending one, research relevant established
 open-source projects or documented production systems using primary docs/source.
 Pin implementation references and explain each example's workload, mechanism and
