@@ -19,6 +19,9 @@ selected-edition statistics. `internal/htmlsearch` now binds those fields to bor
 retained articles and resolves snapshot-bound references into owned quotes on demand.
 The bounded `htmledition` binary codec now recovers one edition
 with counts and saved ranges, verified on-demand article quotes and JSON inspection.
+`internal/generationmanifest` now saves bounded Git/HTML source, edition, capture and
+document bindings and checks selected index/article associations. It does not implement
+the trusted preparer, captured-input fingerprint or catalog publication integration.
 These components do not supply complete asset retention or publication.
 Provider fault and full
 recovery experiments remain open. The complete importer, Markdown processor, published-generation retrieval engine,
@@ -85,7 +88,8 @@ ID plus exact repository-relative path; future adapters can use reliable native 
 under their own lifecycle contract. Renames are not automatically joined. Complete
 generation metadata must bind article slots to these identities without conflating
 shared bytes or rejecting the same logical key across different editions. Source
-registration, the identity codec and complete manifest remain unimplemented.
+registration, trusted capture and publication integration remain unimplemented; the
+initial Git/HTML manifest codec now preserves and checks these metadata bindings.
 
 An explicitly version-scoped query considers eligible passages from that version.
 Do not retrieve one global winner and drop it afterward, leaving an artificial miss.
@@ -135,8 +139,9 @@ first bounded implementation and the limited live R2 evidence.
 The accepted [manifest layout and encoding](decisions/manifest-layout.md) is one
 bounded, versioned JSON manifest per generation. It keeps the first recovery path
 and validation simple. Encoded bytes and decoded metadata need explicit bounds.
-The strict codec, full schema and content representation remain open; source capture
-alone is not searchable publication. Measure metadata before introducing paged layouts and preserve readers
+The initial strict Git/HTML metadata codec now exists; trusted source preparation,
+input fingerprint and full publication remain open. Source capture alone is not
+searchable publication. Measure metadata before introducing paged layouts and preserve readers
 for retained formats when another layout is introduced.
 
 The accepted [index layout](decisions/edition-index-layout.md) separates bounded
@@ -145,6 +150,8 @@ version-scoped reader can select one edition's artifact; comparisons may need
 several reads. The bounded HTML codec/reader now exists; the complete manifest schema is open. Keep
 all required objects confirmed before publication and define generation admission,
 selected-index validation and exact location/source bindings before recovery. The
+bounded manifest component now checks the selected index's exact article refs/order
+and resolves its slots; see the [experiment](experiments/generation-manifest.md). The
 accepted [artifact-binding direction](decisions/edition-artifact-binding.md) puts
 count postings and saved passage locations in that edition object without an extra
 ordered-word copy. Its reader verifies independently expected bytes and

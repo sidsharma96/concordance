@@ -146,9 +146,19 @@ or enable automatic deletion. Keep collection policy with Concordance.
 The accepted `engineering/decisions/manifest-layout.md` chooses one bounded,
 versioned JSON manifest per generation. Reject excessive or incomplete metadata;
 use closed versions/fields and strict Unicode, duplicate, null and number validation.
-Keep retained-format compatibility explicit. Layout and encoding are settled; the
-strict codec, complete schema, content representations and fingerprint remain open.
-Raw-source archival metadata alone cannot satisfy the complete searchable-generation import contract.
+Keep retained-format compatibility explicit. The bounded initial Git/HTML codec now
+exists in `internal/generationmanifest`; read `engineering/experiments/generation-manifest.md`.
+It owns immutable opened metadata; `Objects` is a distinct-byte confirmation list,
+not proof of existence. `OpenEdition` checks selected index article refs/order;
+`Resolve` copies one slot's provenance without exporting private slices;
+`VerifyArticle` checks exact bytes, HTML/profile and all image block/address bindings.
+These are metadata/structure checks, not acquisition completeness or producer proof.
+Keep captured-input fingerprint, source registration, trusted preparation and actual
+publication with their caller; they remain unimplemented. Recipe bytes are retained
+configuration input, never executed here. V1 is Git/HTML only; reject unsupported
+paths/formats instead of normalizing or coercing future sources. Global counts apply
+before decode append; per-source quotas/cross-references follow bounded decode.
+Raw-source archival metadata alone cannot satisfy the searchable import contract.
 
 The accepted `engineering/decisions/article-storage.md` chooses separate bounded
 article-data objects (option B), keeping one generation manifest. Persistent indexing,
