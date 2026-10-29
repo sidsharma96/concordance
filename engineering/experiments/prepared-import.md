@@ -193,6 +193,29 @@ service workload motivates reuse; a cross-request cache would add process lifeti
 resource and isolation policy beyond our single synchronous capture. These examples
 support investigating batching, not adopting a long-lived process pool.
 
-Whether to introduce one bounded batch reader per capture is a separate design
-checkpoint. No cross-call process cache, goroutine pool, concurrency change or Git
-transport implementation is accepted by this measurement record.
+The [bounded sequential batch reader](git-capture.md#bounded-batch-framing-and-process-lifetime)
+now implements this local transport without changing public contracts or storage
+formats. It uses one blob process per nonempty selection: six for three Markdown
+and three dependency selections, instead of 10,445. Metadata commands remain separate.
+The per-file transport remains a real-Git test oracle; no cross-call cache or pool
+is introduced.
+
+Three sequential executions of the same local-construction probe with that reader
+produced the same input fingerprint, document/image counts, staged object counts,
+byte totals, index lengths and verified query results as the original run:
+
+| Sample | Local construction seconds | Heap bytes after GC | Allocated bytes through snapshot |
+| --- | ---: | ---: | ---: |
+| 1 | 1.952906083 | 138,030,608 | 497,491,200 |
+| 2 | 2.140234708 | 138,033,200 | 497,550,256 |
+| 3 | 2.143338000 | 138,023,712 | 497,399,200 |
+
+The environment, workload, probe counters and soft runtime target match the original
+observation. Caches/host load were uncontrolled, including a concurrent race-test
+process during the third execution; these are exploratory observations rather than
+a controlled repeated A/B benchmark. The original path has one timing sample only.
+Retained heap is a forced-GC snapshot, not peak memory. This does not measure remote
+publication or predict larger-corpus latency. Raw logs are
+`.tools/reviews/restricted-import-batch-cost-{2,3,4}.txt`; the first development run
+is retained separately. The main cost result is eliminating per-object startup while
+keeping the admitted snapshot and verification semantics.

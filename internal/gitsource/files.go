@@ -100,16 +100,12 @@ func CaptureFiles(ctx context.Context, request FilesRequest, limits FileLimits) 
 		}
 		total += entry.size
 	}
-	result := FilesSnapshot{Commit: request.Commit, Files: make([]Document, 0, len(entries))}
-	for _, entry := range entries {
-		file, err := captureBlob(ctx, request.Repository, entry, entry.name)
-		if err != nil {
-			return FilesSnapshot{}, err
-		}
-		result.Files = append(result.Files, file)
+	files, err := captureBlobs(ctx, request.Repository, entries)
+	if err != nil {
+		return FilesSnapshot{}, fmt.Errorf("read selected Git files: %w", err)
 	}
 	if err := ctx.Err(); err != nil {
 		return FilesSnapshot{}, err
 	}
-	return result, nil
+	return FilesSnapshot{Commit: request.Commit, Files: files}, nil
 }

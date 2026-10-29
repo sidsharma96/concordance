@@ -16,11 +16,7 @@ import (
 func run(ctx context.Context, repository string, maxBytes int64, arguments ...string) ([]byte, error) {
 	childContext, cancel := context.WithCancel(ctx)
 	defer cancel()
-	args := []string{"--no-replace-objects", "--no-lazy-fetch", "--no-optional-locks", "--literal-pathspecs", "-C", repository}
-	cmd := exec.CommandContext(childContext, "git", append(args, arguments...)...)
-	cmd.Env = gitEnvironment()
-	cmd.Stderr = io.Discard
-	cmd.WaitDelay = time.Second
+	cmd := gitCommand(childContext, repository, arguments...)
 	output := cappedOutput{remaining: maxBytes, cancel: cancel}
 	cmd.Stdout = &output
 	err := cmd.Run()
@@ -31,6 +27,15 @@ func run(ctx context.Context, repository string, maxBytes int64, arguments ...st
 		return nil, errors.Join(err, ctx.Err())
 	}
 	return output.buffer.Bytes(), nil
+}
+
+func gitCommand(ctx context.Context, repository string, arguments ...string) *exec.Cmd {
+	args := []string{"--no-replace-objects", "--no-lazy-fetch", "--no-optional-locks", "--literal-pathspecs", "-C", repository}
+	cmd := exec.CommandContext(ctx, "git", append(args, arguments...)...)
+	cmd.Env = gitEnvironment()
+	cmd.Stderr = io.Discard
+	cmd.WaitDelay = time.Second
+	return cmd
 }
 
 func gitEnvironment() []string {
