@@ -107,7 +107,13 @@ Include external object storage in the first storage milestone. R2 through an S3
 client adapter stores immutable files/manifests; PostgreSQL is the publication
 authority. This split is accepted in `engineering/decisions/catalog-publication.md`;
 the private R2 bucket `concordance-data` exists and its opt-in creation/reuse/read
-probe passes with locally configured credentials. No hosted PostgreSQL backend is provisioned. Uploading
+probe passes with locally configured credentials. A dedicated catalog now runs on
+the existing droplet PostgreSQL server; read `engineering/decisions/catalog-hosting.md`
+and `engineering/experiments/droplet-catalog.md`. Use its restricted runtime login
+through SSH; never run schema-creating test suites there. The writer is trusted,
+not an adversarial SQL boundary. Encrypted off-host backup and a quarantined isolated
+restore/read pass for a synthetic fixture with surviving R2 bodies; scheduled backups,
+second protected key custody and production recovery targets remain open. Uploading
 a manifest alone is not publication.
 Confirm required remote writes before the catalog transaction, handle ambiguous
 outcomes explicitly, and leave automatic deletion disabled in the first storage
@@ -182,8 +188,9 @@ receipt hits explicitly use prior verification plus conditional HEAD. Keep proof
 scoped to stable physical bindings and the captured namespace epoch. Receipt-based
 callers must use `PublishInNamespace`; never bypass its quarantine check with strict
 `Publish`. There is no automatic resume/delete, complete importer, production
-migration or hosted PostgreSQL. A read-only R2/local-PostgreSQL probe passes; network
-commit ambiguity, restored-state recovery, audits and scale evidence remain open.
+migration. A read-only R2/local-PostgreSQL probe passes; the separate droplet drill
+checks quarantined restored namespaces and strict published reads. Network commit
+ambiguity, restoring publication trust, audits and scale evidence remain open.
 Do not substitute ETags for SHA-256 or treat design reviews as change approvals.
 
 The user selected versioned JSON for retained article files. `internal/htmlarticlejson`
