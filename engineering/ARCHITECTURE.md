@@ -21,8 +21,10 @@ The bounded `htmledition` binary codec now recovers one edition
 with counts and saved ranges, verified on-demand article quotes and JSON inspection.
 `internal/generationmanifest` now saves bounded Git/HTML source, edition, capture and
 document bindings and checks selected index/article associations. It does not implement
-the trusted preparer, captured-input fingerprint or catalog publication integration.
-These components do not supply complete asset retention or publication.
+the trusted preparer or captured-input fingerprint. `internal/generationpublish` now
+validates prospective artifacts, confirms objects and publishes through the guarded
+catalog using an internal trusted request. It is not the full importer or proof of
+source preparation/completeness.
 Provider fault and full
 recovery experiments remain open. The complete importer, Markdown processor, published-generation retrieval engine,
 crawler, query API and shared library are not implemented.
@@ -181,7 +183,10 @@ leave unreferenced objects; a lost commit reply can hide a successful publicatio
 A PostgreSQL transaction cannot roll back remote writes. Keep automatic deletion
 disabled in the first storage slice until reader/in-flight-work protection and safe
 orphan cleanup are specified. The decision record defines the cross-store failure
-matrix and required experiments.
+matrix and required experiments. The bounded [publication component](experiments/generation-publication.md)
+now exercises local PostgreSQL with S3 HTTP fixtures, including rejection after remote
+confirmation and a namespace fence. It still consumes internal trusted fingerprint
+metadata rather than constructing the full captured input.
 
 The accepted [import completion decision](decisions/import-completion.md) is synchronous
 publication: success returns a complete generation ready for queries selecting its ID.
@@ -195,7 +200,8 @@ without the writer's local files. The accepted [retry contract](decisions/import
 uses a saved operation key: identical retries recover the original result; changed
 inputs under that key conflict. The [catalog experiment](experiments/import-catalog.md)
 specifies the first concrete metadata operations. Capture/comparison rules,
-cancellation, hosting and the full cross-store path still need implementation/design.
+the complete cancellation/recovery contract, hosting and real-provider cross-store
+recovery still need implementation/design.
 Do not borrow Rewind's acknowledgment contract implicitly. Bound input bytes, pending
 work, retries, remote reads and cache memory. Start with one publishing writer until
 measurements justify coordinating more.

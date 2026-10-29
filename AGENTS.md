@@ -160,6 +160,18 @@ paths/formats instead of normalizing or coercing future sources. Global counts a
 before decode append; per-source quotas/cross-references follow bounded decode.
 Raw-source archival metadata alone cannot satisfy the searchable import contract.
 
+`internal/generationpublish` now composes bounded Git/HTML artifact validation,
+`catalog.Bind`, receipt-based object/root confirmation and `PublishInNamespace`;
+read `engineering/experiments/generation-publication.md`. It consumes internal trusted
+`catalog.Request` identity; never expose caller digests as the complete Import API.
+Source preparation, actual inventory/fingerprint construction and full importer remain
+open. Preserve no S3 access on a completed binding, all local checks before binding,
+all artifacts before root before guarded publication, wrapped uncertain errors and
+zero partial results. Inputs are borrowed unchanged through return. One nonwaiting
+caller per instance is admission, not distributed ownership. Retain bounded RAM as
+the first composition; file staging needs measured pressure and streaming consumers,
+not an unsupported claim of bounded whole-process heap or million-document support.
+
 The accepted `engineering/decisions/article-storage.md` chooses separate bounded
 article-data objects (option B), keeping one generation manifest. Persistent indexing,
 paged metadata and safe retention/deletion are necessary scaling work before claiming
