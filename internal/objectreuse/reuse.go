@@ -15,6 +15,9 @@ var ErrInvalid = errors.New("invalid object reuse input")
 type Limits struct {
 	MaxObjects    int
 	MaxInputBytes int64
+	// MaxConcurrentObjects bounds active object chains per Ensure call. Zero
+	// preserves sequential operation; explicit values must be between 1 and 8.
+	MaxConcurrentObjects int
 }
 
 // Store borrows clients and a captured namespace. Their owners configure durable
@@ -28,7 +31,7 @@ type Store struct {
 }
 
 func New(c *catalog.Store, o *objectstore.Store, n catalog.Namespace, l Limits) (*Store, error) {
-	if c == nil || o == nil || n.ID() == "" || n.Binding() != o.Binding() || l.MaxObjects <= 0 || l.MaxInputBytes <= 0 {
+	if c == nil || o == nil || n.ID() == "" || n.Binding() != o.Binding() || l.MaxObjects <= 0 || l.MaxInputBytes <= 0 || l.MaxConcurrentObjects < 0 || l.MaxConcurrentObjects > 8 {
 		return nil, ErrInvalid
 	}
 	return &Store{c, o, n, l}, nil
@@ -50,6 +53,8 @@ func deadline(ctx context.Context) error {
 // Keep every input alias unchanged until return. Success is NOT publication; callers
 // must confirm all generation objects and use catalog.PublishInNamespace. Warm
 // distinct objects use HEAD; missing receipts use strict creation/full verification.
+// Workers borrow inputs and are all joined before return, even on error. The
+// concurrency ceiling is per call; callers still bound simultaneous calls.
 func (s *Store) Ensure(ctx context.Context, bodies [][]byte) ([]objectstore.Ref, error) {
 	if e := deadline(ctx); e != nil {
 		return nil, e
@@ -87,29 +92,11 @@ func (s *Store) Ensure(ctx context.Context, bodies [][]byte) ([]objectstore.Ref,
 	if e != nil {
 		return nil, e
 	}
-	proofs := make([]objectstore.Verified, 0, len(unique))
-	for i, r := range unique {
-		if e = ctx.Err(); e != nil {
-			return nil, e
-		}
-		if receipts[i].Found() {
-			e = s.objects.Check(ctx, r, receipts[i].ETag())
-		} else {
-			var proof objectstore.Verified
-			proof, e = s.objects.EnsureVerified(ctx, bodies[inputs[i]])
-			if e == nil {
-				var evidenceErr error
-				_, evidenceErr = proof.Evidence()
-				if evidenceErr == nil {
-					proofs = append(proofs, proof)
-				} else if !errors.Is(evidenceErr, objectstore.ErrNoValidator) {
-					return nil, evidenceErr
-				}
-			}
-		}
-		if e != nil {
-			return nil, s.failure(ctx, e)
-		}
+	proofs, e := s.confirm(ctx, bodies, inputs, unique, receipts)
+	if e != nil {
+		// Peer cancellation must not cancel the quarantine operation. Every worker
+		// has joined; the original caller's deadline still governs this attempt.
+		return nil, s.failure(ctx, e)
 	}
 	if len(proofs) > 0 {
 		if e = s.catalog.RecordVerified(ctx, s.namespace, proofs, s.limits.MaxObjects); e != nil {

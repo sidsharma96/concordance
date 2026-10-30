@@ -93,16 +93,17 @@ reuse and provider conditions were uncontrolled. Successful small GETs do not mo
 missing GETs, conditional PUTs, larger objects, throttling or complete publication.
 No full-import speedup, peak-memory or production capacity is measured.
 
-## Next checkpoint: bounded confirmation overlap
+## Accepted follow-up: bounded confirmation overlap
 
 The existing sequential path is the simplest alternative and a useful oracle. It
-has one active object confirmation but serializes remote waits. A proposed alternative
+has one active object confirmation but serializes remote waits. The accepted [follow-up](../decisions/confirmation-concurrency.md)
 permits at most eight simultaneous object confirmations **inside the existing bounded
-batch**, keeping each object's strict creation/reuse protocol. Write concurrency and
-failure work change, so this remains a user decision. No concurrency implementation
-or accepted default follows from this record.
+batch**, keeping each object's strict creation/reuse protocol. The bounded internal
+implementation and its local fault evidence are described in the
+[concurrency experiment](confirmation-concurrency.md). This interrupted run itself
+used the sequential implementation; its record is not a concurrent-write measurement.
 
-The proposed path must retain batch count/byte admission, independent result positions
+The accepted path must retain batch count/byte admission, independent result positions
 and unchanged borrowed buffers until all workers join. On failure, cancel remaining
 work, wait for every worker, preserve material integrity/uncertain-write causes and
 handle quarantine without losing it to peer cancellation. Return no partial refs,
