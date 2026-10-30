@@ -154,7 +154,7 @@ func setup(t *testing.T) fixture {
 	if e != nil {
 		t.Fatal(e)
 	}
-	reuse, e := New(c, objects, n, Limits{4, 2048})
+	reuse, e := New(c, objects, n, Limits{MaxObjects: 4, MaxInputBytes: 2048})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -189,7 +189,7 @@ func TestStrictThenFreshPoolReuseAndRead(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	reuse, _ := New(c, f.objects, ns, Limits{4, 2048})
+	reuse, _ := New(c, f.objects, ns, Limits{MaxObjects: 4, MaxInputBytes: 2048})
 	again, e := reuse.Ensure(f.ctx, bodies)
 	if e != nil || len(again) != len(refs) {
 		t.Fatal(again, e)

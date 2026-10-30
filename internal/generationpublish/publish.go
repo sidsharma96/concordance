@@ -22,7 +22,7 @@ var (
 	ErrBusy    = errors.New("generation publisher already has a caller")
 )
 
-// Limits are positive logical ceilings, not exact heap or CPU quotas. Objects and
+// Limits are logical ceilings, not exact heap or CPU quotas. Objects and
 // InputBytes count every supplied artifact plus the manifest. Each must fit a
 // batch. Codec metadata, maps, index state, decoded articles and GC add memory.
 type Limits struct {
@@ -31,6 +31,9 @@ type Limits struct {
 	Manifest                     generationmanifest.Limits
 	Edition                      htmledition.Limits
 	Article                      htmlarticlejson.Limits
+	// Zero preserves sequential confirmation. Explicit values must be 1..8;
+	// the limit applies inside one count/byte-admitted batch, not across publishers.
+	MaxConcurrentObjects int
 }
 
 // Publisher borrows clients and an already-authorized, captured namespace. Their
@@ -51,7 +54,7 @@ func New(c *catalog.Store, o *objectstore.Store, n catalog.Namespace, l Limits) 
 	if !validLimits(l) {
 		return nil, ErrInvalid
 	}
-	r, err := objectreuse.New(c, o, n, objectreuse.Limits{MaxObjects: l.MaxBatchObjects, MaxInputBytes: l.MaxBatchBytes})
+	r, err := objectreuse.New(c, o, n, objectreuse.Limits{MaxObjects: l.MaxBatchObjects, MaxInputBytes: l.MaxBatchBytes, MaxConcurrentObjects: l.MaxConcurrentObjects})
 	if err != nil {
 		return nil, fmt.Errorf("configure publication confirmation: %w", err)
 	}

@@ -89,7 +89,10 @@ waited cancellation/error cleanup. There is no cross-call process cache or paral
 The first real-corpus publication attempt is interrupted and unpublished; read
 `engineering/experiments/kubernetes-publication.md`. Its saved key, exact capture and
 namespace receipts remain for deliberate recovery, with no deletion. Bounded parallel
-object confirmation is a pending user checkpoint, not implemented behavior. Do not
+object confirmation is accepted in `engineering/decisions/confirmation-concurrency.md`.
+`objectreuse` admits the batch before dispatch, runs at most eight object chains per
+call, joins all workers before quarantine/return and preserves material peer errors.
+Zero keeps sequential operation; callers still bound simultaneous Store calls. Do not
 restart with a new key or treat uploaded objects as a published generation.
 The accepted `engineering/decisions/kubernetes-build-inputs.md` selects the checked
 restricted preparation profile for this first corpus: retain other known build inputs
