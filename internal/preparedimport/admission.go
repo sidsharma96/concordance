@@ -182,22 +182,3 @@ func (i *Importer) admit(ctx context.Context, id string, editions []Edition) (in
 	}
 	return input, ctx.Err()
 }
-
-func validLimits(l Limits) bool {
-	if l.MaxInputBytes <= 0 || l.MaxStagedBytes <= 0 || l.Git.MaxListingBytes <= 0 || l.Git.MaxDocumentBytes <= 0 || l.Git.MaxTotalBytes < l.Git.MaxDocumentBytes || l.Files.MaxListingBytes <= 0 || l.Files.MaxFileBytes <= 0 || l.Files.MaxTotalBytes < l.Files.MaxFileBytes || l.Manifest.MaxObjectBytes <= 0 || l.Manifest.MaxReferencedBytes <= 0 {
-		return false
-	}
-	m, x, e, a, p, f := l.Manifest, l.Extract, l.Edition.File, l.Edition.Article, l.Edition.Preparation.Passages, l.Edition.Preparation.Field
-	for _, n := range []int{l.MaxObjects, l.MaxHashBytes, l.Git.MaxEntries, l.Files.MaxFiles,
-		m.MaxEncodedBytes, m.MaxSources, m.MaxEditions, m.MaxCaptures, m.MaxFiles, m.MaxDocuments, m.MaxImages, m.MaxSourceFiles, m.MaxSourceDocuments, m.MaxStringBytes, m.MaxValueBytes,
-		x.MaxInputBytes, x.MaxTokenBytes, x.MaxTokens, x.MaxNodes, x.MaxDepth, x.MaxBlocks, x.MaxGroups, x.MaxBlockBytes, x.MaxOutputBytes,
-		e.MaxEncodedBytes, e.MaxArticles, e.MaxArticleBytes, e.MaxBlocks, e.MaxPassages, e.MaxTerms, e.MaxPreparedBytes, e.MaxKeyBytes, e.MaxTermBytes, e.MaxVocabulary, e.MaxPostings,
-		a.MaxEncodedBytes, a.MaxBlocks, a.MaxGroups, a.MaxStringBytes, a.MaxValueBytes, a.MaxGroupDepth, a.MaxHTMLBytes,
-		p.MaxBlocks, p.MaxGroups, p.MaxInputBytes, p.MaxPassages, p.MaxBodyBytes, p.MaxReferences, p.MaxContextBytes,
-		f.MaxInputBytes, f.MaxTerms, f.MaxTermBytes, f.MaxOutputBytes, l.Edition.Preparation.MaxViewBytes, l.Edition.Preparation.MaxTerms, l.Edition.Preparation.MaxOutputBytes} {
-		if n <= 0 {
-			return false
-		}
-	}
-	return x.MaxTokenBytes < x.MaxInputBytes && x.MaxDepth <= 512 && x.MaxOutputBytes >= x.MaxBlockBytes
-}

@@ -87,7 +87,13 @@ type Importer struct {
 }
 
 func New(p *generationpublish.Publisher, collection string, sources []Source, l Limits) (*Importer, error) {
-	if p == nil || !identifier(collection) || !validLimits(l) || len(sources) > l.Manifest.MaxSources {
+	if p == nil || !identifier(collection) {
+		return nil, ErrInvalid
+	}
+	if err := validateLimits(l); err != nil {
+		return nil, err
+	}
+	if len(sources) > l.Manifest.MaxSources {
 		return nil, ErrInvalid
 	}
 	remaining := l.Manifest.MaxValueBytes

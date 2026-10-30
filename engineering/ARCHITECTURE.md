@@ -1,362 +1,252 @@
-# Concordance architecture direction
+# Concordance architecture
 
-This describes the architecture direction. The command-line runtime provides help
-and version only. PostgreSQL import-catalog operations now exist as an internal
-component, and bounded Git object capture exists in `internal/gitsource`. An internal
-S3 adapter implements verified immutable-object reuse, tested against HTTP fixtures
-and a live R2 creation/reuse/fresh-client-read smoke probe. Bounded in-memory HTML
-structure extraction now exists in `internal/htmlarticle`; the Kubernetes reference
-profile extracts all 38 selected articles with image references. The Git adapter also captures explicit file dependencies;
-the Kubernetes audit tool can acquire referenced original images locally at an
-exact commit. `internal/htmlpassage` now forms bounded structure-first ranges in
-these articles, with heading and group references. `internal/termsearch` supplies
-bounded match-all candidate selection over caller-prepared terms within one exact
-edition. `internal/textterms` prepares owned lowercase technical terms with a bounded,
-Unicode-versioned grammar. `internal/htmlterms` connects retained HTML to separate
-body, all-ancestor heading and notice-label term fields with a canonical passage plan.
-`termsearch.RankBM25` now orders complete matches using combined-field counts and
-selected-edition statistics. `internal/htmlsearch` now binds those fields to borrowed
-retained articles and resolves snapshot-bound references into owned quotes on demand.
-The bounded `htmledition` binary codec now recovers one edition
-with counts and saved ranges, verified on-demand article quotes and JSON inspection.
-`internal/generationmanifest` now saves bounded Git/HTML source, edition, capture and
-document bindings and checks selected index/article associations. It does not implement
-the trusted preparer. Its bounded input-fingerprint method now compares declared
-captured inputs and full processing rules separately from generated results.
-`internal/generationpublish` now
-validates prospective artifacts, confirms objects and publishes through the guarded
-catalog. `PublishCaptured` derives input identity after those checks; the older
-`Publish` accepts an internal trusted request. It is not the full importer or proof of
-source preparation/completeness. `internal/preparedimport` now composes complete
-pinned Git membership, trusted prepared HTML, declared dependency capture, actual
-processing and that publisher. Its in-process source registration is trusted; it
-does not prove rendering provenance or dependency completeness.
-`internal/capturefiles` now reads that handoff from a bounded versioned JSON
-descriptor and separate regular HTML/recipe files. It verifies and returns the same
-owned payload buffers, leaving source routing and operation identity with its caller.
-`tools/captureaudit` checks these local files without acquiring Git or publishing.
-Provider fault and full
-recovery experiments remain open. A managed preparer, durable capture journal,
-import/query CLI, Markdown processor, published-generation retrieval service,
-crawler, query API and shared library are not implemented.
+Concordance retrieves technical documentation from exact captured revisions and
+product editions. The public CLI currently provides help and version only. The
+internal Git/HTML import path builds and publishes searchable generations; an
+operator experiment has published the first Kubernetes corpus and read its indexes
+and verified quotes in a fresh process. A supported import/query CLI and reusable
+published-generation reader are still open work. See the
+[publication experiment](experiments/kubernetes-publication.md) for that run's scope.
 
-## Scope and boundaries
+## The implemented path
 
-P0 retrieves version-aware technical documentation and identifies the exact source
-revision behind every passage. Code search is a possible P1. Begin with a bounded,
-explicit documentation collection; broad web crawling is not a prerequisite.
+```text
+trusted offline preparer
+  -> capturefiles: descriptor + owned HTML/recipe buffers
+  -> preparedimport: exact Git membership + declared dependencies + processing
+       -> retained article JSON + per-edition binary indexes + JSON manifest
+  -> generationpublish: validate -> bind saved key -> confirm objects/root
+       -> catalog.PublishInNamespace: make the generation visible
 
-One Go process owns acquisition, indexing and retrieval initially. Separate these
-responsibilities as real operations arrive, without a tree of empty packages:
+published catalog reference
+  -> strict object reads -> generationmanifest.Open -> OpenEdition
+  -> lexical search -> Resolve + VerifyArticle + edition.Quote
+     (currently composed by an operator experiment)
+```
 
-- A source adapter acquires bytes and supplies stable source/document identity,
-  revision information and deletion observations. Fetch failure is not deletion.
-- A content processor extracts document structure, text and passage locations.
-  Documentation headings and code symbols need different processors.
-- Retrieval consumes normalized passages and metadata. Its ranking code should not
-  know how Git, HTTP or a local fixture supplied them.
-- Storage owns immutable objects and the catalog's publication/recovery protocol.
-  CLI and future HTTP handlers translate requests; they do not define storage formats.
+The preparer owns rendering provenance and the completeness of its declared build
+inputs. The importer independently captures the selected committed Markdown and
+declared dependencies, verifies exact page membership, and runs actual extraction
+and indexing. It retains recipe bytes as configuration; it never executes them.
 
-The accepted [first-source decision](decisions/first-source.md) starts with Markdown
-at a specific Git commit. Acquisition and content format are independent: the same
-repository can supply Markdown, code or PDFs; another adapter can supply provider
-documents. Future processors must preserve headings, blocks, pages, slides or code
-symbols rather than flattening everything into anonymous text. Retain captured
-representations alongside derived passages, with source-specific provenance.
+| Responsibility | Current packages | Boundary |
+| --- | --- | --- |
+| Source acquisition | `gitsource` | Bounded committed Markdown and explicit Git files; no renderer |
+| Prepared file transport | `capturefiles` | Strict descriptor and root-relative regular payload files; no Git or remote stores |
+| Extraction and passage preparation | `htmlarticle`, `htmlpassage`, `textterms`, `htmlterms` | HTML structure, ranges and compatible technical terms; no source routing |
+| Lexical retrieval | `termsearch`, `htmlsearch` | Exact-edition matching/ranking; the snapshot borrows articles |
+| Durable artifacts | `htmlarticlejson`, `htmlpassagemap`, `htmledition`, `generationmanifest` | Versioned bounded representations and exact bindings |
+| Import composition | `preparedimport` | Complete selected membership, processing, staging and publication |
+| Storage/publication | `objectstore`, `objectreuse`, `catalog`, `generationpublish` | Immutable object integrity, scoped receipts and catalog visibility |
 
-The [representative-corpus decision](decisions/representative-corpus.md) starts
-evaluation with Kubernetes Pods docs across three pinned release snapshots, then
-full English documentation. The raw-source inventory exposes shortcode and external
-data dependencies; it does not establish complete extraction, retrieval quality or
-production capacity. Settle processing and dependency capture before publication.
+These are concrete in-process components, not independently deployed services.
+Introduce small consumer-owned interfaces when a real substitution needs one; avoid
+a dynamic plugin system or generic service/repository framework.
 
-The accepted [source-preparation boundary](decisions/source-preparation.md) keeps
-Kubernetes-specific rendering outside core retrieval. A bounded offline reference
-render verifies selected notices/examples across the three pins, not complete
-extraction or a production ingestion pipeline. Other sources may supply Markdown,
-captured HTML, provider blocks or exports through different acquisition/preparation
-paths. The accepted [prepared-capture handoff](decisions/prepared-capture.md) now
-lets the first internal importer consume those trusted build outputs. It independently
-checks complete Git Markdown membership and captures declared dependencies, while
-the preparer asserts HTML provenance and complete rendering inputs. Missing, extra
-or duplicate page mappings fail the import. Slots sort by source ID and full Git
-path. A future managed runner must emit this same handoff; it is not an arbitrary
-recipe executor. Format processors and site profiles preserve content and citations; ranking
-does not need to know which builder or provider produced them.
+## Acquisition and content are separate
 
-Do not build a dynamic plugin system yet. First demonstrate the boundary with Git
-and a fixture source. Introduce small interfaces through concrete consumers rather
-than empty future adapters or a universal schema. Provider revisions, product-version
-applicability and changing permissions need their own explicit contracts before a
-private connector is enabled. Acquisition permission alone cannot authorize later
-search results or citations. Shared lexical retrieval need not know the transport;
-code navigation, visual search and other new capabilities may need new algorithms.
+The [first source](decisions/first-source.md) is Markdown at an exact Git commit.
+The [representative corpus](decisions/representative-corpus.md) uses Kubernetes Pods
+documentation across three pinned releases. Kubernetes needs a source-specific
+[offline preparation step](decisions/source-preparation.md) to render shortcodes,
+notices and dependencies faithfully. That requirement belongs to this source; other
+sources may supply Markdown, provider blocks, HTML or exports.
 
-## Identity and query correctness
+The [trusted handoff](decisions/prepared-capture.md) pairs selected Markdown paths
+with prepared HTML and explicit extraction profiles. `capturefiles` reads each
+unique payload once, checks its declared bytes and returns the same owned buffer.
+Returned aliases can share that buffer. Root-relative `os.Root` access constrains
+paths but is neither a filesystem snapshot nor a hostile-filesystem sandbox.
+Source registration, credentials, routes and the saved operation key stay outside
+the descriptor. See the [transport experiment](experiments/capture-files.md).
 
-Keep source, logical document, product version, captured source revision, passage
-location, content hash, processing version and index generation distinct. A corrected
-page may retain its product version while acquiring a new revision. The same bytes
-can legitimately occur in several documents or editions. A hash permits integrity
-checks or scoped deduplication; it does not identify or authorize a logical document.
+`preparedimport` rejects missing, extra or duplicate page mappings. It captures the
+complete selected Markdown inventory and declared dependencies at the requested
+commit, including referenced original images. Logical slots sort by source ID and
+full Git path. Git acquisition uses a bounded sequential batch process after full
+count/byte admission; cancellation and errors still wait for that process to exit.
+See [Git capture](experiments/git-capture.md).
 
-The accepted [document-identity direction](decisions/document-identity.md) separates
-logical key, observed location and exact revision. Git starts with configured source
-ID plus exact repository-relative path; future adapters can use reliable native IDs
-under their own lifecycle contract. Renames are not automatically joined. Complete
-generation metadata must bind article slots to these identities without conflating
-shared bytes or rejecting the same logical key across different editions. Source
-registration remains trusted in-process configuration; the initial Git/HTML manifest
-preserves these bindings, and `preparedimport` constructs them from actual pinned
-capture and processing. External transport and persistent registration remain open.
+The [restricted Kubernetes build-input profile](decisions/kubernetes-build-inputs.md)
+retains checked required inputs and original figures while excluding unrelated
+static files. Changed source pins or preparation require revalidation. Neither
+selected rendered output nor a dependency list proves preparation completeness;
+that assertion remains with the trusted preparer.
 
-An explicitly version-scoped query considers eligible passages from that version.
-Do not retrieve one global winner and drop it afterward, leaving an artificial miss.
-A missing edition returns no eligible results, with an explanation; broader fallback
-must be explicit. Resolve mutable labels such as `latest` to a concrete edition for
-the request. Define version-label ordering per source rather than assuming SemVer.
+A source adapter owns revision, permission-change and deletion semantics. A content
+processor owns headings, blocks, pages, slides or code symbols. Future connectors
+must define reliable revisions, authorization and deletion before handling private
+documents. Code search is a possible P1 and needs code-aware processing rather than
+prose with another extension. Ranking should not know which provider supplied text.
 
-A query pins a published generation so text, postings, statistics, tombstones and
-citations agree. It must not mix an old passage with a newly overwritten source page.
-Define replacement/deletion visibility and reader lifetimes before adding compaction.
-Captured revisions still need a retention contract; citations cannot promise bytes
-forever if garbage collection removes them.
+## Identity and evidence
 
-The accepted [citation decision](decisions/passage-citations.md) makes the retained
-article the quote authority for rendered HTML. Verified original Git file/line ranges
-are optional additional provenance and may name several inputs. Missing mappings
-are valid; invented mappings are not. Keep article identity, block locations, source
-revision and processing version separate. The bounded HTML processor now returns
-owned blocks and nested container intervals. A bounded [versioned JSON article codec](decisions/article-json.md) now preserves
-this retained HTML representation through owned bytes and reconstruction. It is
-not the complete manifest, source association or citation API, which remain open. See the [extraction experiment](experiments/html-extraction.md)
-for supported structures and parser limits. The accepted
-[media scope](decisions/media-coverage.md) retains original figures and searches
-authored text first; visual contents remain uninterpreted. Later descriptions of
-informative diagrams require separately labeled derived content in a new
-processing version and generation. Fingerprint/manifest coverage fields and durable
-asset retention remain unimplemented.
+Keep source, logical document, product edition, captured revision, passage location,
+content hash, processing version and generation distinct. Shared bytes can occur in
+several logical documents or editions; a hash proves neither identity nor permission.
+The [document-identity contract](decisions/document-identity.md) uses configured
+source ID plus exact full repository-relative path for Git. Renames are not inferred.
+The manifest binds edition-local slots to their exact capture, article and provenance;
+the same logical key may appear across editions but not twice in one source/edition.
 
-## Storage from the first milestone
+A query selects an exact edition within one published generation. Missing editions
+must not silently fall back; explicitly empty and absent editions remain distinct.
+A future mutable label such as `latest` must resolve once per request. The public
+query API need not ask users for generation IDs, but its implementation must pin one
+so text, counts, statistics and citations agree.
 
-Use external object storage from the first write/read/recovery slice, not as a final
-port of a local-only engine. The accepted [catalog/publication split](decisions/catalog-publication.md)
-uses PostgreSQL as the publication authority and R2 for immutable source, index and
-manifest objects. The private R2 bucket `concordance-data` is provisioned; its live
-creation/reuse/fresh-client-read probe passes. A dedicated catalog database now runs
-on the existing droplet PostgreSQL server with a restricted trusted writer, SSH
-access and a small connection pool; see the [hosting decision](decisions/catalog-hosting.md).
-Live synthetic publication and encrypted off-host catalog restore/read pass with
-surviving R2 objects and restored receipts quarantined. This is not production HA,
-unattended backup or restored publication trust. Neither backend is required to build
-the scaffold.
-Verify the operations used through the S3 client adapter on the actual R2 service.
+The [retained article is the quote authority](decisions/passage-citations.md).
+Verified original Git file/line ranges are optional additional metadata; generated
+content may have several origins. The HTML processor owns bounded text blocks and
+nested group intervals. [Original figures are retained](decisions/media-coverage.md)
+and authored alt text, captions and surrounding prose are searchable. Figure
+contents remain uninterpreted; derived diagram descriptions need a separate explicit
+processing version and generation.
 
-The accepted [object-sharing decision](decisions/object-sharing.md) uses immutable
-objects named by exact-byte SHA-256 within one authorized collection. Generations
-can share their bytes while retaining separate identities and provenance. Verify
-existing objects and uncertain writes; never overwrite unexpected bytes. Automatic
-deletion remains disabled until shared references, readers and in-flight work are
-protected. The [adapter experiment](experiments/object-storage.md) describes the
-first bounded implementation and the limited live R2 evidence.
+## Artifacts and validation
 
-The accepted [manifest layout and encoding](decisions/manifest-layout.md) is one
-bounded, versioned JSON manifest per generation. It keeps the first recovery path
-and validation simple. Encoded bytes and decoded metadata need explicit bounds.
-The initial strict Git/HTML metadata codec now exists; trusted source preparation,
-input fingerprint and full publication remain open. Source capture alone is not
-searchable publication. Measure metadata before introducing paged layouts and preserve readers
-for retained formats when another layout is introduced.
+Each generation has [one bounded JSON manifest](decisions/manifest-layout.md),
+[separate article objects](decisions/article-storage.md), and
+[one binary index per exact edition](decisions/edition-index-layout.md). Shared exact
+article bytes remain separate from logical article slots. All required artifacts
+must be confirmed before the generation becomes visible.
 
-The accepted [index layout](decisions/edition-index-layout.md) separates bounded
-index objects by exact edition under that same single generation manifest. A
-version-scoped reader can select one edition's artifact; comparisons may need
-several reads. The bounded HTML codec/reader now exists; the complete manifest schema is open. Keep
-all required objects confirmed before publication and define generation admission,
-selected-index validation and exact location/source bindings before recovery. The
-bounded manifest component now checks the selected index's exact article refs/order
-and resolves its slots; see the [experiment](experiments/generation-manifest.md). The
-accepted [artifact-binding direction](decisions/edition-artifact-binding.md) puts
-count postings and saved passage locations in that edition object without an extra
-ordered-word copy. Its reader verifies independently expected bytes and
-structural relationships; it relies on the canonical writer for semantic preparation
-agreement. Article bodies are verified before quoting. The old ordered-field location
-reader stays unchanged. The accepted [binary format](decisions/edition-binary.md) has
-a bounded codec and inspection tool; full generation metadata/publication integration
-remains open. See the [component experiment](experiments/binary-edition.md).
+`htmlarticlejson` preserves retained HTML text and structure through a strict
+[versioned JSON codec](decisions/article-json.md). `htmledition` derives count postings
+and saved body ranges together, then owns the immutable state recovered from its
+[binary format](decisions/edition-binary.md). It checks expected bytes, edition,
+closed tags, minimal integers, counts, statistics and range coverage. The index has
+[no extra ordered-word copy](decisions/edition-artifact-binding.md). Article bytes
+are verified before quotes are assembled with LF separators. Diagnostic JSON
+inspection is separate from authentication and publication.
 
-The accepted [article layout](decisions/article-storage.md) stores separate bounded
-article-data objects so unchanged exact bytes can be reused between generations.
-It keeps that one generation manifest. More objects mean more references and requests;
-the existing adapter still reads every reused body to verify it. The user selected
-the direction to design [verified receipts and HEAD](decisions/verification-receipts.md);
-PostgreSQL placement is accepted. `objectreuse` now confirms bounded batches through
-catalog receipts and conditional HEAD, while misses and body reads retain full
-verification. Guarded publication rejects stale epochs; strict publication remains
-separate. The [component experiment](experiments/postgres-receipts.md) describes tests,
-read-only live interoperability and unresolved recovery/migration limits. Persistent indexing,
-paged metadata and safe retention/deletion are necessary scaling work before claiming
-million-document support; selective loading and bounded caches also remain open.
+`generationmanifest` owns immutable opened metadata. `Objects` lists distinct-byte
+references to confirm; the list alone proves no remote existence. `OpenEdition`
+checks the selected index's article references and order. `Resolve` copies one
+slot's provenance, and `VerifyArticle` checks exact bytes, extraction profile and
+image bindings. Loading one edition does not verify the bodies of every other
+object. These checks bind artifacts, not the truth of the preparer's assertions.
+See the [manifest experiment](experiments/generation-manifest.md).
 
-Write and confirm the required immutable files and manifest before publishing their
-catalog reference in a short PostgreSQL transaction. Uploading an R2 manifest is not
-publication. Queries open one published generation. A failed catalog commit can
-leave unreferenced objects; a lost commit reply can hide a successful publication.
-A PostgreSQL transaction cannot roll back remote writes. Keep automatic deletion
-disabled in the first storage slice until reader/in-flight-work protection and safe
-orphan cleanup are specified. The decision record defines the cross-store failure
-matrix and required experiments. The bounded [publication component](experiments/generation-publication.md)
-now exercises local PostgreSQL with S3 HTTP fixtures, including rejection after remote
-confirmation and a namespace fence. It still consumes internal trusted fingerprint
-metadata rather than constructing the full captured input.
+The three JSON readers share `jsonunicode.CheckSurrogates` to reject malformed
+escaped UTF-16 before `encoding/json` can replace it. Each caller retains its own
+schema, limits and domain errors, checks raw UTF-8, and uses the standard decoder
+for JSON grammar. The shared scanner borrows bytes only through return and uses
+linear time and constant extra space; it is not a general JSON parser.
 
-The accepted [import completion decision](decisions/import-completion.md) is synchronous
-publication: success returns a complete generation ready for queries selecting its ID.
-The [snapshot request contract](decisions/import-snapshots.md) selects the complete
-intended source/edition/path scope. The adapter captures its full inventory; a failed
-fetch fails the import rather than removing a document. Deliberate omission affects
-only the new generation, without physical deletion. Patches are deferred; unchanged
-compatible objects can still be reused.
-The first recovery drill must reconstruct that generation and fetch its cited bytes
-without the writer's local files. The accepted [retry contract](decisions/import-retries.md)
-uses a saved operation key: identical retries recover the original result; changed
-inputs under that key conflict. The [catalog experiment](experiments/import-catalog.md)
-specifies the first concrete metadata operations. Capture/comparison rules,
-the complete cancellation/recovery contract, hosting and real-provider cross-store
-recovery still need implementation/design.
-Do not borrow Rewind's acknowledgment contract implicitly. Bound input bytes, pending
-work, retries, remote reads and cache memory. Start with one publishing writer until
-measurements justify coordinating more.
+`htmlpassagemap` remains the bounded reader for saved ranges checked against ordered
+prepared fields. `htmlsearch` remains a borrowed in-memory search snapshot. These
+components and the scan ranker provide independent bindings/oracles; the durable
+edition reader does not change their ownership contracts.
+
+## Publication and recovery
+
+[PostgreSQL is the publication authority; R2 holds immutable objects](decisions/catalog-publication.md).
+Objects are named by SHA-256 within an authorized globally unique collection scope.
+Conditional creation and uncertain-write reconciliation prevent overwriting
+unexpected bytes. A PostgreSQL transaction cannot roll back an R2 write.
+
+The accepted import contract is a [complete snapshot](decisions/import-snapshots.md)
+and [synchronous publication](decisions/import-completion.md). Success returns a
+complete generation ready for exact-generation queries. Omission changes only new
+generation membership; acquisition failure fails the import rather than deleting a
+document. Patch imports remain deferred.
+
+A [saved operation key](decisions/import-retries.md) identifies the intended import.
+`Manifest.InputFingerprint` compares captured inputs and full processing rules,
+excluding candidate IDs and derived article/index bytes. `PublishCaptured` derives
+this fingerprint after artifact preflight; `preparedimport` constructs those
+artifacts from actual capture/processing. Identical retries recover the original
+publication, while changed inputs conflict. Metadata hashing still cannot prove
+rendering provenance. Keep the exact handoff for a deliberate retry; see
+[captured-input equality](decisions/captured-input-identity.md).
+
+The publication sequence is local validation, catalog binding, artifact confirmation,
+root confirmation, then `PublishInNamespace`. A completed binding returns its
+original result without S3 access. Preparation is rebuilt before that lookup in the
+current importer. Errors yield no partial result, but publication may already have
+committed if its reply was lost. Cancellation is cooperative, not rollback. A failed
+attempt can leave unreferenced objects, and an unpublished binding does not prove
+that no attempt is running.
+
+`objectreuse` uses [PostgreSQL verification receipts](decisions/verification-receipts.md)
+and conditional HEAD for previously checked immutable objects; misses and uncertain
+writes use full verification. Proofs bind the physical namespace and captured epoch.
+Guarded publication rejects stale or quarantined epochs; never replace that gate
+with strict `Publish`. Strict object body reads always check length and SHA-256.
+Restored published references can be read strictly while receipt reuse remains
+quarantined. ETags are not content hashes.
+
+[Bounded confirmation overlap](decisions/confirmation-concurrency.md) permits up to
+eight object chains per call, with sequential behavior as the zero-value default.
+Admission and receipt lookup precede workers; cancellation joins all workers before
+return or quarantine. One nonwaiting caller per importer/publisher instance is
+admission, not distributed ownership. Request/staging limits count logical admitted
+bytes, not whole-process heap or aggregate concurrency across instances.
+
+The [catalog on the existing droplet](decisions/catalog-hosting.md) uses a restricted
+runtime login over SSH. Live synthetic publication and encrypted off-host backup
+with isolated restore/read have been exercised; restored receipts stayed quarantined.
+The [real Kubernetes publication](experiments/kubernetes-publication.md) additionally
+exercises a deliberate same-key retry, completed-key recovery without S3, and a fresh
+strict read. This is not unattended backup, production HA, restored publication
+trust or exhaustive provider-fault coverage. Run schema-creating tests only on a
+dedicated local test database.
+
+Automatic deletion stays disabled until references, in-flight writes and reader
+lifetimes have a safety protocol. Persistent indexing, paged metadata and safe
+retention/deletion are required scaling work before claiming million-document
+support. The current bounded in-memory composition also needs measured memory
+pressure and streaming consumers before file staging can make stronger heap claims.
 
 ## Retrieval and algorithm progression
 
-The accepted [passage direction](decisions/passage-grouping.md) follows authored
-structure. The first in-memory HTML builder partitions blocks without overlap,
-keeps outer containers intact, and preserves group labels and common enclosing
-headings by reference. It rejects malformed ranges, crossing groups, excessive
-metadata and oversized bodies with no partial plan. Admission ceilings are caller
-configured; no automatic splitting or permanent product-size limit is implied.
-The caller must retain the exact unchanged article for all use of the returned
-indices. The [experiment](experiments/structured-passages.md) records the current
-38-page partition and limits. The accepted
-[saved-location decision](decisions/saved-passage-locations.md) now has a bounded
-`htmlpassagemap` record: canonical body ranges bind to exact article JSON and prepared
-field contents. Its reader checks those bindings without rebuilding passages; the
-full index, manifest and source/citation associations remain open. See the
-[component experiment](experiments/saved-passage-locations.md). Preserving context
-does not establish relevance. The separate baseline ranker counts supplied context equally with body
-terms. Text preparation is
-a separate component and does not decide which article fields to supply.
+[Structure-first passages](decisions/passage-grouping.md) keep outer containers
+whole and partition body blocks without overlap. They carry heading/group references;
+oversized units fail explicitly rather than being silently split. `htmlterms` projects
+body, all ancestor headings and notice labels separately. `textterms` prepares owned,
+lowercase technical terms with whole CamelCase names and punctuation preserved under
+a Unicode-versioned grammar. Source/query preparation must be compatible. It is not
+full case folding, stemming, normalization or a code/URL parser.
 
-The accepted [keyword matching](decisions/keyword-matching.md) baseline requires
-all distinct query terms within one passage's supplied body/heading/label union.
-`termsearch.MatchAll` validates bounded prepared inputs, selects an exact edition,
-and scans its passages. It distinguishes missing and explicitly empty editions,
-rejects incompatible term-version tags and returns no partial result on failure.
-Returned positions belong to this exact input, not a persisted passage identity.
-The accepted [text preparation](decisions/text-preparation.md) keeps whole CamelCase
-and punctuation-bearing names without adding their parts. `textterms.Prepare`
-lowercases compatible source/query text with an explicit grammar and a tag including
-the Unicode table version. It admits byte/count ceilings before allocating owned
-output strings; every error returns no partial result. It does not perform full case
-folding, canonical normalization or stemming. The accepted
-[HTML projection](decisions/passage-fields.md) now builds its canonical passage plan
-and prepares body text, every referenced ancestor heading and nonempty group labels
-separately through `htmlterms.Build`. It counts repeated projected bytes before
-joining views; aggregate output bounds are checked after each bounded field. The
-caller retains exact article/source associations and chooses editions. The raw-text
-query command and published-generation integration remain unimplemented. Field
-weights remain deferred. The accepted [ranking baseline](decisions/lexical-ranking.md)
-uses `termsearch.RankBM25` with combined-field counts, fixed k1/b, positive IDF,
-all-passage statistics within the selected edition, and full-sort output. Matching
-still requires every distinct query term. Query permutations and duplicates do not
-change scores; exact ties use input position. Scores and positions are temporary,
-not durable citations or confidence. All errors return no partial ranked result.
-See the [matching component](experiments/keyword-matching.md) for invariants and limits.
+[Every distinct query term must match](decisions/keyword-matching.md). `termsearch`
+provides both a scan oracle and an immutable counted-posting index. Sorted posting
+lists are intersected and complete results ranked using
+[combined-field BM25](decisions/lexical-ranking.md) with exact-edition statistics,
+fixed k1/b, positive IDF and full sorting. Query duplicates/permutations do not alter
+scores; exact ties preserve input order. Intermediate intersections may exceed the
+final-match limit. Scores are temporary ranking values, not confidence or citations.
+Field weights, top-k and phrase/proximity positions remain deferred.
 
-The accepted [snapshot ownership direction](decisions/snapshot-ownership.md) is now
-implemented by `htmlsearch.New`. It borrows edition/article input and owns freshly
-prepared terms and compact canonical body-location tables. The caller controls all
-aliases and keeps the input and source associations unchanged through dependent use.
-Reachability keeps storage alive but does not prevent mutation. Copies of the wrapper
-share one state; separately built states reject one another's references.
+`htmlsearch` [borrows caller input](decisions/snapshot-ownership.md) unchanged through
+dependent use and owns prepared terms/locations. Opaque hit references keep that
+state alive; Go reachability does not prevent mutation through caller aliases.
+[Quotes own assembled strings](decisions/search-results.md), while references retain
+the state. Zero/cross-state references fail. Standalone scan calls retain no inputs
+after return. A reusable reader for published generations needs an explicit ownership
+and lifetime checkpoint; the operator read sequence has not settled that API.
 
-The accepted [result contract](decisions/search-results.md) returns opaque temporary
-references from ranked searches, then assembles an owned quote only when requested.
-Location returns scalar input ordinals/body ranges; source/document/revision metadata
-and persisted citation identity still belong to the caller. No mutable block slices
-escape. Quote admission counts retained text plus LF separators before allocation;
-labels/context outside the canonical body are excluded. Each reference can retain the
-whole state; only owned quote strings have independent lifetimes. Read-only methods
-use per-call scratch and support concurrent readers with unchanged input. All workful
-operations require deadlines and return no partial output on errors. The
-[component reference](experiments/search-snapshot.md) describes bounds and evidence.
-No R2 reader-retention, persisted identity or publication behavior follows from this
-in-memory composition.
+Semantic embeddings and vector search remain future work. Exact vector search is
+the oracle before ANN experiments; keep embedding model/dimensions/metric and
+processing versions compatible. Measure neighbor recall separately from reader-judged
+relevance. Hybrid retrieval, compression, skip data, Bloom filters and sharding need
+concrete workloads and comparisons against simple scans, postings and full sorts.
+Count allocations, retained memory, remote requests, transferred bytes and recovery
+work alongside CPU complexity.
 
-The accepted [posting-count decision](decisions/posting-counts.md) now has an
-in-memory `termsearch.Index` with sorted unique passage lists and separate field
-frequencies. Queries intersect lists and rank with the same edition-local BM25,
-using cached input admission and statistics. The original scans remain unchanged
-oracles; `htmlsearch` still uses its original scan path. This index does not persist
-search artifacts or replace source/citation/generation associations. See the
-[posting experiment](experiments/counted-postings.md) for ownership, costs and evidence.
-Begin with a small judged documentation corpus and keep the explicit term grammar
-and edition semantics while comparing representations. Compare intersections and bounded top-k selection against
-simple scans/full sorts on the same inputs. Use uncompressed postings before deciding
-whether gap/varint encoding or skip data materially helps.
+## Agreement with Rewind and roadmap differences
 
-Embedding acquisition and vector search follow a stable citation/publication path.
-Use exact vector search as the oracle before evaluating HNSW. Keep embedding model,
-dimensions, distance metric and processing version compatible within a generation.
-Measure approximate recall against exact neighbors separately from relevance on judged
-queries. Hybrid fusion and reranking need evidence of a quality improvement over the
-lexical baseline, alongside request cost, latency and failure behavior.
+Share only a small in-process Go object-storage library after each project exercises
+one write/read/recovery sequence that establishes its needs. Keep catalogs, logs,
+publication, compaction, retention, tenant policy and acknowledgment semantics with
+each application. Rewind requires remote durability including recovery metadata
+before acknowledgment. Concordance's visibility promise comes from its own catalog.
+No shared engine/schema/service, cross-checkout imports or shared cache is implied.
 
-Future crawl scheduling, tries, Bloom filters and sharding are candidates, not a
-checklist. For each structure state its invariant, cost variables, workload, simplest
-credible alternative, measured outcome and revisit condition. Count object requests,
-bytes, cold-cache behavior and recovery cost as well as CPU complexity.
-
-## Agreement with Rewind
-
-Share only a small in-process Go object-storage library when concrete consumers
-establish its contract: immutable writes, bounded full/range reads, integrity checks,
-explicit provider errors and reusable fault tests. Specify and exercise one
-write/read/recovery sequence from each project before extraction. Start locally;
-repository and versioning arrangements come later. No cross-checkout module imports.
-
-Keep logs, catalogs, publication, compaction, retention, tenant isolation/deduplication
-policy and acknowledgment/read-visibility semantics application-specific. Rewind
-requires remote durability, including recovery metadata, before acknowledgment.
-Shared primitives must support that without prescribing Concordance's policy.
-Shared caching, a storage service, a shared schema and a universal engine are deferred.
-
-## Changes from the roadmap
-
-The roadmap proposes broad crawling, hybrid retrieval, a Rewind engine reused unchanged
-and documents keyed by content hash. Our narrower initial corpus, separated identity,
-and small shared object library replace those assumptions. Immutable segments still
-need publication and reader-lifetime coordination. The roadmap's compressed postings,
-skip pointers and HNSW are experiments to compare against baselines, not pre-proven
-winners. Its timings and performance claims are not measurements of Concordance.
-
-Before completing storage implementation, settle captured-input comparison, activation,
-cancellation and retention contracts with concrete examples. Preserve
-the accepted import completion promise while choosing those mechanisms. The public
-query API is not fixed to explicit generation IDs, and the initial small corpus is
-not a permanent size limit.
-
-## Captured-input equality
-
-The [input-identity decision](decisions/captured-input-identity.md) compares complete
-captured inputs and processing rules, excluding candidate generation IDs and derived
-article/index bytes. Actual HTML changes conflict under the same saved key, even
-when searchable words do not change. Keep original captures for exact retries.
-`Manifest.InputFingerprint` implements a separate versioned framed comparison;
-`Publisher.PublishCaptured` derives and binds it only after complete artifact checks.
-The [experiment](experiments/captured-input-identity.md) records fields, ordering,
-bounds and local retry evidence. Neither method proves acquisition completeness or
-truthful preparation. The production source preparer and durable capture/resume
-protocol remain separate work.
+The supplied roadmap is context rather than a committed schedule. Broad crawling,
+hybrid search, content-hash document identity and reusing Rewind unchanged are not
+current contracts. A managed preparer, durable capture journal/WAL, automatic resume,
+public import/query commands, reusable published reader and HTTP API are unimplemented.
+A small first corpus is an experiment, not a permanent product limit. Reader lifetime,
+activation and safe retention need concrete decisions as those operations arrive;
+roadmap performance claims are not Concordance measurements.
