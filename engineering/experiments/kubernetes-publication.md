@@ -1,9 +1,11 @@
-# A first corpus can wait on thousands of remote objects
+# Publish the first corpus after an interrupted attempt
 
-Status: interrupted live experiment with an unpublished saved binding, not a
-successful Kubernetes publication. The accepted restricted input profile is unchanged.
-The operation key, original capture and pinned Git objects remain available for a
-deliberate same-input retry. No object or catalog record was deleted.
+Status: the deliberate same-key retry published the first Kubernetes corpus, after
+an interrupted sequential attempt. The accepted restricted input profile is unchanged.
+The original operation key, capture and pinned Git inputs were retained without
+reset or deletion. A separate fresh process verifies the published root, all three
+edition indexes, image references and six article quotes. This remains an internal
+operator experiment, not an import/query CLI or production recovery guarantee.
 
 ## Workload and operator boundary
 
@@ -30,12 +32,12 @@ Credentials and routing identifiers remain private.
 
 `BindNamespace` registers configuration before importer construction. The actual
 `ImportPrepared` builds all artifacts and runs publisher preflight before binding
-the saved operation key or making S3 requests. Confirmation stays sequential within
+the saved operation key or making S3 requests. The initial attempt kept confirmation sequential within
 32-object/16 MiB batches. Artifacts precede root, and guarded PostgreSQL publication
 follows every confirmation. Caller ceilings match the local probe, with a 20-minute
 context and 20-second HTTP timeout. These are experimental settings, not defaults.
 
-## Remote progress exposed waiting
+## The interrupted sequential attempt exposed waiting
 
 The log counts attempted HTTP round trips, not confirmed object totals:
 
@@ -57,13 +59,14 @@ A fresh reader returned `catalog.ErrNotFound`. Read-only catalog queries found:
 | Saved operation binding | Present |
 | Published generation | Absent |
 | Namespace | Active, epoch 1 |
-| Current verified receipts | 160 |
+| Verified receipts after interruption | 160 |
 | Receipt byte total | 1,975,176 |
 
 Receipt totals are prior verification evidence, not a full current R2 inventory.
 No partial generation is exposed. A later retry must keep the original key/inputs,
 check receipts through conditional HEAD and strictly reconcile objects lacking
-receipts. No retry or cleanup was launched.
+receipts. No retry or cleanup was launched during that initial investigation. The later
+deliberate retry below used this exact saved operation.
 
 ## Separate catalog and object waits
 
@@ -93,6 +96,64 @@ reuse and provider conditions were uncontrolled. Successful small GETs do not mo
 missing GETs, conditional PUTs, larger objects, throttling or complete publication.
 No full-import speedup, peak-memory or production capacity is measured.
 
+## Deliberate retry published the original operation
+
+The corrected eight-worker implementation merged in PR 34. The disposable operator
+was rebuilt from feature revision `caba6fceba783cc637ebce743f20daeebd67de4c` and
+independently reviewed before live writes. A fresh read first found no generation;
+a read-only status pass found the same bound key, active epoch 1 and 160 receipts.
+It repeated the fixed 32-object read diagnostic successfully before the writer began.
+Those later diagnostic times are not pooled with the original comparison above.
+
+The operator then retried the original saved operation with its exact capture, Git
+pins, collection, namespace, candidate and key. It configured eight object chains
+within 32-object/16 MiB batches, keeping the 20-minute context, 20-second HTTP timeout
+and 768 MiB soft Go memory setting. No DDL, grants, migrations, cleanup, namespace
+reactivation or changes to Receipt ran. The saved operation file's SHA-256 remained
+unchanged before/after the retry.
+
+| Observation | Result |
+| --- | ---: |
+| `ImportPrepared` call elapsed | 13m22.4974125s |
+| GET attempts | 9,691 |
+| Conditional PUT attempts | 4,834 |
+| HEAD attempts | 160 |
+| Total observed HTTP attempts | 14,685 |
+| Published manifest bytes | 2,444,095 |
+| Declared distinct objects, including root | 5,017 |
+| Declared bytes, including root | 132,106,453 |
+
+The elapsed value covers the actual importer call, including local reconstruction
+and publication. It excludes earlier file loading, connection/namespace setup, the
+completed-key check and fresh-reader process. Request counts come from the operator's
+transport observer; PUT attempts are not a measurement of newly created object count.
+The published byte total is a manifest declaration, not measured bucket occupancy.
+Live identifiers explain the root's 19-byte increase over the local cost fixture.
+
+The call returned a new publication (`Duplicate=false`). A second call with the same
+saved key, original capture and a different candidate returned the original generation
+and made no additional S3 calls. This repeats local construction/preflight; it is
+not a product journal or efficient host-loss resume protocol.
+
+A separate process then used only catalog/object access, not the capture directory
+or Git checkout, and performed 16 strict GETs: root, three edition indexes, six
+image-reference reads and six article reads for quotes. It verified the independently
+catalog-pinned root, each edition index's article-reference bindings and all six
+query-matched article reads. The `ContainerRestartRules` query returned two matches
+in each edition. All six quotes resolve
+to `content/en/docs/concepts/workloads/pods/pod-lifecycle.md` at the three pinned
+revisions. Quote byte lengths are 106/285 for 1.34 and 104/285 for 1.35 and 1.36.
+The reader passed after the writer process exited and its pools/clients closed.
+It did not freshly download all 5,017 bodies or assess reader-judged relevance.
+
+This is one resumed live import with prior receipts and potentially unreceipted
+objects, not a cold sequential-versus-parallel benchmark. Provider conditions and
+cache/connection reuse were uncontrolled. It establishes completion and this read
+path on the actual providers, not an eightfold speedup, throttling tolerance,
+peak-memory bound, production capacity or recovery after losing either storage host.
+Automatic deletion and automatic resume remain disabled. The owned SSH forward
+was closed after fresh-reader success.
+
 ## Accepted follow-up: bounded confirmation overlap
 
 The existing sequential path is the simplest alternative and a useful oracle. It
@@ -111,7 +172,7 @@ save no unsupported proof, confirm root last and preserve guarded publication. M
 in-flight operations may leave more uncertain writes. Conditional creation and the
 saved key remain necessary. Overlapping waits reduces neither request count nor
 storage semantics. Transport concurrency does not change captured input meaning:
-keep the same key for this intended operation if that transport is implemented.
+the retry kept the same key when using that transport.
 
 As inspected in October 2026, restic 0.18.0's
 [`connectionLimitedBackend`](https://github.com/restic/restic/blob/d401ad6c1ec93a8fbcfcd9f6855a7a4468878ec2/internal/backend/sema/backend.go)
@@ -133,6 +194,8 @@ Ignored operator sources are `.tools/probes/corpus-live/`. Reviewed pre-write so
 is captured in `.tools/reviews/corpus-live-plan-2.txt`; its original publication binary
 stayed unchanged when read-only diagnostics were added. Raw records are
 `corpus-live-publish.txt`, `corpus-live-after-stop-read.txt` and
-`corpus-live-status-latency.txt` in that private directory. A successful fresh reader
-for this corpus remains open. The earlier synthetic publication/restore result is
-separate and still valid.
+`corpus-live-status-latency.txt` in that private directory. The later retry's primary outputs are `confirmation-before-retry-status.txt`,
+`confirmation-live-publish.txt` and `confirmation-live-read.txt`. Source revision and
+binary SHA-256 are in `confirmation-live-revision.txt`, and the saved-operation hash
+check is in `confirmation-operation-state-before.sha256`. The earlier synthetic
+publication/restore result is separate and still valid.

@@ -63,7 +63,23 @@ A transient artifact failure skips the root, and an explicit same-key retry succ
 A completed-key retry returns its original generation without further S3 calls.
 Existing sequential scan/reuse/publication tests remain the oracle.
 
-Raw local records are ignored under `.tools/reviews/confirmation-*`. Check/review
-results and any live measurements must be supplied before claiming completion.
+The implementation review found an actual failure in the first cancellation filter:
+a transport-originated cancellation with a live caller could erase the only failure
+and let receipt-backed references escape without completed HEAD checks. The focused
+regression failed at both zero/sequential and eight-worker settings before the fix.
+Suppression now requires another surviving material error. The same regression
+passes after the repair. The before/after logs preserve that distinction rather than
+treating the earlier passing suite as evidence for the missing case.
+
+`make verify` passed after that repair against dedicated local PostgreSQL 14.17,
+including uncached repository-wide race tests, build and the final 203-file staged
+artifact check. Required code and architecture reviews inspected the corrected
+implementation and operator plan before the deliberate retry. This source change
+merged in PR 34 at `16fc0dc796d4abc353a0ba8a10e0bb312ff15a50`.
+
+Raw local records are ignored under `.tools/reviews/confirmation-*`, notably
+`confirmation-cancel-regression-before.txt`, `confirmation-cancel-regression-after.txt`,
+`confirmation-verify-3.txt`, and the final code/architecture reports. Live retry
+measurements belong to the [corpus record](kubernetes-publication.md).
 No provider outage, live cold-write benchmark, peak-memory bound or production
 capacity follows from these local fixtures.
