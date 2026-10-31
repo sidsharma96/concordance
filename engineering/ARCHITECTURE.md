@@ -4,8 +4,8 @@ Concordance retrieves technical documentation from exact captured revisions and
 product editions. The public CLI currently provides help and version only. The
 internal Git/HTML import path builds and publishes searchable generations; an
 operator experiment has published the first Kubernetes corpus and read its indexes
-and verified quotes in a fresh process. A supported import/query CLI and reusable
-published-generation reader are still open work. See the
+and verified quotes in a fresh process. The reusable internal published-generation reader now owns one exact selection
+for repeated searches; a supported import/query CLI remains open work. See the
 [publication experiment](experiments/kubernetes-publication.md) for that run's scope.
 
 ## The implemented path
@@ -18,10 +18,10 @@ trusted offline preparer
   -> generationpublish: validate -> bind saved key -> confirm objects/root
        -> catalog.PublishInNamespace: make the generation visible
 
-published catalog reference
-  -> strict object reads -> generationmanifest.Open -> OpenEdition
-  -> lexical search -> Resolve + VerifyArticle + edition.Quote
-     (currently composed by an operator experiment)
+publishedsearch.Open: catalog-published generation + exact edition
+  -> strict manifest/index reads -> owned immutable selected reader
+  -> repeated local lexical search -> reader-bound references
+  -> on-demand strict article read -> provenance checks + exact quote
 ```
 
 The preparer owns rendering provenance and the completeness of its declared build
@@ -36,6 +36,7 @@ and indexing. It retains recipe bytes as configuration; it never executes them.
 | Extraction and passage preparation | `htmlarticle`, `htmlpassage`, `textterms`, `htmlterms` | HTML structure, ranges and compatible technical terms; no source routing |
 | Lexical retrieval | `termsearch`, `htmlsearch` | Exact-edition matching/ranking; the snapshot borrows articles |
 | Durable artifacts | `htmlarticlejson`, `htmlpassagemap`, `htmledition`, `generationmanifest` | Versioned bounded representations and exact bindings |
+| Published retrieval | `publishedsearch` | Own one catalog-published generation/edition; local queries and on-demand verified quotes |
 | Import composition | `preparedimport` | Complete selected membership, processing, staging and publication |
 | Storage/publication | `objectstore`, `objectreuse`, `catalog`, `generationpublish` | Immutable object integrity, scoped receipts and catalog visibility |
 
@@ -223,8 +224,12 @@ dependent use and owns prepared terms/locations. Opaque hit references keep that
 state alive; Go reachability does not prevent mutation through caller aliases.
 [Quotes own assembled strings](decisions/search-results.md), while references retain
 the state. Zero/cross-state references fail. Standalone scan calls retain no inputs
-after return. A reusable reader for published generations needs an explicit ownership
-and lifetime checkpoint; the operator read sequence has not settled that API.
+after return. The [published reader](decisions/published-reader.md) owns immutable manifest/index
+state for one exact edition. It retains the object client for lazy strict quotes,
+not the catalog/opening context. Copies share state; independently opened readers
+reject each other's hit references. Caller-owned routing and client lifetimes remain
+explicit. Per-open declared byte caps apply before GET; no global cache or automatic
+reload/activation is introduced.
 
 Semantic embeddings and vector search remain future work. Exact vector search is
 the oracle before ANN experiments; keep embedding model/dimensions/metric and
@@ -246,7 +251,7 @@ No shared engine/schema/service, cross-checkout imports or shared cache is impli
 The supplied roadmap is context rather than a committed schedule. Broad crawling,
 hybrid search, content-hash document identity and reusing Rewind unchanged are not
 current contracts. A managed preparer, durable capture journal/WAL, automatic resume,
-public import/query commands, reusable published reader and HTTP API are unimplemented.
+public import/query commands and HTTP API are unimplemented.
 A small first corpus is an experiment, not a permanent product limit. Reader lifetime,
 activation and safe retention need concrete decisions as those operations arrive;
 roadmap performance claims are not Concordance measurements.
