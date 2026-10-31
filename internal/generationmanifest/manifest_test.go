@@ -510,3 +510,34 @@ func FuzzOpen(f *testing.F) {
 		}
 	})
 }
+
+func TestEditionIndexReturnsOnlySelectedReference(t *testing.T) {
+	f := fixture(t)
+	m := opened(t, encoded(t, f.d))
+	ctx := testContext(t)
+	for _, edition := range f.d.Editions {
+		r, err := m.EditionIndex(ctx, edition.ID)
+		if err != nil || r != edition.Index {
+			t.Fatal("selected reference", r, err)
+		}
+		r.Bytes = 0
+		again, err := m.EditionIndex(ctx, edition.ID)
+		if err != nil || again != edition.Index {
+			t.Fatal("mutable reference escaped", err)
+		}
+	}
+	if _, err := m.EditionIndex(ctx, "absent"); !errors.Is(err, ErrNotFound) {
+		t.Fatal("missing edition", err)
+	}
+	if _, err := (*Manifest)(nil).EditionIndex(ctx, "one"); !errors.Is(err, ErrInvalid) {
+		t.Fatal("nil manifest", err)
+	}
+	if _, err := m.EditionIndex(nil, "one"); !errors.Is(err, ErrInvalid) {
+		t.Fatal("nil context", err)
+	}
+	canceled, cancel := context.WithCancel(ctx)
+	cancel()
+	if _, err := m.EditionIndex(canceled, "one"); !errors.Is(err, context.Canceled) {
+		t.Fatal("canceled selection", err)
+	}
+}

@@ -35,6 +35,16 @@ from passage-field projection and matching.
 body, all-ancestor heading and notice-label fields, keeping returned positions tied
 to the caller's exact retained article.
 
+`internal/publishedsearch` now opens one catalog-published generation and exact
+edition, owns immutable manifest/index state and reuses it for local prepared-term
+searches. Read `engineering/decisions/published-reader.md`. It validates declared
+root/index byte caps and the root's physical key before GET, uses strict reads
+without requiring active receipts, and verifies exact articles for lazy quotes.
+Reader-bound references are temporary; copied wrappers share state and separate
+opens reject each other's handles. The catalog/opening context are not retained;
+the owner keeps object clients/routing valid and bounds simultaneous readers/queries.
+No raw-query CLI, automatic latest/reload, article cache or deletion protocol exists.
+
 ## Design and implementation
 
 Read `engineering/GO.md` before Go changes and `engineering/ARCHITECTURE.md` before
@@ -394,6 +404,39 @@ Blog posts develop one supported claim through a problem, mechanism, alternative
 experiment, result and limit. Do not invent decision history, measurements or
 production-scale experience. Keep full identifiers in reproducibility references
 rather than scattering hashes through teaching prose.
+
+## Code excerpts in the book
+
+A reader with only the book, never the repository, should understand 95% of the
+code a lesson is about (Rule 7 of `docs/BOOK-RULES.md`). Show the real types and
+functions, whole or honestly trimmed, with one concrete input before them, a
+line-by-line walk after them, and the real output they produce. Go one level down
+(the standard library, the database, the operating system) or up (a trace, a log,
+a test run) and come back. A link adds to code on the page; it never replaces it.
+
+- Put `<!-- excerpt: <path>.go#L<a>-L<b> @<commit> current -->` on the line above
+  each excerpt of implemented code and fence it as ```` ```go ```` (or
+  ```` ```sql ````). Paste output as ```` ```text ````.
+- `current` means the excerpt matches the working source. The project changes at
+  every checkpoint, so a checkpoint that changes excerpted code also refreshes the
+  excerpt, its walk-through and its marker; the check fails until it does. Use
+  `historical`, labelled `**Before: bug example.**` or
+  `**Before: performance comparison.**` above the marker, only for a recorded wrong
+  turn, with the current code on the same page.
+- Decision snippets and future examples are not excerpts. Give them no marker and
+  label them illustrative or proposed.
+- Trim honestly: replace each cut with a comment containing "…" that says what was
+  cut. Pin code links to a commit that has been pushed (`/blob/<commit>/`), because
+  `tools/checkdocs` does not verify them.
+- Standard-library or dependency code cannot carry a marker. Quote it with a link
+  pinned to the Go release or module version in `go.mod`, and compare it with the
+  copy under `$(go env GOROOT)/src` or `$(go env GOMODCACHE)`.
+- Paste only output that really ran. Quote recorded measurements, never timings
+  rerun on a busy machine; label numbers worked out from the code as derived.
+- Walk each piece of code once in the book; elsewhere give a sentence and a link.
+  Reference pages link to lessons rather than repeating their walk-throughs.
+- Check with `../learning-docs/check-excerpts.py concordance --require-status
+  --scoped-history` as well as `make docs`. The sibling `deploy.sh` runs both.
 
 ## Privacy and publication
 

@@ -81,6 +81,17 @@ func (m *Manifest) Resolve(ctx context.Context, id string, slot int) (Binding, e
 	return out, nil
 }
 
+// EditionIndex returns the selected edition's expected index reference by value.
+// Missing and known-empty editions stay distinct: an empty edition still has an
+// index to read. This does no object I/O and exposes no mutable metadata slices.
+func (m *Manifest) EditionIndex(ctx context.Context, id string) (Ref, error) {
+	e, err := m.edition(ctx, id)
+	if err != nil {
+		return Ref{}, err
+	}
+	return e.Index, nil
+}
+
 // OpenEdition opens just the selected exact index, checks its article slots against
 // the manifest and bounds saved image blocks against descriptors. No body is read;
 // checking one index doesn't verify other indexes, source provenance or existence.
