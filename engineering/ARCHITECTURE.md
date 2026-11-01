@@ -22,6 +22,7 @@ publishedsearch.Open: catalog-published generation + exact edition
   -> strict manifest/index reads -> owned immutable selected reader
   -> repeated local lexical search -> reader-bound references
   -> on-demand strict article read -> provenance checks + exact quote
+  -> optional SearchQuoted: complete ranking + every strict quote, or zero result
 
 searchtarget.Resolve: friendly catalog name + optional exact edition
   -> copy one generation/default tuple -> publishedsearch.Open as above
@@ -248,6 +249,17 @@ not the catalog/opening context. Copies share state; independently opened reader
 reject each other's hit references. Caller-owned routing and client lifetimes remain
 explicit. Per-open declared byte caps apply before GET; no global cache or automatic
 reload/activation is introduced.
+
+The accepted [verified-batch policy](decisions/verified-search-batches.md) adds
+`Reader.SearchQuoted` without changing the separate Search/Quote methods. It
+assembles every ranked hit's strict quote before returning any hits; a later read,
+validation, cancellation or byte-limit failure returns a zero result. Positive
+per-quote and total-quote limits bound logical returned text; the existing search
+limit bounds hit count. References retain the same reader, while each result owns
+its hit slice and quote strings. It still performs one full bounded article read
+per hit, including shared articles. Rendering needs its own encoded-output budget
+and can suffer partial writes after verification. This is neither a public output
+schema nor a CLI, cache, top-k or transactional-output implementation.
 
 Semantic embeddings and vector search remain future work. Exact vector search is
 the oracle before ANN experiments; keep embedding model/dimensions/metric and

@@ -45,6 +45,15 @@ opens reject each other's handles. The catalog/opening context are not retained;
 the owner keeps object clients/routing valid and bounds simultaneous readers/queries.
 No raw-query CLI, automatic latest/reload, article cache or deletion protocol exists.
 
+`publishedsearch.Reader.SearchQuoted` now assembles a complete ranked batch with
+strict quotes or returns a zero result on every error. Read
+`engineering/decisions/verified-search-batches.md`. Preserve exact scores/order,
+positive per-quote/aggregate quote-byte limits and the existing complete-match
+limit. References retain reader state; results own their mutable hit slice and
+quote strings. Aggregate quote bytes exclude encoding/metadata and do not bound
+whole-process heap. Every hit still performs its own strict article read. No
+renderer, persisted citation schema or public search command is included.
+
 `internal/searchtarget` now resolves a catalog-backed friendly name to an exact
 published selection and verifies a candidate default through `publishedsearch.Open`
 before explicit activation. Read `engineering/decisions/search-targets.md` and
