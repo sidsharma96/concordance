@@ -1,6 +1,6 @@
-// Package catalog stores import bindings and published generation references in
-// PostgreSQL. It does not authorize callers, upload objects, build indexes, select
-// an active generation or implement the complete import operation.
+// Package catalog stores import bindings, published generations and named search
+// targets in PostgreSQL. It does not authorize callers, upload objects, build
+// indexes or implement the complete import operation.
 package catalog
 
 import (

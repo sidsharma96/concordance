@@ -22,6 +22,12 @@ publishedsearch.Open: catalog-published generation + exact edition
   -> strict manifest/index reads -> owned immutable selected reader
   -> repeated local lexical search -> reader-bound references
   -> on-demand strict article read -> provenance checks + exact quote
+
+searchtarget.Resolve: friendly catalog name + optional exact edition
+  -> copy one generation/default tuple -> publishedsearch.Open as above
+
+searchtarget.Activate: explicit operator choice + expected target revision
+  -> strict default reader preflight -> catalog conditional target update
 ```
 
 The preparer owns rendering provenance and the completeness of its declared build
@@ -37,6 +43,7 @@ and indexing. It retains recipe bytes as configuration; it never executes them.
 | Lexical retrieval | `termsearch`, `htmlsearch` | Exact-edition matching/ranking; the snapshot borrows articles |
 | Durable artifacts | `htmlarticlejson`, `htmlpassagemap`, `htmledition`, `generationmanifest` | Versioned bounded representations and exact bindings |
 | Published retrieval | `publishedsearch` | Own one catalog-published generation/edition; local queries and on-demand verified quotes |
+| Search selection | `searchtarget`, catalog targets | Resolve a friendly name once; explicitly activate a checked default with a revision condition |
 | Import composition | `preparedimport` | Complete selected membership, processing, staging and publication |
 | Storage/publication | `objectstore`, `objectreuse`, `catalog`, `generationpublish` | Immutable object integrity, scoped receipts and catalog visibility |
 
@@ -95,6 +102,17 @@ must not silently fall back; explicitly empty and absent editions remain distinc
 A future mutable label such as `latest` must resolve once per request. The public
 query API need not ask users for generation IDs, but its implementation must pin one
 so text, counts, statistics and citations agree.
+
+The [named search target](decisions/search-targets.md) hides that generation choice
+from normal users. `searchtarget.Resolve` copies one catalog tuple and applies an
+explicit edition override or its displayed default. It does not open an index or
+claim the override exists; `publishedsearch.Open` performs those checks. Explicit
+activation first opens the candidate default strictly, then conditionally changes
+the target's collection/generation/default tuple using an expected revision. A
+stale operator conflicts, while exact-next-revision same-tuple retries converge.
+No import automatically activates its result. See the [update contract](decisions/target-updates.md)
+and [local evidence](experiments/search-targets.md). The additive target schema is
+opt-in setup and has not been installed on the hosted catalog.
 
 The [retained article is the quote authority](decisions/passage-citations.md).
 Verified original Git file/line ranges are optional additional metadata; generated
@@ -252,6 +270,7 @@ The supplied roadmap is context rather than a committed schedule. Broad crawling
 hybrid search, content-hash document identity and reusing Rewind unchanged are not
 current contracts. A managed preparer, durable capture journal/WAL, automatic resume,
 public import/query commands and HTTP API are unimplemented.
-A small first corpus is an experiment, not a permanent product limit. Reader lifetime,
-activation and safe retention need concrete decisions as those operations arrive;
-roadmap performance claims are not Concordance measurements.
+A small first corpus is an experiment, not a permanent product limit. Explicit
+internal target activation exists; the command's connection/output contract and
+reader-safe retention remain open. Roadmap performance claims are not Concordance
+measurements.

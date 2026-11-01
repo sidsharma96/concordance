@@ -45,6 +45,16 @@ opens reject each other's handles. The catalog/opening context are not retained;
 the owner keeps object clients/routing valid and bounds simultaneous readers/queries.
 No raw-query CLI, automatic latest/reload, article cache or deletion protocol exists.
 
+`internal/searchtarget` now resolves a catalog-backed friendly name to an exact
+published selection and verifies a candidate default through `publishedsearch.Open`
+before explicit activation. Read `engineering/decisions/search-targets.md` and
+`engineering/decisions/target-updates.md`. Keep target tuples atomic, expected-revision
+updates conditional, and exact-next-revision retries distinct from superseded ones.
+Target names are scoped to the configured trusted catalog schema, not authorization.
+No import auto-activation, target deletion/reset, hosted schema installation or
+public search command is included. The owner authorizes collection use and keeps
+trusted routes stable; automatic retention/deletion remains disabled.
+
 ## Design and implementation
 
 Read `engineering/GO.md` before Go changes and `engineering/ARCHITECTURE.md` before
