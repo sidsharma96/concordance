@@ -137,9 +137,10 @@ func (b *bundle) encode(t testing.TB) {
 }
 
 type remote struct {
-	mu     sync.Mutex
-	bodies map[string][]byte
-	calls  map[string]int
+	mu        sync.Mutex
+	bodies    map[string][]byte
+	calls     map[string]int
+	failGETAt int // Synthetic missing object on this GET ordinal; zero disables it.
 }
 
 func (s *remote) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -147,6 +148,9 @@ func (s *remote) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer s.mu.Unlock()
 	s.calls[r.Method]++
 	b, found := s.bodies[r.URL.Path]
+	if r.Method == "GET" && s.failGETAt > 0 && s.calls["GET"] == s.failGETAt {
+		found = false
+	}
 	switch r.Method {
 	case "GET", "HEAD":
 		if !found {
