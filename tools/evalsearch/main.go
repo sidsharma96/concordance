@@ -70,6 +70,7 @@ type report struct {
 	Controls       []caseReport  `json:"scope_controls"`
 	AnyWord        *anyReport    `json:"match_any,omitempty"`
 	Noise          []noiseReport `json:"noise_controls,omitempty"`
+	Reranked       *rerankReport `json:"reranked,omitempty"`
 }
 
 func main() {
@@ -87,6 +88,8 @@ func run(parent context.Context, args []string, out io.Writer) error {
 	setPath := f.String("set", "", "reviewed evaluation-set JSON; kept outside source history")
 	compare := f.Bool("compare-any", false, "compare any-word matching on development only; diagnostic full quotes")
 	noise := f.Bool("compare-noise", false, "compare fixed question-word and minimum-half rules on development only")
+	export := f.Bool("rerank-export", false, "export first100 any-word candidates for local scoring; development only")
+	scores := f.String("rerank-scores", "", "checked local score file for the reconstructed first100 bundle; development only")
 	split := f.String("split", "development", "development, reserved or all; controls accompany development")
 	timeout := f.Duration("timeout", 2*time.Minute, "whole audit deadline; local file I/O is not preemptive")
 	if err := f.Parse(args); err != nil {
@@ -95,8 +98,11 @@ func run(parent context.Context, args []string, out io.Writer) error {
 	if parent == nil || out == nil || f.NArg() != 0 || *directory == "" || *setPath == "" || *timeout <= 0 || (*split != "development" && *split != "reserved" && *split != "all") {
 		return errors.New("provide -capture, -set, a valid -split and positive -timeout")
 	}
-	if (*compare || *noise) && *split != "development" {
+	if (*compare || *noise || *export || *scores != "") && *split != "development" {
 		return errors.New("comparison flags require the development split")
+	}
+	if (*export && *scores != "") || ((*export || *scores != "") && (*compare || *noise)) {
+		return errors.New("rerank modes are mutually exclusive and cannot combine with comparison flags")
 	}
 	ctx, cancel := context.WithTimeout(parent, *timeout)
 	defer cancel()
@@ -138,27 +144,60 @@ func run(parent context.Context, args []string, out io.Writer) error {
 			return err
 		}
 	}
+	if *export || *scores != "" {
+		bundle, err := buildRerankBundle(ctx, editions, s, hash)
+		if err != nil {
+			return err
+		}
+		if *export {
+			return writeAudit(ctx, out, bundle, 128<<20)
+		}
+		checked, err := loadRerankScores(ctx, *scores, bundle)
+		if err != nil {
+			return err
+		}
+		r, err := evaluate(ctx, editions, s, hash, "development", true, false)
+		if err != nil {
+			return err
+		}
+		r.Reranked, err = describeReranked(ctx, bundle, checked, s)
+		if err != nil {
+			return err
+		}
+		return writeAudit(ctx, out, r, 16<<20)
+	}
 	r, err := evaluate(ctx, editions, s, hash, *split, *compare || *noise, *noise)
 	if err != nil {
 		return err
 	}
-	var body bytes.Buffer
-	enc := json.NewEncoder(&body)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(r); err != nil {
+	return writeAudit(ctx, out, r, 16<<20)
+}
+
+func writeAudit(ctx context.Context, out io.Writer, value any, limit int) error {
+	body, err := auditBytes(value, limit)
+	if err != nil {
 		return err
-	}
-	if body.Len() > 16<<20 {
-		return errors.New("encoded report byte limit exceeded")
 	}
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	n, err := out.Write(body.Bytes())
-	if err == nil && n != body.Len() {
+	n, err := out.Write(body)
+	if err == nil && n != len(body) {
 		err = io.ErrShortWrite
 	}
 	return err
+}
+func auditBytes(value any, limit int) ([]byte, error) {
+	var body bytes.Buffer
+	enc := json.NewEncoder(&body)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(value); err != nil {
+		return nil, err
+	}
+	if body.Len() > limit {
+		return nil, errors.New("encoded audit byte limit exceeded")
+	}
+	return body.Bytes(), nil
 }
 
 func compatible(p processing) error {
@@ -209,6 +248,9 @@ func searchPair(ctx context.Context, o openedEdition, id, form, raw string, refs
 	return c, trial, nil
 }
 func describeCase(ctx context.Context, o openedEdition, id, form string, refs []reference, ranked termsearch.RankedResult) (caseReport, error) {
+	return describeTop(ctx, o, id, form, refs, ranked, 5)
+}
+func describeTop(ctx context.Context, o openedEdition, id, form string, refs []reference, ranked termsearch.RankedResult, count int) (caseReport, error) {
 	known := map[location]bool{}
 	for _, r := range refs {
 		known[location{r.Path, r.First, r.After}] = true
@@ -228,7 +270,7 @@ func describeCase(ctx context.Context, o openedEdition, id, form string, refs []
 		if useful && r.FirstKnownRank == 0 {
 			r.FirstKnownRank = i + 1
 		}
-		if i < 5 {
+		if i < count {
 			judgment := "unjudged"
 			if useful {
 				judgment = "known_useful"

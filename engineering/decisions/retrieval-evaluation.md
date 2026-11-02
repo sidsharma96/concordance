@@ -80,7 +80,11 @@ body/context evidence; ordinary mode and product search stay unchanged. The
 [fixed noise-control comparison](../experiments/query-noise.md) adds development-only
 `-compare-noise`, including both prior baselines, query-only question-word removal
 and one explicit half-overlap threshold. It selects no product rule. Development
-is the default. It requires no PostgreSQL, R2 or credentials
+is the default. The [local reranking trial](../experiments/local-reranking.md) adds
+mutually exclusive development-only `-rerank-export` and `-rerank-scores FILE` modes.
+Export carries no relevance labels; checked local scores bind the exact reconstructed
+first-100 any-word bundle. This selects no production model or search behavior.
+The Go audit requires no PostgreSQL, R2, model runtime or credentials
 and makes no remote writes, activation or imports. Existing local payloads are
 borrowed unchanged while processing; returned canonical bytes and the immutable
 index remain owned until their edition is finished. Downloaded/prepared corpus
