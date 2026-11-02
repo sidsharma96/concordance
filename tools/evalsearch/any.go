@@ -25,12 +25,19 @@ type anyReport struct {
 // where P is the admitted edition's passage count. Each single search also sorts
 // its own results. No production query API or postings algorithm is changed.
 func rankAny(ctx context.Context, o openedEdition, q termsearch.Query, baseline termsearch.RankedResult) (termsearch.RankedResult, int, int, error) {
+	return rankMinimum(ctx, o, q, baseline, 1)
+}
+
+func rankMinimum(ctx context.Context, o openedEdition, q termsearch.Query, baseline termsearch.RankedResult, minimum int) (termsearch.RankedResult, int, int, error) {
 	fail := func(err error) (termsearch.RankedResult, int, int, error) {
 		return termsearch.RankedResult{}, 0, 0, err
 	}
 	terms := slices.Clone(q.Terms)
 	slices.Sort(terms)
 	terms = slices.Compact(terms)
+	if minimum < 1 || minimum > len(terms) {
+		return fail(errors.New("invalid diagnostic minimum term count"))
+	}
 	scores := make([]float64, len(o.positions))
 	counts := make([]int, len(scores))
 	total := 0
@@ -69,7 +76,9 @@ func rankAny(ctx context.Context, o openedEdition, q termsearch.Query, baseline 
 			continue
 		}
 		hit := termsearch.ScoredPassage{Passage: pos, Score: scores[pos]}
-		ranked.Matches = append(ranked.Matches, hit)
+		if n >= minimum {
+			ranked.Matches = append(ranked.Matches, hit)
+		}
 		if n == len(terms) {
 			intersection = append(intersection, hit)
 		}

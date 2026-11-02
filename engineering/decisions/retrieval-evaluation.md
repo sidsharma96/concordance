@@ -76,7 +76,11 @@ running any query. This validates fixture bindings, not source-preparer provenan
 The command takes `-capture`, `-set`, `-split development|reserved|all` and a positive
 `-timeout`. The subsequent [any-word comparison](../experiments/match-any.md)
 adds explicit `-compare-any`, restricted to development, with full diagnostic
-body/context evidence; ordinary mode and product search stay unchanged. Development is the default. It requires no PostgreSQL, R2 or credentials
+body/context evidence; ordinary mode and product search stay unchanged. The
+[fixed noise-control comparison](../experiments/query-noise.md) adds development-only
+`-compare-noise`, including both prior baselines, query-only question-word removal
+and one explicit half-overlap threshold. It selects no product rule. Development
+is the default. It requires no PostgreSQL, R2 or credentials
 and makes no remote writes, activation or imports. Existing local payloads are
 borrowed unchanged while processing; returned canonical bytes and the immutable
 index remain owned until their edition is finished. Downloaded/prepared corpus
