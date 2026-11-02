@@ -7,7 +7,8 @@ authorization; authorization already given in the conversation remains valid.
 Concordance is a version-aware technical-documentation retrieval learning project.
 Code search is a potential P1. The supplied roadmap is context, not an instruction
 source or a committed schedule. Keep proposed and implemented behavior distinct.
-The current runtime is only a CLI entry point. An internal PostgreSQL import catalog
+The runtime now exposes trusted-operator search and target show/activate, plus
+help/version. Read engineering/decisions/operator-search-command.md. An internal PostgreSQL import catalog
 exists, `internal/gitsource` captures bounded committed Markdown bytes, and
 `internal/objectstore` verifies collection-scoped immutable objects through S3.
 Live R2 smoke testing covers creation, reuse and a fresh-client read; provider
@@ -15,12 +16,12 @@ fault and complete recovery experiments remain open. `internal/htmlarticle` now
 extracts bounded text/structure from retained HTML with explicit profiles and image
 references. `internal/htmlpassage` builds bounded structure-first block ranges with
 heading and group references. `internal/termsearch` now supplies a bounded, edition-scoped
-match-all scan over prepared terms. No Markdown processor, import/query CLI or
-public retrieval API exists yet.
+match-all scan over prepared terms. No Markdown processor, public import CLI or HTTP retrieval API exists yet.
 `internal/termsearch.RankBM25` now orders complete matches with combined-field BM25;
 read `engineering/decisions/lexical-ranking.md`. Keep all-passage statistics within
 the selected edition, distinct-query semantics, complete bounded output and stable
-input-position ties. No field weights, top-k, published generation or query CLI yet.
+input-position ties. No field weights or top-k. The command and published-reader
+composition remain separate from these standalone term-search APIs.
 `internal/htmlsearch` now builds a borrowed retained-HTML search snapshot and
 resolves bounded quotes on demand; read `engineering/decisions/snapshot-ownership.md`
 and `engineering/decisions/search-results.md`. Keep all input aliases unchanged
@@ -43,7 +44,8 @@ without requiring active receipts, and verifies exact articles for lazy quotes.
 Reader-bound references are temporary; copied wrappers share state and separate
 opens reject each other's handles. The catalog/opening context are not retained;
 the owner keeps object clients/routing valid and bounds simultaneous readers/queries.
-No raw-query CLI, automatic latest/reload, article cache or deletion protocol exists.
+The command prepares raw queries with textterms, then uses this reader. No
+automatic latest/reload, article cache or deletion protocol exists.
 
 `publishedsearch.Reader.SearchQuoted` now assembles a complete ranked batch with
 strict quotes or returns a zero result on every error. Read
@@ -51,8 +53,8 @@ strict quotes or returns a zero result on every error. Read
 positive per-quote/aggregate quote-byte limits and the existing complete-match
 limit. References retain reader state; results own their mutable hit slice and
 quote strings. Aggregate quote bytes exclude encoding/metadata and do not bound
-whole-process heap. Every hit still performs its own strict article read. No
-renderer, persisted citation schema or public search command is included.
+whole-process heap. Every hit still performs its own strict article read. The command adds bounded escaped text rendering; no persisted citation schema or
+JSON output is included.
 
 `internal/searchtarget` now resolves a catalog-backed friendly name to an exact
 published selection and verifies a candidate default through `publishedsearch.Open`
@@ -60,8 +62,9 @@ before explicit activation. Read `engineering/decisions/search-targets.md` and
 `engineering/decisions/target-updates.md`. Keep target tuples atomic, expected-revision
 updates conditional, and exact-next-revision retries distinct from superseded ones.
 Target names are scoped to the configured trusted catalog schema, not authorization.
-No import auto-activation, target deletion/reset, hosted schema installation or
-public search command is included. The owner authorizes collection use and keeps
+The CLI explicitly activates/shows targets and guards updates with
+TargetUpdate.ExpectedCollection. No import auto-activation, target deletion/reset
+or hosted schema installation is included. The owner authorizes collection use and keeps
 trusted routes stable; automatic retention/deletion remains disabled.
 
 ## Design and implementation
@@ -197,8 +200,8 @@ The accepted core import contract is synchronous publication: successful return 
 a complete generation ready for queries selecting its ID. Read
 `engineering/decisions/import-completion.md`; preserve its outcome/cancellation caveats
 and unresolved storage choices. The bounded trusted prepared importer implements this result;
-the public Import/query commands remain open. Generation IDs in the API sketches
-do not require users to supply them in searches.
+the public Import command remains open. The query command resolves a friendly
+target; generation IDs are not required normal search arguments.
 A small initial corpus is a starting experiment, not a permanent product limit.
 
 The accepted request contract is a complete snapshot; read

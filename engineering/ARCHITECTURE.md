@@ -1,16 +1,22 @@
 # Concordance architecture
 
 Concordance retrieves technical documentation from exact captured revisions and
-product editions. The public CLI currently provides help and version only. The
+product editions. The public CLI provides trusted-operator search, target inspection and explicit
+activation alongside help/version. The
 internal Git/HTML import path builds and publishes searchable generations; an
 operator experiment has published the first Kubernetes corpus and read its indexes
 and verified quotes in a fresh process. The reusable internal published-generation reader now owns one exact selection
-for repeated searches; a supported import/query CLI remains open work. See the
+for repeated searches; a public import CLI remains open work. See the
 [publication experiment](experiments/kubernetes-publication.md) for that run's scope.
 
 ## The implemented path
 
 ```text
+operator search CLI
+  -> admit/prepare query -> resolve target once -> check configured collection
+  -> publishedsearch.Open -> SearchQuoted -> bounded escaped text -> stdout
+operator target show/activate -> catalog inspection / checked conditional update
+
 trusted offline preparer
   -> capturefiles: descriptor + owned HTML/recipe buffers
   -> preparedimport: exact Git membership + declared dependencies + processing
@@ -113,7 +119,9 @@ the target's collection/generation/default tuple using an expected revision. A
 stale operator conflicts, while exact-next-revision same-tuple retries converge.
 No import automatically activates its result. See the [update contract](decisions/target-updates.md)
 and [local evidence](experiments/search-targets.md). The additive target schema is
-opt-in setup and has not been installed on the hosted catalog.
+opt-in setup and has not been installed on the hosted catalog. The operator CLI
+uses a configured collection guard on SQL updates, so names in another collection
+cannot be redirected. Existing trusted internal callers can keep unscoped updates.
 
 The [retained article is the quote authority](decisions/passage-citations.md).
 Verified original Git file/line ranges are optional additional metadata; generated
@@ -281,8 +289,10 @@ No shared engine/schema/service, cross-checkout imports or shared cache is impli
 The supplied roadmap is context rather than a committed schedule. Broad crawling,
 hybrid search, content-hash document identity and reusing Rewind unchanged are not
 current contracts. A managed preparer, durable capture journal/WAL, automatic resume,
-public import/query commands and HTTP API are unimplemented.
+a public import command and HTTP API are unimplemented.
 A small first corpus is an experiment, not a permanent product limit. Explicit
-internal target activation exists; the command's connection/output contract and
+target activation and trusted-operator search are exposed by the CLI. Native
+PostgreSQL profiles and explicit R2 environment settings configure connections;
+text is for reading, with no stable JSON/citation codec. Hosted target setup and
 reader-safe retention remain open. Roadmap performance claims are not Concordance
 measurements.
