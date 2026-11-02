@@ -403,6 +403,10 @@ are unknown, not irrelevant; never turn query/fixture errors into relevance miss
 The fixed development-only `-compare-noise` experiment is recorded in
 `engineering/experiments/query-noise.md`; its word list and half-overlap rule are
 experimental controls, not product defaults. Do not tune them in place.
+The local BGE trial in `engineering/experiments/local-reranking.md` uses development-only
+`-rerank-export` and `-rerank-scores` modes. Scores bind a reconstructed exact candidate
+bundle; runtime metadata is a trusted producer assertion, not proof of inference.
+No model dependency, reranking or any-word matching is added to product search.
 
 Implement the core learning algorithms deliberately. Use libraries for infrastructure
 such as HTTP, database and object clients. The user and agent build together; do not
