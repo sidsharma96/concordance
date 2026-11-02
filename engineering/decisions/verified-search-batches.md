@@ -65,7 +65,7 @@ returns an error without partial results when false. Its failure unit is a shard
 request, not our article read after a complete local ranking. It demonstrates an
 explicit policy, not a reason to copy its distributed machinery or defaults.
 
-ripgrep 14.1.1's [sequential search](https://github.com/BurntSushi/ripgrep/blob/0e8390a66fbcf6eeac1aeb0541b367663a597c79/crates/core/main.rs#L100-L142)
+ripgrep 14.1.1's [sequential search](https://github.com/BurntSushi/ripgrep/blob/4649aa9700619f94cf9c66876e9549d83420e16c/crates/core/main.rs#L100-L142)
 reports a per-file error and continues. Its surrounding run selects error status
 except the quiet-mode exception. Its independent local-file workload makes useful
 partial output reasonable; emitted bytes cannot be retracted. We choose a complete

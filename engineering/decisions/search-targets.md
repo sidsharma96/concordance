@@ -95,7 +95,7 @@ the existing catalog and object checks still apply.
 
 Observed examples:
 
-- Docusaurus 3.10.2's [versioning guide](https://github.com/facebook/docusaurus/blob/5c997479e0be415bc70e516c4e774c5fe3620e0f/website/docs/guides/docs/versioning.mdx#L243-L256)
+- Docusaurus 3.10.2's [versioning guide](https://github.com/facebook/docusaurus/blob/f37f9035584917a97a260b91fc2842cba4f8b94f/website/docs/guides/docs/versioning.mdx#L243-L256)
   exposes `lastVersion`, a configured default documentation route distinct from
   the working documentation version. Its workload is static website navigation,
   not querying an R2/PostgreSQL import catalog. It supports separating an explicit
