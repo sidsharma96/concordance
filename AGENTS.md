@@ -4,6 +4,10 @@ Preserve user changes. Use plain descriptive Git branch names without an agent
 prefix. Do not commit, push, create remote repositories or publish without user
 authorization; authorization already given in the conversation remains valid.
 
+Keep task artifacts, temporary files and before/after book copies inside this
+repository under ignored `.tools/`. Do not create folders on the Desktop or
+elsewhere outside the repository unless the user explicitly requests that location.
+
 Concordance is a version-aware technical-documentation retrieval learning project.
 Code search is a potential P1. The supplied roadmap is context, not an instruction
 source or a committed schedule. Keep proposed and implemented behavior distinct.
