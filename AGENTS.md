@@ -52,12 +52,17 @@ The command prepares raw queries with textterms, then uses this reader. No
 automatic latest/reload, article cache or deletion protocol exists.
 
 `publishedsearch.Reader.SearchQuoted` now assembles a complete ranked batch with
-strict quotes or returns a zero result on every error. Read
+strict quotes or returns a zero result on every error. SearchQuotedFirst now
+selects a positive requested prefix after the same complete ranking; TotalMatches
+counts indexed matches from that one Search. Read
+engineering/decisions/requested-quote-batches.md. The CLI defaults to ten quotes
+with --limit; --all uses the complete operation. Keep matched/shown counts distinct,
+complete candidate overflow an error and unshown article bodies uncertified. Read
 `engineering/decisions/verified-search-batches.md`. Preserve exact scores/order,
 positive per-quote/aggregate quote-byte limits and the existing complete-match
 limit. References retain reader state; results own their mutable hit slice and
 quote strings. Aggregate quote bytes exclude encoding/metadata and do not bound
-whole-process heap. Every hit still performs its own strict article read. The command adds bounded escaped text rendering; no persisted citation schema or
+whole-process heap. Every selected hit still performs its own strict article read. The command adds bounded escaped text rendering; no persisted citation schema or
 JSON output is included.
 
 `internal/searchtarget` now resolves a catalog-backed friendly name to an exact

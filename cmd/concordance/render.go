@@ -28,7 +28,7 @@ func visible(s string) string { q := strconv.Quote(s); return q[1 : len(q)-1] }
 
 func renderSearch(ctx context.Context, r *publishedsearch.Reader, name string, selection publishedsearch.Selection, batch publishedsearch.QuotedResult, maxBytes int) ([]byte, error) {
 	b := displayBuffer{max: maxBytes}
-	if _, err := fmt.Fprintf(&b, "Searching %q | edition %q\nCollection %q | generation %q\n%d matching passages\n", name, selection.Edition, selection.Collection, selection.Generation, len(batch.Hits)); err != nil {
+	if _, err := fmt.Fprintf(&b, "Searching %q | edition %q\nCollection %q | generation %q\nShowing %d of %d indexed matches\n", name, selection.Edition, selection.Collection, selection.Generation, len(batch.Hits), batch.TotalMatches); err != nil {
 		return nil, err
 	}
 	for i, hit := range batch.Hits {

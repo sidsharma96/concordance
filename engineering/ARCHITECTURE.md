@@ -14,7 +14,8 @@ for repeated searches; a public import CLI remains open work. See the
 ```text
 operator search CLI
   -> admit/prepare query -> resolve target once -> check configured collection
-  -> publishedsearch.Open -> SearchQuoted -> bounded escaped text -> stdout
+  -> publishedsearch.Open -> SearchQuotedFirst (--all: SearchQuoted)
+  -> bounded escaped text -> stdout
 operator target show/activate -> catalog inspection / checked conditional update
 
 trusted offline preparer
@@ -29,6 +30,7 @@ publishedsearch.Open: catalog-published generation + exact edition
   -> repeated local lexical search -> reader-bound references
   -> on-demand strict article read -> provenance checks + exact quote
   -> optional SearchQuoted: complete ranking + every strict quote, or zero result
+  -> SearchQuotedFirst: complete ranking + requested strict prefix, or zero result
 
 searchtarget.Resolve: friendly catalog name + optional exact edition
   -> copy one generation/default tuple -> publishedsearch.Open as above
@@ -245,7 +247,11 @@ lists are intersected and complete results ranked using
 fixed k1/b, positive IDF and full sorting. Query duplicates/permutations do not alter
 scores; exact ties preserve input order. Intermediate intersections may exceed the
 final-match limit. Scores are temporary ranking values, not confidence or citations.
-Field weights, top-k and phrase/proximity positions remain deferred.
+Field weights, optimized top-k selection and phrase/proximity positions remain deferred.
+The CLI defaults to ten verified quotes with positive --limit, or explicit --all.
+Its [requested batch](decisions/requested-quote-batches.md) reports the complete
+indexed-match count separately, preserves full candidate admission/sorting and
+verifies every shown quote before output. Unshown article bodies are not read.
 
 `htmlsearch` [borrows caller input](decisions/snapshot-ownership.md) unchanged through
 dependent use and owns prepared terms/locations. Opaque hit references keep that

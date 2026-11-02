@@ -12,7 +12,9 @@ The operator already has authorized catalog and object-store access. A friendly
 name resolves once to the catalog-selected collection, generation and exact
 edition. An explicit edition overrides the saved default without changing it.
 Reuse the existing textterms preparation, published reader and SearchQuoted batch;
-keep complete matching/ranking and all-or-zero quote verification unchanged.
+keep complete matching/ranking and all-or-zero verification of the requested quote
+batch. The later accepted [requested-batch decision](requested-quote-batches.md)
+changes the CLI default to ten quotes; explicit --all retains complete output.
 
 A successful command must show the edition actually searched and sufficient
 source/provenance information to identify its retained passages. A known-empty
@@ -52,7 +54,9 @@ implementation review with the consumed client APIs.
 Prepare the raw query under the existing technical-term version before opening
 objects; reject empty/punctuation-only queries deliberately. Resolve the name
 once, check the authorized collection, open that exact reader, and assemble all
-quotes with SearchQuoted. Resolve hit metadata using that same reader. Format
+quotes with SearchQuotedFirst (default ten or positive --limit), or SearchQuoted
+for explicit --all. Both return the complete indexed-match count from the same
+Search. Resolve hit metadata using that same reader. Format
 into a separate bounded buffer only after validation/collection succeeds, then
 write it with short-write/error checking. No result body escapes on a data or
 formatting failure. A later output-device failure may still leave partial bytes.
@@ -61,7 +65,8 @@ The public command needs positive query/count, manifest/index/article, quote,
 encoded-output and timeout bounds. Their meanings are distinct. Initial settings
 must admit the published 38-document corpus and be documented as operator
 admission settings, not heap or million-document guarantees. Do not silently
-truncate matches or quotes. No performance conclusion follows from the design.
+silently truncate an over-budget ranking or an individual quote. Requested quote
+selection is explicit and separate. No performance conclusion follows from the design.
 
 ## Accepted output and concrete implementation
 
@@ -79,7 +84,9 @@ reader success or new general test framework is needed.
 
 Search takes exactly a friendly target and one quoted query argument, with flags
 before the target. --edition overrides the saved default; an explicitly empty
-edition is invalid. --timeout defaults to60s. Require explicit PGSERVICE and use
+edition is invalid. --timeout defaults to60s. --limit defaults to10 and must be positive; enabled
+--all conflicts with an explicitly supplied --limit, while --all=false leaves the
+limited mode enabled. Reject invalid/conflicting flags before connection setup. Require explicit PGSERVICE and use
 pgxpool.ParseConfig with a URL-encoded explicit service selector so native
 PGSERVICEFILE/PGPASSFILE and standard connection
 settings retain their driver's precedence. Set pool MaxConns=2, MinConns=0 and
@@ -105,18 +112,23 @@ not truncate. Remaining initial structural ceilings are64sources/editions,
 512group depth and20000vocabulary terms; detailed fixed bounds remain named in
 code and documented. They are bounded operator settings, not a universal product
 capacity. Use the existing real-corpus reader's compatible field/string versions.
-Normally H matching passages cause H+2 logical GET operations: manifest, selected
-index and each quoted article. With default1000matches and8MiB article cap,
-successful article body reads alone can approach8GiB (derived upper bound, not a
-measurement); the60s deadline and real provider conditions may stop earlier.
-This is neither cumulative transfer admission nor an HTTP-redirect/header bound.
-Use a lower complete-match limit to bound requests; do not add an unmeasured cache.
+For H admitted matches and positive quote limit L, a fresh command uses at most
+min(H,L)+2 logical GETs: manifest, selected index and each selected article. Default
+ten quotes mean at most12. Explicit --all retains H+2, up to1002 at the default
+candidate ceiling. At the8MiB article cap, ten successful article reads can approach
+80MiB and all-mode1000 can approach8GiB (derived upper bounds, not measurements).
+The60s deadline and real provider conditions may stop earlier. These are not
+cumulative transfer admissions or HTTP-redirect/header bounds. Complete candidate
+overflow still fails before articles, even when the quote limit is smaller. Full
+index loading/ranking remain; do not infer an optimized top-k algorithm or cache.
 
 The prior live reader admitted this first corpus with lower compatible component
 counts/bytes. Local command execution is now exercised through the real
 PostgreSQL/HTTP pipeline; the hosted experiment separately checks exact corpus quotes.
 
-The header shows target, exact edition, collection and generation once. Each hit
+The header shows target, exact edition, collection and generation once, then
+Showing N of H indexed matches. N counts verified shown quotes; H is the complete
+ranked count from the same Search, not the number of article bodies read. Each hit
 shows source ID/native document key, captured revision and retained block range,
 then all quote lines in ranked order. Do not guess original Git line numbers or
 reconstruct a current website URL. Escape terminal-control characters in all

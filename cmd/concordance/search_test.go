@@ -50,7 +50,7 @@ func TestSearchCommandRealPipelineAndText(t *testing.T) {
 		t.Fatal(err)
 	}
 	text := out.String()
-	for _, want := range []string{`Searching "kubernetes" | edition "one"`, `Collection "guide" | generation "generation-a"`, `2 matching passages`, `1. "docs":"docs/pods.md"`, `2. "docs":"docs/other.md"`, `revision "` + strings.Repeat("a", 40) + `"`, `retained blocks [0,2)`, "   Pods\n   Retry uploads safely.\n"} {
+	for _, want := range []string{`Searching "kubernetes" | edition "one"`, `Collection "guide" | generation "generation-a"`, `Showing 2 of 2 indexed matches`, `1. "docs":"docs/pods.md"`, `2. "docs":"docs/other.md"`, `revision "` + strings.Repeat("a", 40) + `"`, `retained blocks [0,2)`, "   Pods\n   Retry uploads safely.\n"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("missing %q in output:\n%s", want, text)
 		}
@@ -65,7 +65,7 @@ func TestSearchCommandRealPipelineAndText(t *testing.T) {
 
 	out.Reset()
 	f.remote.reset()
-	if err := runSearch(testContext(t), []string{"--edition", "empty", "kubernetes", "retry"}, &out, environment(configEnvironment()), cliConnector(f, &opened, &closed)); err != nil || !strings.Contains(out.String(), `edition "empty"`) || !strings.Contains(out.String(), "0 matching passages") || f.remote.counts()["GET"] != 2 {
+	if err := runSearch(testContext(t), []string{"--edition", "empty", "kubernetes", "retry"}, &out, environment(configEnvironment()), cliConnector(f, &opened, &closed)); err != nil || !strings.Contains(out.String(), `edition "empty"`) || !strings.Contains(out.String(), "Showing 0 of 0 indexed matches") || f.remote.counts()["GET"] != 2 {
 		t.Fatal("known empty", out.String(), err)
 	}
 	out.Reset()
@@ -117,7 +117,7 @@ func TestSearchCommandFailureLeavesNoBodyAndCleansUp(t *testing.T) {
 }
 
 func TestSearchAdmissionBeforeConnections(t *testing.T) {
-	args := [][]string{{}, {"kubernetes"}, {"kubernetes", "retry", "extra"}, {"--edition=", "kubernetes", "retry"}, {"--timeout=0s", "kubernetes", "retry"}, {"--max-matches=0", "kubernetes", "retry"}, {"--max-query-bytes=1", "kubernetes", "retry"}, {"kubernetes", "..."}, {"kubernetes", "\xff"}, {"kubernetes", "private\x00query"}, {"--unknown-private-query", "kubernetes", "retry"}}
+	args := [][]string{{}, {"kubernetes"}, {"kubernetes", "retry", "extra"}, {"--edition=", "kubernetes", "retry"}, {"--timeout=0s", "kubernetes", "retry"}, {"--max-matches=0", "kubernetes", "retry"}, {"--limit=0", "kubernetes", "retry"}, {"--limit=-1", "kubernetes", "retry"}, {"--all", "--limit=10", "kubernetes", "retry"}, {"--max-query-bytes=1", "kubernetes", "retry"}, {"kubernetes", "..."}, {"kubernetes", "\xff"}, {"kubernetes", "private\x00query"}, {"--unknown-private-query", "kubernetes", "retry"}}
 	for _, a := range args {
 		var out bytes.Buffer
 		calls := 0

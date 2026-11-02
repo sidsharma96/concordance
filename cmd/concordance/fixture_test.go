@@ -76,6 +76,10 @@ type bundle struct {
 // Synthetic trusted producer: two logical paths share article bytes; the empty
 // edition has its own actual index. This does not certify a real renderer/capture.
 func makeBundle(t testing.TB, generation, text string) bundle {
+	return makeBundleWithDocuments(t, generation, text, 2)
+}
+
+func makeBundleWithDocuments(t testing.TB, generation, text string, count int) bundle {
 	t.Helper()
 	ctx, l := testContext(t), testLimits()
 	b := bundle{}
@@ -99,7 +103,11 @@ func makeBundle(t testing.TB, generation, text string) bundle {
 	}
 	prep := htmlterms.Limits{Passages: htmlpassage.Limits{MaxBlocks: 1000, MaxGroups: 1000, MaxInputBytes: 1 << 20, MaxPassages: 1000, MaxBodyBytes: 4096, MaxReferences: 10000, MaxContextBytes: 1 << 20}, Field: textterms.Limits{MaxInputBytes: 65536, MaxTerms: 10000, MaxTermBytes: 1024, MaxOutputBytes: 1 << 20}, MaxViewBytes: 1 << 20, MaxTerms: 20000, MaxOutputBytes: 1 << 20}
 	build := htmledition.BuildLimits{File: l.Edition, Article: l.Article, Preparation: prep}
-	b.index, err = htmledition.Build(ctx, "one", [][]byte{b.article, b.article}, build)
+	articles := make([][]byte, count)
+	for i := range articles {
+		articles[i] = b.article
+	}
+	b.index, err = htmledition.Build(ctx, "one", articles, build)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +136,18 @@ func makeBundle(t testing.TB, generation, text string) bundle {
 	other := doc
 	other.File, other.NativeID, other.Location = 1, c.Files[1].Path, c.Files[1].Path
 	other.Images = append([]gm.Image{}, images...)
-	b.description = gm.Description{Collection: "guide", Generation: generation, Sources: []gm.Source{{ID: "docs", Repository: "https://example.invalid/docs.git"}}, Editions: []gm.Edition{{ID: "one", Index: put(wire), Captures: []gm.Capture{c}, Documents: []gm.Document{doc, other}}, {ID: "empty", Index: put(emptyWire)}}}
+	documents := []gm.Document{doc, other}
+	for i := 2; i < count; i++ {
+		file := c.Files[0]
+		file.Path = fmt.Sprintf("docs/extra-%02d.md", i)
+		next := doc
+		next.File = len(c.Files)
+		next.NativeID, next.Location = file.Path, file.Path
+		next.Images = append([]gm.Image{}, images...)
+		c.Files = append(c.Files, file)
+		documents = append(documents, next)
+	}
+	b.description = gm.Description{Collection: "guide", Generation: generation, Sources: []gm.Source{{ID: "docs", Repository: "https://example.invalid/docs.git"}}, Editions: []gm.Edition{{ID: "one", Index: put(wire), Captures: []gm.Capture{c}, Documents: documents}, {ID: "empty", Index: put(emptyWire)}}}
 	b.encode(t)
 	return b
 }
