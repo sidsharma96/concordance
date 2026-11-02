@@ -74,7 +74,9 @@ Validate every referenced article/range/quote, including reserved cases, before
 running any query. This validates fixture bindings, not source-preparer provenance.
 
 The command takes `-capture`, `-set`, `-split development|reserved|all` and a positive
-`-timeout`. Development is the default. It requires no PostgreSQL, R2 or credentials
+`-timeout`. The subsequent [any-word comparison](../experiments/match-any.md)
+adds explicit `-compare-any`, restricted to development, with full diagnostic
+body/context evidence; ordinary mode and product search stay unchanged. Development is the default. It requires no PostgreSQL, R2 or credentials
 and makes no remote writes, activation or imports. Existing local payloads are
 borrowed unchanged while processing; returned canonical bytes and the immutable
 index remain owned until their edition is finished. Downloaded/prepared corpus

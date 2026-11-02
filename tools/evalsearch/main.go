@@ -1,5 +1,6 @@
 // Command evalsearch audits a trusted local capture against fixed known-useful
-// references. It has no database, provider client, imports or ranking policy.
+// references. It has no database, provider client or imports. Optional comparison mode
+// changes only diagnostic candidate eligibility, never product search.
 package main
 
 import (
@@ -27,11 +28,15 @@ import (
 )
 
 type hitReport struct {
-	Path     string  `json:"path"`
-	First    int     `json:"first"`
-	After    int     `json:"after"`
-	Score    float64 `json:"score"`
-	Judgment string  `json:"judgment"`
+	Path          string   `json:"path"`
+	First         int      `json:"first"`
+	After         int      `json:"after"`
+	Score         float64  `json:"score"`
+	Judgment      string   `json:"judgment"`
+	ArticleSHA256 string   `json:"article_sha256,omitempty"`
+	Quote         string   `json:"quote,omitempty"`
+	Headings      []string `json:"headings,omitempty"`
+	Labels        []string `json:"labels,omitempty"`
 }
 type caseReport struct {
 	ID             string      `json:"id"`
@@ -40,6 +45,8 @@ type caseReport struct {
 	Matches        int         `json:"matches"`
 	FirstKnownRank int         `json:"first_known_rank"` // zero means none in the complete ranking
 	Top            []hitReport `json:"top_five"`
+	DistinctTerms  int         `json:"distinct_terms,omitempty"`
+	SingleTermHits int         `json:"summed_single_term_hits,omitempty"`
 }
 type summary struct {
 	Edition     string `json:"edition"`
@@ -60,6 +67,7 @@ type report struct {
 	Summaries      []summary    `json:"summaries"`
 	Cases          []caseReport `json:"cases"`
 	Controls       []caseReport `json:"scope_controls"`
+	AnyWord        *anyReport   `json:"match_any,omitempty"`
 }
 
 func main() {
@@ -75,6 +83,7 @@ func run(parent context.Context, args []string, out io.Writer) error {
 	f.SetOutput(io.Discard)
 	directory := f.String("capture", "", "trusted retained capture directory")
 	setPath := f.String("set", "", "reviewed evaluation-set JSON; kept outside source history")
+	compare := f.Bool("compare-any", false, "compare any-word matching on development only; diagnostic full quotes")
 	split := f.String("split", "development", "development, reserved or all; controls accompany development")
 	timeout := f.Duration("timeout", 2*time.Minute, "whole audit deadline; local file I/O is not preemptive")
 	if err := f.Parse(args); err != nil {
@@ -82,6 +91,9 @@ func run(parent context.Context, args []string, out io.Writer) error {
 	}
 	if parent == nil || out == nil || f.NArg() != 0 || *directory == "" || *setPath == "" || *timeout <= 0 || (*split != "development" && *split != "reserved" && *split != "all") {
 		return errors.New("provide -capture, -set, a valid -split and positive -timeout")
+	}
+	if *compare && *split != "development" {
+		return errors.New("-compare-any requires the development split")
 	}
 	ctx, cancel := context.WithTimeout(parent, *timeout)
 	defer cancel()
@@ -123,7 +135,7 @@ func run(parent context.Context, args []string, out io.Writer) error {
 			return err
 		}
 	}
-	r, err := evaluate(ctx, editions, s, hash, *split)
+	r, err := evaluate(ctx, editions, s, hash, *split, *compare)
 	if err != nil {
 		return err
 	}
@@ -155,18 +167,45 @@ func compatible(p processing) error {
 func queryLimits() termsearch.Limits {
 	return termsearch.Limits{MaxEditions: 1, MaxPassages: 4000, MaxTerms: 200000, MaxQueryTerms: 64, MaxInputBytes: 2 << 20, MaxMatches: 4000}
 }
-func searchCase(ctx context.Context, o openedEdition, id, form, raw string, refs []reference) (caseReport, error) {
+func searchPair(ctx context.Context, o openedEdition, id, form, raw string, refs []reference, compare bool) (caseReport, caseReport, error) {
+	fail := func(err error) (caseReport, caseReport, error) { return caseReport{}, caseReport{}, err }
 	prepared, err := textterms.Prepare(ctx, raw, textterms.Limits{MaxInputBytes: 4096, MaxTerms: 64, MaxTermBytes: 4096, MaxOutputBytes: 4096})
 	if err != nil {
-		return caseReport{}, err
+		return fail(err)
 	}
 	if len(prepared.Terms) == 0 {
-		return caseReport{}, errors.New("query has no technical terms")
+		return fail(errors.New("query has no technical terms"))
 	}
-	ranked, err := o.index.Search(ctx, termsearch.Query{Edition: o.index.ID(), TermsVersion: prepared.Version, Terms: prepared.Terms}, queryLimits())
+	q := termsearch.Query{Edition: o.index.ID(), TermsVersion: prepared.Version, Terms: prepared.Terms}
+	baseline, err := o.index.Search(ctx, q, queryLimits())
 	if err != nil {
-		return caseReport{}, err
+		return fail(err)
 	}
+	c, err := describeCase(ctx, o, id, form, refs, baseline)
+	if err != nil {
+		return fail(err)
+	}
+	if !compare {
+		return c, caseReport{}, nil
+	}
+	ranked, distinct, hits, err := rankAny(ctx, o, q, baseline)
+	if err != nil {
+		return fail(err)
+	}
+	trial, err := describeCase(ctx, o, id, form, refs, ranked)
+	if err != nil {
+		return fail(err)
+	}
+	trial.DistinctTerms, trial.SingleTermHits = distinct, hits
+	if err := addEvidence(ctx, o, &c); err != nil {
+		return fail(err)
+	}
+	if err := addEvidence(ctx, o, &trial); err != nil {
+		return fail(err)
+	}
+	return c, trial, nil
+}
+func describeCase(ctx context.Context, o openedEdition, id, form string, refs []reference, ranked termsearch.RankedResult) (caseReport, error) {
 	known := map[location]bool{}
 	for _, r := range refs {
 		known[location{r.Path, r.First, r.After}] = true
@@ -191,7 +230,7 @@ func searchCase(ctx context.Context, o openedEdition, id, form, raw string, refs
 			if useful {
 				judgment = "known_useful"
 			}
-			r.Top = append(r.Top, hitReport{path, loc.Body.First, loc.Body.After, h.Score, judgment})
+			r.Top = append(r.Top, hitReport{Path: path, First: loc.Body.First, After: loc.Body.After, Score: h.Score, Judgment: judgment})
 		}
 	}
 	return r, nil
@@ -208,8 +247,11 @@ func accumulate(s *summary, c caseReport) {
 		s.ZeroMatches++
 	}
 }
-func evaluate(ctx context.Context, editions []preparedimport.Edition, s evaluationSet, hash, split string) (report, error) {
+func evaluate(ctx context.Context, editions []preparedimport.Edition, s evaluationSet, hash, split string, compare bool) (report, error) {
 	r := report{SetSHA256: hash, CaptureSHA256: s.CaptureSHA256, Processing: s.Processing, RankingVersion: termsearch.BM25Version, Split: split, Documents: len(s.Documents), Summaries: []summary{}, Cases: []caseReport{}, Controls: []caseReport{}}
+	if compare {
+		r.AnyWord = &anyReport{Policy: anyPolicy, Summaries: []summary{}, Cases: []caseReport{}, Controls: []caseReport{}}
+	}
 	for _, q := range s.Intents {
 		for _, a := range q.Answers {
 			r.References += len(a.References)
@@ -221,6 +263,7 @@ func evaluate(ctx context.Context, editions []preparedimport.Edition, s evaluati
 			return report{}, err
 		}
 		sums := [2]summary{{Edition: input.ID, Form: "keywords"}, {Edition: input.ID, Form: "natural"}}
+		anySums := sums
 		for _, q := range s.Intents {
 			if split != "all" && q.Split != split {
 				continue
@@ -232,22 +275,32 @@ func evaluate(ctx context.Context, editions []preparedimport.Edition, s evaluati
 				}
 			}
 			for fi, raw := range []string{q.Keywords, q.Natural} {
-				c, err := searchCase(ctx, o, q.ID, sums[fi].Form, raw, refs)
+				c, trial, err := searchPair(ctx, o, q.ID, sums[fi].Form, raw, refs, compare)
 				if err != nil {
 					return report{}, fmt.Errorf("query %q edition %q: %w", q.ID, input.ID, err)
 				}
 				r.Cases = append(r.Cases, c)
 				accumulate(&sums[fi], c)
+				if compare {
+					r.AnyWord.Cases = append(r.AnyWord.Cases, trial)
+					accumulate(&anySums[fi], trial)
+				}
 			}
 		}
 		r.Summaries = append(r.Summaries, sums[:]...)
+		if compare {
+			r.AnyWord.Summaries = append(r.AnyWord.Summaries, anySums[:]...)
+		}
 		if split != "reserved" {
 			for _, q := range s.Controls {
-				c, err := searchCase(ctx, o, q.ID, "control", q.Query, nil)
+				c, trial, err := searchPair(ctx, o, q.ID, "control", q.Query, nil, compare)
 				if err != nil {
 					return report{}, err
 				}
 				r.Controls = append(r.Controls, c)
+				if compare {
+					r.AnyWord.Controls = append(r.AnyWord.Controls, trial)
+				}
 			}
 		}
 	}
