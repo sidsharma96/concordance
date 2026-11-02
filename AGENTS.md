@@ -387,6 +387,11 @@ postings, full sort and exact vector search are useful baselines, not failures.
 Measure recall and latency together for approximate search. Distinguish ANN recall
 against an exact neighbor baseline from relevance judged by readers.
 
+Read `engineering/decisions/retrieval-evaluation.md` before running or changing
+retrieval audits. Keep the ten reserved intents out of tuning runs; JSON sets and
+reports remain ignored, with their frozen hashes recorded in source. Unjudged hits
+are unknown, not irrelevant; never turn query/fixture errors into relevance misses.
+
 Implement the core learning algorithms deliberately. Use libraries for infrastructure
 such as HTTP, database and object clients. The user and agent build together; do not
 impose the roadmap's split of who types algorithms. Explain key decisions in the book
