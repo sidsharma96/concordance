@@ -2,7 +2,9 @@
 
 Status: accepted option A. The user chose verification of the whole requested
 batch before printing, rather than per-hit quote-unavailable output. This document
-specifies the internal implementation; a public command is not implemented yet.
+specifies the implemented complete-all reader operation. The command now uses the
+[requested-batch operation](requested-quote-batches.md) by default and this complete
+operation for --all; every selected quote still verifies before display.
 
 ## Workload and invariant
 
@@ -21,6 +23,8 @@ succeeds with no hits; an absent edition is rejected when opening the reader.
 
 QuotedHit contains the existing temporary Reference, score and owned quote string.
 QuotedResult owns its hit slice and carries the existing ranking-version label.
+TotalMatches records the complete indexed ranking from that same Search. It equals
+the hit count in SearchQuoted; SearchQuotedFirst can return a shorter verified prefix.
 References retain the opened reader state and stable object routing, exactly like
 ordinary results. They are neither persisted citations nor authorization. Separate
 opens still reject each other's references; callers resolve metadata through the
@@ -81,6 +85,7 @@ truncation; bad inputs/search overflow do no article I/O; cancellation and corru
 articles return zero; old readers remain pinned; empty results need no article read.
 Preserve evidence and inspect concurrent calls with independent result storage.
 
-Connection configuration, public result/citation encoding and CLI installation
-remain the next checkpoint. This slice supplies the accepted verification behavior
-without deciding those contracts or modifying hosted schema, data or target state.
+The operator CLI now supplies connection configuration and bounded text output.
+The requested-batch checkpoint changes only quote selection and matched/shown counts;
+public machine/citation encoding remains separate. No hosted schema, data or target
+state changes follow from these operations.

@@ -74,24 +74,34 @@ retained block range and quote. A block range `[first,after)` includes the first
 block and stops before `after`; it identifies saved article text, not Git lines.
 Terminal controls, quotes and backslashes display with Go-style escapes.
 
+Search shows up to ten verified quotes by default. Use `--limit 5` to request
+another positive count, or `--all` to quote every admitted match. Enabled `--all`
+conflicts with an explicit `--limit`. The header reports shown quotes and total
+indexed matches separately; unshown article bodies have not been verified.
+
 Search requires every prepared technical term and ranks matches with BM25. It is
 lexical retrieval. A missing requested edition fails rather than falling back;
 a known-empty edition or no matches succeeds with zero matching passages.
 
-Every quote is verified and the complete display buffered before stdout is written.
+Every selected quote is verified and the complete display buffered before stdout
+is written.
 A read, validation or formatting failure produces no result body. A later device
 failure can still leave partial bytes. Text is for reading, not a stable script or
 saved-citation format; JSON is deferred.
 
 `search --help` lists independent query, artifact, count, quote, display and timeout
-ceilings. Excess matches or bytes fail rather than truncate. The selected index
-and whole generation manifest are loaded into memory. Each hit downloads its whole
+ceilings. Excess candidate matches or bytes fail rather than truncate. The quote
+limit selects a ranked prefix after complete candidate admission. The selected index
+and whole generation manifest are loaded into memory. Each selected hit downloads its whole
 bounded article, including repeated hits sharing bytes; there is no article cache.
 These limits are not whole-process memory quotas or million-document support.
 Other initial structural ceilings are listed in the
 [command design](engineering/decisions/operator-search-command.md). The default
-match limit can entail up to 1,002 logical GETs; use a lower `--max-matches` to bound
-that work. It remains a complete-result ceiling, not a top-k display limit.
+ten quotes require at most twelve logical GETs in a fresh command: the manifest,
+index and ten articles. `--all` can entail up to 1,002 under the default candidate
+ceiling. `--max-matches` still bounds the complete ranking; exceeding it is an
+error even when `--limit` is smaller. The quote limit does not reduce index loading
+or complete matching and sorting.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for local checks and
 [the architecture](engineering/ARCHITECTURE.md) for boundaries and scaling work.

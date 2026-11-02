@@ -163,6 +163,8 @@ func runSearch(parent context.Context, args []string, out io.Writer, getenv func
 	f.SetOutput(io.Discard)
 	var read readOptions
 	read.flags(f)
+	limit := f.Int("limit", 10, "maximum verified quotes to show; ranking admission is separate")
+	all := f.Bool("all", false, "verify and show every admitted match; conflicts with explicit --limit")
 	edition := f.String("edition", "", "exact edition; omitted uses the target's configured default")
 	queryBytes := f.Int("max-query-bytes", 4096, "raw query UTF-8 byte ceiling")
 	queryTerms := f.Int("max-query-terms", 64, "query term occurrence ceiling")
@@ -176,15 +178,21 @@ func runSearch(parent context.Context, args []string, out io.Writer, getenv func
 		}
 		return commandFailure("invalid search flags; use search --help", err)
 	}
-	if f.NArg() != 2 || !validName(f.Arg(0)) || !read.valid() || *queryBytes <= 0 || *queryTerms <= 0 || *matches <= 0 || *quote <= 0 || *total <= 0 || *output <= 0 {
+	if f.NArg() != 2 || !validName(f.Arg(0)) || !read.valid() || *queryBytes <= 0 || *queryTerms <= 0 || *matches <= 0 || *limit <= 0 || *quote <= 0 || *total <= 0 || *output <= 0 {
 		return errors.New("provide a target, one quoted query and positive search limits; use search --help")
 	}
-	editionSet := false
+	editionSet, limitSet := false, false
 	f.Visit(func(v *flag.Flag) {
 		if v.Name == "edition" {
 			editionSet = true
 		}
+		if v.Name == "limit" {
+			limitSet = true
+		}
 	})
+	if *all && limitSet {
+		return errors.New("--all conflicts with an explicit --limit")
+	}
 	if editionSet && !validName(*edition) {
 		return errors.New("provide a nonempty exact edition or omit --edition")
 	}
@@ -219,7 +227,14 @@ func runSearch(parent context.Context, args []string, out io.Writer, getenv func
 		return commandFailure("open published selection failed", err)
 	}
 	q := termsearch.Query{Edition: selection.Edition, TermsVersion: prepared.Version, Terms: prepared.Terms}
-	batch, err := r.SearchQuoted(ctx, q, termsearch.Limits{MaxEditions: 1, MaxPassages: read.passages, MaxTerms: read.terms, MaxQueryTerms: *queryTerms, MaxInputBytes: read.prepared, MaxMatches: *matches}, publishedsearch.QuoteLimits{MaxQuoteBytes: *quote, MaxTotalQuoteBytes: *total})
+	searchLimits := termsearch.Limits{MaxEditions: 1, MaxPassages: read.passages, MaxTerms: read.terms, MaxQueryTerms: *queryTerms, MaxInputBytes: read.prepared, MaxMatches: *matches}
+	quoteLimits := publishedsearch.QuoteLimits{MaxQuoteBytes: *quote, MaxTotalQuoteBytes: *total}
+	var batch publishedsearch.QuotedResult
+	if *all {
+		batch, err = r.SearchQuoted(ctx, q, searchLimits, quoteLimits)
+	} else {
+		batch, err = r.SearchQuotedFirst(ctx, q, searchLimits, quoteLimits, *limit)
+	}
 	if err != nil {
 		return commandFailure("collect verified search quotes failed", err)
 	}

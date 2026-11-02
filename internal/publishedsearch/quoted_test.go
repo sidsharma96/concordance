@@ -33,7 +33,7 @@ func TestQuotedSearchPreservesCompleteRankingAndPinnedQuotes(t *testing.T) {
 	f.publish(t, makeBundle(t, "generation-b", "Retry requests carefully."))
 	f.remote.reset()
 	got, err := r.SearchQuoted(testContext(t), q, queryLimits(), l)
-	if err != nil || len(got.Hits) != 2 || got.RankingVersion != ranked.RankingVersion {
+	if err != nil || len(got.Hits) != 2 || got.TotalMatches != 2 || got.RankingVersion != ranked.RankingVersion {
 		t.Fatal(got, err)
 	}
 	for i, hit := range got.Hits {
