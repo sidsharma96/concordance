@@ -65,14 +65,15 @@ Do not manufacture a byte comparison with Rewind's instrumented controlled peer.
 The counterpart drill must record body reads/writes separately from headers,
 SDK buffers, retries and guaranteed delivery, as Rewind's record does.
 
-The writer-kill/deleted-work-directory/fresh-replacement sequence and actual
-PostgreSQL COMMIT-response loss remain unimplemented in Concordance. No new drill
-pass is claimed by the evaluation tool. The
-[prepared checkpoint](../decisions/shared-object-recovery-checkpoint.md) supplies
-four proposed cases and bounded ownership, but its tracer/proxy placement still
-needs implementation design review. The intended cases preserve exact saved-key
-retry, distinguish unpublished orphan objects from publication, and retain all
-uncertain objects. An earlier returned error is never permission to delete.
+The separately authorized [counterpart drill](writer-process-recovery.md) now
+kills and reaps the writer, removes its working directory and starts a replacement.
+It withholds the real final publication COMMIT response after observing completion
+and idle state. Four cases pass against native local PostgreSQL and a controlled
+HTTP peer with per-phase request and actual body-byte counts. This closes the
+local process/wire-fault evidence gap, not host-loss or provider-durability coverage.
+The [design checkpoint](../decisions/shared-object-recovery-checkpoint.md) records
+source-inspected tracer placement and the separate pre-implementation review.
+An earlier returned error is never permission to delete uncertain objects.
 
 ## Differences that a shared primitive must preserve
 
@@ -124,6 +125,18 @@ adapter installs one; Concordance rejects it. This difference must survive any
 wrapper or reviewed common guard. Both owners still supply trusted
 clients/routes/credentials and keep them valid through all dependent work.
 
+### Write references and input ownership
+
+Rewind's `Create` takes an `ObjectID` containing the caller's digest and verifies
+that digest against the body before remote access. Concordance's `EnsureVerified`
+computes and returns its exact reference. Neither method makes a caller's digest
+an identity or permission. A common write/reference shape remains undecided.
+Rewind also clones its input in the ingest coordinator and has separate
+nonblocking ingest and object-adapter permits. Concordance's strict adapter borrows
+the body through return and leaves admission to callers. These are source-derived
+ownership and operation limits, not measured peak-heap results or reasons to copy
+an extra buffer into Concordance.
+
 ### Conditional writes, errors and verification reuse
 
 Both strict paths reconcile ambiguous conditional creation through a verified
@@ -148,9 +161,8 @@ It excludes codecs, logical identity, catalogs, receipts, publication, compactio
 retention, acknowledgment, shared services and cross-checkout imports. This names
 candidate responsibilities, not function signatures or an approved package API.
 
-First complete/review the Concordance counterpart fault sequence and its request/
-body-byte counts. Then compare the pinned evidence together and discuss the
-namespace, exact-length and admission alternatives before extracting a library.
+Complete the counterpart implementation reviews and compare the pinned evidence together and discuss the
+namespace, write-reference, exact-length and admission alternatives before extracting a library.
 Rewind's received handoff plus this assessment establishes delivered coordination;
 it does not automatically satisfy the joint design or extraction gate. Actual
 machine loss, provider-service loss, failover and disaster recovery remain distinct

@@ -115,6 +115,10 @@ type storageFixture struct {
 }
 
 func setup(t *testing.T) storageFixture {
+	return setupPeer(t, nil)
+}
+
+func setupPeer(t *testing.T, wrap func(http.Handler) http.Handler) storageFixture {
 	t.Helper()
 	dsn := os.Getenv("CONCORDANCE_TEST_DATABASE_URL")
 	if dsn == "" {
@@ -146,7 +150,11 @@ func setup(t *testing.T) storageFixture {
 	cfg.ConnConfig.RuntimeParams["application_name"] = name
 	cfg.MaxConns = 4
 	f := storageFixture{ctx: ctx, config: cfg, remote: &remote{bodies: map[string][]byte{}}}
-	f.server = httptest.NewServer(f.remote)
+	var handler http.Handler = f.remote
+	if wrap != nil {
+		handler = wrap(handler)
+	}
+	f.server = httptest.NewServer(handler)
 	t.Cleanup(f.server.Close)
 	f.cat, f.pool = f.reopenCatalog(t)
 	if err := f.cat.CreateSchema(ctx); err != nil {
