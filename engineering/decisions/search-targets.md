@@ -82,7 +82,8 @@ together, and competing operators must not silently overwrite each other's choic
 The bounded [update protocol](target-updates.md) received independent design
 review. The internal implementation is now `catalog` targets plus
 `searchtarget.Activate` and `searchtarget.Resolve`. Schema installation is an
-explicit operation; no hosted catalog change has been made.
+explicit operation; the [hosted setup](../experiments/hosted-search-target.md)
+now installs it and selects exact default `1.36` for the existing Kubernetes corpus.
 
 The target lookup grants no authorization. The application must resolve it within
 the caller's authorized configuration, authorize the resulting collection before

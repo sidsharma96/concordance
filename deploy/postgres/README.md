@@ -39,6 +39,34 @@ The writer is trusted to use the catalog APIs. Its SQL privileges permit the DML
 those APIs need; they do not protect the catalog against a compromised writer.
 The role limit counts sessions, not waiting callers or per-query memory.
 
+## Add named search targets
+
+For an existing catalog, connect as its administrator and run from this checkout:
+
+```sh
+psql -X -v ON_ERROR_STOP=1 -d concordance -f deploy/postgres/install-targets.sql
+```
+
+The script checks the database name and catalog owner, then creates the existing
+`internal/catalog/targets.sql` table and applies its grants in one transaction.
+It changes no existing catalog tables, login settings, HBA rules or object data.
+An existing target table is an error; inspect it rather than rerunning bootstrap
+or assuming its schema matches. Failure before commit rolls back this addition.
+A lost commit reply still needs inspection of the table, owner and grants.
+
+The runtime receives SELECT, INSERT and UPDATE on the choice/revision columns;
+it cannot rename or delete a target, create tables or truncate this table. This
+trusted writer can still issue arbitrary permitted SQL. These grants are not an
+untrusted-user authorization boundary. Keep target names scoped by the application
+and use the CLI's configured collection and expected-revision update guard.
+
+Verify the table owner is `concordance_owner`, the foreign key points at
+`catalog.concordance_imports`, and runtime reads/inserts/choice updates work while
+DELETE, TRUNCATE and name UPDATE fail. Explicitly activate an already-published
+generation and a chosen exact default edition with `concordance target activate`;
+creating the table does not select a default. Keep the exact activation flags for
+inspection/retry if the reply is lost. See the [operator setup](../../README.md#configure-operator-access).
+
 ## Backup and isolated restoration
 
 Use the server's compatible `pg_dump -Fc` for this database alone. Encrypt before
@@ -58,7 +86,9 @@ advance its epoch, saturating at bigint maximum. Check every restored row is ina
 Never reactivate it automatically. This is an administrative restore procedure,
 not a runtime migration or automatic recovery implementation.
 
-Reapply `grants.sql` within the clone to test runtime object permissions. An admin-only
+Reapply `grants.sql` within the clone to test runtime object permissions. If the
+backup contains the search-target table, also apply `target-grants.sql`; do not run
+`install-targets.sql` against a restored existing table. An admin-only
 peer session may `SET ROLE concordance_app` for the test, without enabling runtime
 connections to the clone. Confirm namespace binding refuses quarantined state. Read
 an existing published reference from the restored catalog and fully verify its R2

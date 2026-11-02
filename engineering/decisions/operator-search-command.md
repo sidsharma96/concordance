@@ -3,8 +3,8 @@
 Status: accepted direct-client option A and human-readable output first. The first supported search command runs
 on a trusted operator's machine and connects to PostgreSQL and R2. An authenticated
 HTTP search service remains a later boundary for ordinary users. The commands are implemented and exercised against local PostgreSQL/HTTP
-fixtures. Hosted target setup/default activation and a new live CLI read remain
-separate from that local evidence.
+fixtures. The [hosted setup and public CLI check](../experiments/hosted-search-target.md)
+also pass against the existing corpus, with explicit default edition `1.36`.
 
 ## Accepted responsibility
 
@@ -114,7 +114,7 @@ Use a lower complete-match limit to bound requests; do not add an unmeasured cac
 
 The prior live reader admitted this first corpus with lower compatible component
 counts/bytes. Local command execution is now exercised through the real
-PostgreSQL/HTTP pipeline; a new live CLI read remains separate.
+PostgreSQL/HTTP pipeline; the hosted experiment separately checks exact corpus quotes.
 
 The header shows target, exact edition, collection and generation once. Each hit
 shows source ID/native document key, captured revision and retained block range,
@@ -155,15 +155,14 @@ write failure do not promise that the target was unchanged; retain exact generat
 edition and expected revision and inspect show/retry deliberately. Do not auto-retry
 with a new revision. No target deletion or schema-creating command is introduced.
 
-The initial admin setup is applying the existing internal/catalog/targets.sql with
-appropriate schema/grants, outside search. Document this prerequisite rather than
+The admin setup uses deploy/postgres/install-targets.sql to apply the existing
+internal/catalog/targets.sql with owner and column grants transactionally, outside search. Document this prerequisite rather than
 requiring unpublished private helper programs. Exposing the existing explicit
 activation policy is routine public operator wiring, not a newly chosen default.
 
 Read-only search does not install the target table or select a hosted default.
-Those need explicit operator setup. The first supported code can be exercised
-end to end against the real local synthetic fixture while hosted activation stays
-separate. Verify failure on the second quote leaves stdout empty, rendering overflow
+Those require explicit operator setup. The hosted experiment now installs that
+table and activates the existing corpus; synthetic fixture checks remain separate. Verify failure on the second quote leaves stdout empty, rendering overflow
 leaves stdout empty, cross-collection targets cause no object GET, explicit missing
 edition never falls back, defaults and captured provenance are visible, control
 characters cannot issue terminal commands, deadline/cancellation propagates, and

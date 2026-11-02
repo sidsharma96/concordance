@@ -63,8 +63,10 @@ before explicit activation. Read `engineering/decisions/search-targets.md` and
 updates conditional, and exact-next-revision retries distinct from superseded ones.
 Target names are scoped to the configured trusted catalog schema, not authorization.
 The CLI explicitly activates/shows targets and guards updates with
-TargetUpdate.ExpectedCollection. No import auto-activation, target deletion/reset
-or hosted schema installation is included. The owner authorizes collection use and keeps
+TargetUpdate.ExpectedCollection. The hosted target table is installed, and
+`kubernetes` explicitly selects the published corpus with default `1.36` at revision 1.
+Read `engineering/experiments/hosted-search-target.md`; native profiles remain private.
+No import auto-activation or target deletion/reset is included. The owner authorizes collection use and keeps
 trusted routes stable; automatic retention/deletion remains disabled.
 
 ## Design and implementation

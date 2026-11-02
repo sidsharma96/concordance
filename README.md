@@ -24,6 +24,8 @@ Help and version need no database or credentials. The version prints `concordanc
 
 The catalog must already contain a published generation. An administrator installs
 `internal/catalog/targets.sql` in that catalog's schema and grants suitable access.
+For the existing droplet layout, use the transactional
+[named-target setup](deploy/postgres/README.md#add-named-search-targets).
 This explicit setup is separate from search; schema-creating tests must never run
 against the hosted catalog. Target names are unique within the configured schema.
 

@@ -119,7 +119,8 @@ the target's collection/generation/default tuple using an expected revision. A
 stale operator conflicts, while exact-next-revision same-tuple retries converge.
 No import automatically activates its result. See the [update contract](decisions/target-updates.md)
 and [local evidence](experiments/search-targets.md). The additive target schema is
-opt-in setup and has not been installed on the hosted catalog. The operator CLI
+opt-in setup; its [hosted installation and CLI check](experiments/hosted-search-target.md)
+now selects the published Kubernetes corpus with explicit default `1.36`. The operator CLI
 uses a configured collection guard on SQL updates, so names in another collection
 cannot be redirected. Existing trusted internal callers can keep unscoped updates.
 
@@ -293,6 +294,6 @@ a public import command and HTTP API are unimplemented.
 A small first corpus is an experiment, not a permanent product limit. Explicit
 target activation and trusted-operator search are exposed by the CLI. Native
 PostgreSQL profiles and explicit R2 environment settings configure connections;
-text is for reading, with no stable JSON/citation codec. Hosted target setup and
-reader-safe retention remain open. Roadmap performance claims are not Concordance
+text is for reading, with no stable JSON/citation codec. Hosted target setup now passes;
+reader-safe retention remains open. Roadmap performance claims are not Concordance
 measurements.
