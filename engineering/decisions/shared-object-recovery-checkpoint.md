@@ -1,7 +1,7 @@
 # Compare recovery before extracting shared object I/O
 
-Status: prepared recovery checkpoint, not a shared API, implementation approval or
-claim that a new Concordance crash drill passed. The user renewed this comparison
+Status: implemented local recovery drill.
+This is not a shared API or approval to extract code. The user renewed this comparison
 while approving the retrieval evaluation set. Existing project acknowledgment,
 publication, authorization and retention contracts remain separate.
 
@@ -24,8 +24,8 @@ Concordance's later target-setup change does not alter object contracts.
 Concordance has actual R2/droplet generation publication, saved-key recovery,
 fresh-process strict reads and exact quotes, plus an isolated synthetic catalog
 restore with surviving R2 bodies. That is different evidence from killing a writer
-or dropping the real PostgreSQL commit reply. No counterpart to those last two
-fault placements is claimed here.
+or dropping the real PostgreSQL commit reply. The separately authorized [local counterpart drill](../experiments/writer-process-recovery.md)
+now exercises those two fault placements with surviving local services.
 
 | Boundary | Concordance | Rewind |
 | --- | --- | --- |
@@ -89,3 +89,64 @@ distinguish local WAL flushing from wider recovery guarantees. The locked pgx
 v5.11.0 supplies query tracing and bounded pgproto3 message decoding; inspect those
 local APIs before implementation. These establish a controlled fault placement,
 not provider durability or zero-loss disaster recovery.
+
+## Inspected fault placement
+
+The counterpart writer-process drill is now authorized separately from extraction.
+The architecture design review approved the inspected placement before new Go. Keep all changes
+in test files and evidence; do not change a production interface to inject faults.
+
+At source baseline `1256d52583d1733603403b4e10df0ad837a21f2a`,
+`generationpublish.(*Publisher).publish` confirms the artifact batches, confirms
+its root, and only then calls `catalog.PublishInNamespace`.
+`catalog.(*Store).publish` starts a transaction, locks the import row, checks the
+namespace, executes `UPDATE concordance_imports SET generation_id=$3`, then commits.
+A child-local pgx `QueryTracer` matches that exact UPDATE prefix. No other
+transaction is in flight on the serial writer pool at this barrier. The parent
+checks a still-unpublished binding and all expected stored objects, then arms the
+wire proxy before resuming the UPDATE. Namespace binding and receipt commits have
+already completed. The same barrier permits killing the writer before the UPDATE.
+
+The pinned [pgx Exec implementation](https://github.com/jackc/pgx/blob/5e583fa7aabfa88b796292f849fc9d7d75ac159d/conn.go)
+invokes `TraceQueryStart` before executing SQL. Its
+[transaction Commit](https://github.com/jackc/pgx/blob/5e583fa7aabfa88b796292f849fc9d7d75ac159d/tx.go)
+executes `commit` and closes the transaction on error. Our proxy withholds the
+actual successful `CommandComplete(COMMIT)` and idle `ReadyForQuery`, then close
+both connections. The publisher must return a zero publication with
+`catalog.ErrOutcomeUnknown`; a direct parent lookup must find the committed row.
+PostgreSQL's [message flow](https://www.postgresql.org/docs/14/protocol-flow.html)
+explains these boundaries. Idle completion is not evidence of host-loss durability.
+
+The test executable supplies deterministic `makeBundle` producer inputs afresh in
+each child, not a serialized result or saved artifact. The replacement may choose
+a different candidate generation ID while retaining the original operation key
+and input fingerprint. A published retry must recover the original ID with zero
+object requests; an unpublished retry must publish the new candidate while the
+old uploaded root remains unreferenced and retained. Before retry, the strict
+published reader must reject the unpublished candidate without S3 requests. A
+changed fingerprint must conflict without changing publication or object state.
+
+The parent owns one fresh disposable schema, a bounded controlled HTTP peer and
+an optional plaintext-local-only protocol proxy per case. Children use explicit
+configuration via bounded pipes, a cleared environment, an empty private working
+directory, a deadline, bounded diagnostics, a bounded transport and a small pool.
+Forced termination is checked and reaped, then the directory is removed before
+replacement starts. Schema cleanup runs after children/proxy/HTTP work is joined.
+Reuse the existing fixture and small fresh-client oracle, rather than building a
+new fixture framework. No shared library dependency on Rewind is introduced.
+
+Request counts and body bytes are sampled at quiescent child protocol barriers:
+writer publication, replacement initial read, explicit retry, changed-input
+conflict and final read. Count successful response-body writes at the controlled
+HTTP peer and request bytes actually read there, including missing-object XML.
+These are body-I/O observations, not network delivery, headers, TCP/TLS bytes,
+provider billing, allocation or latency. Retained object counts and exact bodies
+are separate assertions. Every server body is bounded and total retained state is
+capped; tracked connections and forwarding goroutines are closed and joined.
+
+The simplest existing alternative discards a successful Go result and reopens a
+pool. It remains a useful oracle, but cannot locate a wire COMMIT failure or prove
+independence from a killed process's files. This drill adds those boundaries with
+local surviving services. Revisit extraction only after both implementations and
+the three known contract differences have been jointly compared; no common API is
+settled by a passing test.
