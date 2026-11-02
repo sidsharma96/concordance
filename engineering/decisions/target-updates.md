@@ -42,6 +42,14 @@ expected revision, producing expected+1. A stale expected revision cannot overwr
 another operator's change. The counter never wraps; the maximum stays readable
 but cannot be advanced. There is no deletion/reset API that reuses old revisions.
 
+The optional TargetUpdate.ExpectedCollection constrains the replaced row in the
+same SQL WHERE clause as the revision. Empty retains the trusted unrestricted
+in-process API; it is not an authorization credential. The operator CLI sets both
+the desired collection and this guard to its configured scope, so a same-revision
+row in another collection cannot be redirected. Creation is still absent-only.
+An unchanged guarded write retains the existing exact-next/full-value retry rule;
+observing the requested state is not proof of which caller wrote it.
+
 These are single-statement autocommit writes, with bounded RETURNING metadata.
 If no row is returned, read the current target. Treat it as the same desired change
 only if its revision is exactly expected+1 and its entire tuple matches. Concurrent

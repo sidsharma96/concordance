@@ -35,12 +35,18 @@ type TargetUpdate struct {
 	Name             string
 	Value            TargetValue
 	ExpectedRevision int64
+	// Nonempty restricts the replaced row's collection atomically. Empty keeps
+	// the trusted unscoped API. The caller still authorizes the desired value.
+	ExpectedCollection string
 }
 
 // Validate admits bounded metadata before an application performs remote preflight.
 // It cannot establish publication, edition existence or caller authorization.
 func (u TargetUpdate) Validate() error {
 	if !identifier(u.Name, 256) || !validTargetValue(u.Value) || u.ExpectedRevision < 0 || u.ExpectedRevision == math.MaxInt64 {
+		return ErrInvalid
+	}
+	if u.ExpectedCollection != "" && !identifier(u.ExpectedCollection, 256) {
 		return ErrInvalid
 	}
 	return nil
@@ -96,8 +102,8 @@ func (s *Store) SetTarget(ctx context.Context, update TargetUpdate) (Target, err
 	} else {
 		row = s.pool.QueryRow(ctx, `UPDATE concordance_search_targets
  SET collection_id=$2,generation_id=$3,default_edition=$4,revision=revision+1
- WHERE name=$1 AND revision=$5 RETURNING `+targetColumns,
-			update.Name, v.Collection, v.Generation, v.DefaultEdition, update.ExpectedRevision)
+ WHERE name=$1 AND revision=$5 AND ($6='' OR collection_id=$6) RETURNING `+targetColumns,
+			update.Name, v.Collection, v.Generation, v.DefaultEdition, update.ExpectedRevision, update.ExpectedCollection)
 	}
 	result, err := scanTarget(row)
 	if err == nil {

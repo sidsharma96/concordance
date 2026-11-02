@@ -20,7 +20,7 @@ on the index check. Run `make race` when changing concurrent behavior.
 Catalog integration tests use PostgreSQL when `CONCORDANCE_TEST_DATABASE_URL` is set:
 
 ```sh
-CONCORDANCE_TEST_DATABASE_URL='postgres://localhost/concordance_test' go test ./internal/catalog -count=1
+CONCORDANCE_TEST_DATABASE_URL='postgres://localhost/concordance_test' go test ./internal/catalog ./cmd/concordance -count=1
 ```
 
 Use a dedicated test database with permission to create schemas. Tests create and
