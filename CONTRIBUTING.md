@@ -54,6 +54,13 @@ Keep secrets in local credential tooling, never source or shell history. The pro
 creates no bucket and leaves one small synthetic object in a unique namespace;
 automatic deletion is disabled. Ordinary local checks skip the live probe.
 
+The optional [retrieval evaluation](engineering/decisions/retrieval-evaluation.md)
+uses a local retained capture and separately supplied reviewed set. Run
+`go run ./tools/evalsearch -capture /path/to/capture -set /path/to/golden-v1.json`.
+It defaults to development questions, needs no database/cloud access, and leaves
+reserved questions out of the first tuning run. Ordinary tests use synthetic
+fixtures and do not require that corpus. Keep datasets/reports out of source history.
+
 Use `make hooks-install` once per clone to install the versioned pre-commit hook.
 It checks staged artifacts and whitespace; it does not replace the normal checks.
 The installer refuses to overwrite a different custom hook configuration.
