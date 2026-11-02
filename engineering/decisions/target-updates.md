@@ -1,8 +1,9 @@
 # Change a named search target without losing another operator's update
 
 Status: accepted design for [catalog targets](search-targets.md). The bounded
-internal catalog and application operations are implemented. No hosted schema
-change or public command exists yet.
+internal catalog and application operations are implemented. The
+[operator command](operator-search-command.md) exposes them; the
+[hosted target](../experiments/hosted-search-target.md) explicitly selects edition `1.36`.
 
 ## Workload, ownership and invariants
 
@@ -129,7 +130,7 @@ retained article/index/manifest bytes with an HTTP object fixture to reject abse
 or corrupt default editions before target writes. An actual lost network reply is
 not implied by reconnecting after discarding a successful caller result.
 
-No hosted migration, default edition, CLI result format or connection configuration
-is selected by these internal primitives. Review their implementation independently
-before the authorized source PR and merge. The next checkpoint remains the public
-search command's configuration/output behavior.
+These internal primitives do not choose a default edition or configure client
+connections/output. Those responsibilities belong to the explicit operator command
+and setup described above. Hosted activation remains separate from import;
+restored target state still needs strict published-reference/object validation.

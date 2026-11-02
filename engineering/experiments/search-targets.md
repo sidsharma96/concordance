@@ -48,8 +48,9 @@ hosted schema change or live R2 experiment.
 
 These are state/operation-count observations, not latency or scale measurements.
 Reconnection after a discarded caller result does not simulate a lost PostgreSQL
-write acknowledgment. A real transport interruption, target schema deployment and
-operator command remain separate work.
+write acknowledgment. A real transport interruption remains open. Target deployment
+and the public command are checked separately in the
+[hosted experiment](hosted-search-target.md).
 
 ## Reproduction and limits
 
@@ -64,7 +65,8 @@ make verify
 
 `catalog.CreateTargetSchema` is explicit additive setup after the import schema.
 An existing table is an error, not a migration or compatibility proof. The hosted
-runtime has not been migrated and no target/default version was installed there.
+installer reuses that DDL transactionally; its separate experiment activates the
+existing corpus with exact default `1.36`.
 
 The low-level catalog writer consumes trusted metadata; its foreign key proves a
 published generation, not an edition's existence. The concrete application uses
@@ -76,6 +78,6 @@ new generation silently.
 
 The caller owns authorization, object routing, deadlines and concurrent-call
 admission. A target is not an authorization credential. There is no deletion/reset,
-revision history, automatic activation, latest-version sorting, cache, public CLI
-configuration/output contract or portable citation schema. A missing requested
+revision history, automatic activation, latest-version sorting, cache or portable
+citation schema. The operator command owns connection configuration and text output. A missing requested
 edition in the chosen generation does not trigger a search of retained generations.
