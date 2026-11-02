@@ -400,6 +400,9 @@ Read `engineering/decisions/retrieval-evaluation.md` before running or changing
 retrieval audits. Keep the ten reserved intents out of tuning runs; JSON sets and
 reports remain ignored, with their frozen hashes recorded in source. Unjudged hits
 are unknown, not irrelevant; never turn query/fixture errors into relevance misses.
+The fixed development-only `-compare-noise` experiment is recorded in
+`engineering/experiments/query-noise.md`; its word list and half-overlap rule are
+experimental controls, not product defaults. Do not tune them in place.
 
 Implement the core learning algorithms deliberately. Use libraries for infrastructure
 such as HTTP, database and object clients. The user and agent build together; do not

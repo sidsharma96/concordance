@@ -16,6 +16,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/sidsharma96/concordance/internal/capturefiles"
@@ -57,17 +58,18 @@ type summary struct {
 	ZeroMatches int    `json:"zero_matches"`
 }
 type report struct {
-	SetSHA256      string       `json:"set_sha256"`
-	CaptureSHA256  string       `json:"capture_sha256"`
-	Processing     processing   `json:"processing"`
-	RankingVersion string       `json:"ranking_version"`
-	Split          string       `json:"split"`
-	Documents      int          `json:"documents"`
-	References     int          `json:"verified_reference_occurrences"`
-	Summaries      []summary    `json:"summaries"`
-	Cases          []caseReport `json:"cases"`
-	Controls       []caseReport `json:"scope_controls"`
-	AnyWord        *anyReport   `json:"match_any,omitempty"`
+	SetSHA256      string        `json:"set_sha256"`
+	CaptureSHA256  string        `json:"capture_sha256"`
+	Processing     processing    `json:"processing"`
+	RankingVersion string        `json:"ranking_version"`
+	Split          string        `json:"split"`
+	Documents      int           `json:"documents"`
+	References     int           `json:"verified_reference_occurrences"`
+	Summaries      []summary     `json:"summaries"`
+	Cases          []caseReport  `json:"cases"`
+	Controls       []caseReport  `json:"scope_controls"`
+	AnyWord        *anyReport    `json:"match_any,omitempty"`
+	Noise          []noiseReport `json:"noise_controls,omitempty"`
 }
 
 func main() {
@@ -84,6 +86,7 @@ func run(parent context.Context, args []string, out io.Writer) error {
 	directory := f.String("capture", "", "trusted retained capture directory")
 	setPath := f.String("set", "", "reviewed evaluation-set JSON; kept outside source history")
 	compare := f.Bool("compare-any", false, "compare any-word matching on development only; diagnostic full quotes")
+	noise := f.Bool("compare-noise", false, "compare fixed question-word and minimum-half rules on development only")
 	split := f.String("split", "development", "development, reserved or all; controls accompany development")
 	timeout := f.Duration("timeout", 2*time.Minute, "whole audit deadline; local file I/O is not preemptive")
 	if err := f.Parse(args); err != nil {
@@ -92,8 +95,8 @@ func run(parent context.Context, args []string, out io.Writer) error {
 	if parent == nil || out == nil || f.NArg() != 0 || *directory == "" || *setPath == "" || *timeout <= 0 || (*split != "development" && *split != "reserved" && *split != "all") {
 		return errors.New("provide -capture, -set, a valid -split and positive -timeout")
 	}
-	if *compare && *split != "development" {
-		return errors.New("-compare-any requires the development split")
+	if (*compare || *noise) && *split != "development" {
+		return errors.New("comparison flags require the development split")
 	}
 	ctx, cancel := context.WithTimeout(parent, *timeout)
 	defer cancel()
@@ -135,7 +138,7 @@ func run(parent context.Context, args []string, out io.Writer) error {
 			return err
 		}
 	}
-	r, err := evaluate(ctx, editions, s, hash, *split, *compare)
+	r, err := evaluate(ctx, editions, s, hash, *split, *compare || *noise, *noise)
 	if err != nil {
 		return err
 	}
@@ -247,10 +250,13 @@ func accumulate(s *summary, c caseReport) {
 		s.ZeroMatches++
 	}
 }
-func evaluate(ctx context.Context, editions []preparedimport.Edition, s evaluationSet, hash, split string, compare bool) (report, error) {
+func evaluate(ctx context.Context, editions []preparedimport.Edition, s evaluationSet, hash, split string, compare, noise bool) (report, error) {
 	r := report{SetSHA256: hash, CaptureSHA256: s.CaptureSHA256, Processing: s.Processing, RankingVersion: termsearch.BM25Version, Split: split, Documents: len(s.Documents), Summaries: []summary{}, Cases: []caseReport{}, Controls: []caseReport{}}
 	if compare {
 		r.AnyWord = &anyReport{Policy: anyPolicy, Summaries: []summary{}, Cases: []caseReport{}, Controls: []caseReport{}}
+	}
+	if noise {
+		r.Noise = []noiseReport{{Policy: questionPolicy, RemovedWords: strings.Fields(questionWords), Summaries: []summary{}, Cases: []noiseCase{}, Controls: []noiseCase{}}, {Policy: halfPolicy, Summaries: []summary{}, Cases: []noiseCase{}, Controls: []noiseCase{}}}
 	}
 	for _, q := range s.Intents {
 		for _, a := range q.Answers {
@@ -264,6 +270,7 @@ func evaluate(ctx context.Context, editions []preparedimport.Edition, s evaluati
 		}
 		sums := [2]summary{{Edition: input.ID, Form: "keywords"}, {Edition: input.ID, Form: "natural"}}
 		anySums := sums
+		noiseSums := [2][2]summary{sums, sums}
 		for _, q := range s.Intents {
 			if split != "all" && q.Split != split {
 				continue
@@ -285,11 +292,26 @@ func evaluate(ctx context.Context, editions []preparedimport.Edition, s evaluati
 					r.AnyWord.Cases = append(r.AnyWord.Cases, trial)
 					accumulate(&anySums[fi], trial)
 				}
+				if noise {
+					results, err := searchNoisePair(ctx, o, q.ID, sums[fi].Form, raw, refs)
+					if err != nil {
+						return report{}, fmt.Errorf("noise query %q edition %q: %w", q.ID, input.ID, err)
+					}
+					for i, result := range results {
+						r.Noise[i].Cases = append(r.Noise[i].Cases, result)
+						accumulate(&noiseSums[i][fi], result.caseReport)
+					}
+				}
 			}
 		}
 		r.Summaries = append(r.Summaries, sums[:]...)
 		if compare {
 			r.AnyWord.Summaries = append(r.AnyWord.Summaries, anySums[:]...)
+		}
+		if noise {
+			for i := range r.Noise {
+				r.Noise[i].Summaries = append(r.Noise[i].Summaries, noiseSums[i][:]...)
+			}
 		}
 		if split != "reserved" {
 			for _, q := range s.Controls {
@@ -300,6 +322,15 @@ func evaluate(ctx context.Context, editions []preparedimport.Edition, s evaluati
 				r.Controls = append(r.Controls, c)
 				if compare {
 					r.AnyWord.Controls = append(r.AnyWord.Controls, trial)
+				}
+				if noise {
+					results, err := searchNoisePair(ctx, o, q.ID, "control", q.Query, nil)
+					if err != nil {
+						return report{}, err
+					}
+					for i, result := range results {
+						r.Noise[i].Controls = append(r.Noise[i].Controls, result)
+					}
 				}
 			}
 		}
