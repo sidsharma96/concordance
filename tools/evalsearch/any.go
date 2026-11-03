@@ -25,7 +25,18 @@ type anyReport struct {
 // where P is the admitted edition's passage count. Each single search also sorts
 // its own results. No production query API or postings algorithm is changed.
 func rankAny(ctx context.Context, o openedEdition, q termsearch.Query, baseline termsearch.RankedResult) (termsearch.RankedResult, int, int, error) {
-	return rankMinimum(ctx, o, q, baseline, 1)
+	oracle, terms, rows, err := rankMinimum(ctx, o, q, baseline, 1)
+	if err != nil {
+		return termsearch.RankedResult{}, 0, 0, err
+	}
+	indexed, err := o.index.SearchAny(ctx, q, queryLimits())
+	if err != nil {
+		return termsearch.RankedResult{}, 0, 0, err
+	}
+	if indexed.RankingVersion != termsearch.AnyBM25Version || indexed.EditionFound != oracle.EditionFound || !slices.Equal(indexed.Matches, oracle.Matches) {
+		return termsearch.RankedResult{}, 0, 0, errors.New("any-word index does not reproduce single-term oracle")
+	}
+	return oracle, terms, rows, nil
 }
 
 func rankMinimum(ctx context.Context, o openedEdition, q termsearch.Query, baseline termsearch.RankedResult, minimum int) (termsearch.RankedResult, int, int, error) {

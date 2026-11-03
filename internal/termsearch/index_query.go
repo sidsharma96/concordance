@@ -32,7 +32,7 @@ func (x *Index) MatchAll(ctx context.Context, q Query, l Limits) (Result, error)
 	return Result{EditionFound: selected.edition != nil, Passages: positions}, nil
 }
 
-func (x *Index) selectMatches(ctx context.Context, q Query, l Limits) (indexSelection, error) {
+func (x *Index) queryLists(ctx context.Context, q Query, l Limits) (indexSelection, error) {
 	zero := indexSelection{}
 	if err := indexContext(ctx); err != nil {
 		return zero, err
@@ -104,10 +104,24 @@ func (x *Index) selectMatches(ctx context.Context, q Query, l Limits) (indexSele
 			return zero, err
 		}
 		list := e.terms[term]
-		if list == nil {
-			return indexSelection{edition: e}, ctx.Err()
-		}
 		selected.lists = append(selected.lists, list)
+	}
+	return selected, ctx.Err()
+}
+
+func (x *Index) selectMatches(ctx context.Context, q Query, l Limits) (indexSelection, error) {
+	zero := indexSelection{}
+	selected, err := x.queryLists(ctx, q, l)
+	if err != nil || selected.edition == nil {
+		return selected, err
+	}
+	for _, list := range selected.lists {
+		if err := ctx.Err(); err != nil {
+			return zero, err
+		}
+		if list == nil {
+			return indexSelection{edition: selected.edition}, ctx.Err()
+		}
 	}
 	order := make([]int, len(selected.lists))
 	for i := range order {

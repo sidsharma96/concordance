@@ -246,6 +246,15 @@ func (e *Edition) Search(ctx context.Context, q termsearch.Query, l termsearch.L
 	return e.index.RankBM25(ctx, q, l)
 }
 
+// SearchAny ranks the complete union of query terms with the evaluated any-word
+// policy. Search remains match-all. All count-index limits and ownership apply.
+func (e *Edition) SearchAny(ctx context.Context, q termsearch.Query, l termsearch.Limits) (termsearch.RankedResult, error) {
+	if !e.valid() {
+		return termsearch.RankedResult{}, ErrInvalid
+	}
+	return e.index.RankBM25Any(ctx, q, l)
+}
+
 func validateLocations(ctx context.Context, e *Edition, l Limits) error {
 	if e == nil || !validString(e.id) {
 		return ErrInvalid

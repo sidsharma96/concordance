@@ -222,25 +222,11 @@ func (r *Reader) Quote(ctx context.Context, ref Reference, maxBytes int) (string
 	if maxBytes <= 0 {
 		return "", ErrInvalid
 	}
-	loc, err := r.Location(ctx, ref)
+	read, err := r.readArticle(ctx, ref)
 	if err != nil {
 		return "", err
 	}
-	if loc.Document.Article.Bytes > int64(r.data.article.MaxEncodedBytes) {
-		return "", ErrLimit
-	}
-	body, err := r.data.objects.Read(ctx, objectstore.Ref{SHA256: loc.Document.Article.SHA256, Bytes: loc.Document.Article.Bytes})
-	if err != nil {
-		return "", fmt.Errorf("read quoted article: %w", err)
-	}
-	position, err := r.data.edition.Location(ref.passage)
-	if err != nil {
-		return "", err
-	}
-	if _, err := r.data.manifest.VerifyArticle(ctx, loc.Selection.Edition, position.Article, body, r.data.article); err != nil {
-		return "", fmt.Errorf("verify quoted article: %w", err)
-	}
-	return r.data.edition.Quote(ctx, ref.passage, body, r.data.article, maxBytes)
+	return r.data.edition.Quote(ctx, ref.passage, read.body, r.data.article, maxBytes)
 }
 
 func ready(ctx context.Context) error {
