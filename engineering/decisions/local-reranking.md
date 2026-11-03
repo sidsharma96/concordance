@@ -67,8 +67,10 @@ not all headers, retries or failed/overlong network responses. Existing strict
 per-read limits remain necessary. At 100 candidates the simple path can require
 102 logical GETs including manifest/index, versus 12 for ten ordinary quotes.
 At an 8 MiB article cap that is up to 800 MiB of candidate article bodies, a derived
-ceiling, not observed normal traffic. Request-scoped article reuse needs explicit
-ownership/byte limits before it is added.
+ceiling, not observed normal traffic. The accepted [grouped-read operation](grouped-article-reads.md)
+now charges distinct article bytes with separate limits and reuses one encoded body
+within a candidate batch. Per-passage verification/decoding remains. The worker
+composition is still pending; the uncached API keeps its original budget meaning.
 
 ## Alternatives, evidence and revisit conditions
 

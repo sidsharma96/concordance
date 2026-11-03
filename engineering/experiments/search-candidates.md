@@ -64,6 +64,22 @@ failed/overlong responses, model-token work, serialized output or process heap.
 Owners still bound simultaneous calls/readers. No persistent or request cache,
 queue, goroutine, remote write or fallback is added.
 
+## One encoded body can serve several candidates
+
+The accepted [grouped-read operation](../decisions/grouped-article-reads.md) adds
+SearchAnyEvidenceGroupedFirst alongside the uncached API. It groups complete
+expected object refs within the reader's stable Store, admits distinct article
+bytes before GET and processes groups in first-occurrence order. Output is filled
+at original ranked positions. Each logical passage still receives all manifest,
+edition, decoding and canonical-context checks. No decoded state or byte buffer
+is kept between calls. Returned text still counts every occurrence.
+
+The synthetic three-path A,B,A fixture returns exactly the uncached refs, scores,
+body and context with two body GETs instead of three. A later request makes two
+again. A deliberately wrong profile on a second slot sharing bytes fails after
+one GET and returns zero result, preserving logical provenance independently of
+physical reuse. Separate budgets preserve the old per-hit API's meaning.
+
 ## Evidence and limits
 
 Synthetic local PostgreSQL/HTTP publisher-reader checks cover exact body/context,
@@ -84,7 +100,7 @@ claims. Full local checks require a dedicated PostgreSQL test database; no hoste
 DB, live R2, inference or timing benchmark is part of this slice.
 
 Private test logs and exact comparison artifacts stay under .tools. Revisit dense
-scratch on measured query pressure, and repeated article reads with explicit
-request-owned reuse before scaling. This foundation does not establish production
+scratch on measured query pressure, and repeated article decoding/planning if
+its remaining cost becomes material after grouped downloads. This foundation does not establish production
 model latency, readiness/cancellation behavior, private multi-user authorization
 or million-document support.

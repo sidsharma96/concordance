@@ -74,17 +74,9 @@ func (r *Reader) SearchAnyEvidenceFirst(ctx context.Context, q termsearch.Query,
 		if err != nil {
 			return CandidateResult{}, fmt.Errorf("candidate evidence %d: %w", i, err)
 		}
-		if len(evidence.Quote) > textLeft {
-			return CandidateResult{}, ErrLimit
-		}
-		textLeft -= len(evidence.Quote)
-		for _, field := range [][]string{evidence.Headings, evidence.Labels} {
-			for _, text := range field {
-				if len(text) > textLeft {
-					return CandidateResult{}, ErrLimit
-				}
-				textLeft -= len(text)
-			}
+		textLeft, err = admitEvidence(evidence, textLeft)
+		if err != nil {
+			return CandidateResult{}, err
 		}
 		out.Candidates = append(out.Candidates, Candidate{Ref: hit.Ref, Score: hit.Score, Evidence: evidence})
 	}
@@ -92,4 +84,21 @@ func (r *Reader) SearchAnyEvidenceFirst(ctx context.Context, q termsearch.Query,
 		return CandidateResult{}, err
 	}
 	return out, nil
+}
+
+// Logical returned text is charged per passage, regardless of article sharing.
+func admitEvidence(e Evidence, remaining int) (int, error) {
+	if len(e.Quote) > remaining {
+		return 0, ErrLimit
+	}
+	remaining -= len(e.Quote)
+	for _, field := range [][]string{e.Headings, e.Labels} {
+		for _, text := range field {
+			if len(text) > remaining {
+				return 0, ErrLimit
+			}
+			remaining -= len(text)
+		}
+	}
+	return remaining, nil
 }
