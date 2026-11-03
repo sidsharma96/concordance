@@ -8,8 +8,8 @@ scope selection without changing the model or ranking configuration.
 
 ## Workload, model and local runtime
 
-Use the existing 120 development cases and 18 controls, never the ten reserved
-intents. The any-word diagnostic finds a frozen useful reference somewhere for all
+The development trial used the existing 120 development cases and 18 controls,
+without querying the ten reserved intents. The any-word diagnostic finds a frozen useful reference somewhere for all
 60 ordinary-question cases, within five for 41 and within 100 for 57. Selecting only
 100 therefore excludes all frozen references in three cases before model scoring.
 These are incomplete known positives, not exhaustive recall or a relevance guarantee.
@@ -32,10 +32,12 @@ oversize input stops the trial for discussion.
 
 ## Export checked inputs, then import checked scores
 
-Two mutually exclusive development-only modes are implemented in tools/evalsearch:
+The development trial introduced two mutually exclusive modes in tools/evalsearch:
 `-rerank-export` exports candidates; `-rerank-scores FILE` reconstructs them and
 checks scores before emitting existing all/any baselines plus tagged reranking.
-Refuse existing comparison flags and reserved/all splits in these modes. Complete
+The original route refused comparison flags and reserved/all splits. The separate
+[validation route](reserved-reranking-validation.md) now permits explicit reserved
+release while keeping all-split and comparison combinations refused. Complete
 capture/reference preflight, including reserved bindings without their queries,
 still precedes any query.
 
