@@ -19,9 +19,12 @@ sample-size recommendation or evidence of enterprise representativeness.
 
 Twenty whole intents are for development. Ten are reserved across both phrasings
 and every edition. The default initial run uses development plus controls: 138
-runs. The remaining 60 stay unused for tuning until a later validation checkpoint.
-The fixture is readable source, so this separation is procedural, not a secret
-or proof that a model has never seen the questions.
+runs. The user subsequently released the remaining 60 for
+[frozen reranker validation](../experiments/reserved-reranking-validation.md).
+They stay outside tuning and are now observed validation evidence, not untouched
+questions. The fixture keeps its original reserved split label and frozen hash.
+This separation is procedural, not a secret or proof that pretraining never saw
+the public material or authored questions.
 
 A known useful reference contributes decisive factual evidence to the declared
 information need. A question can need several passages; finding one reference
@@ -81,7 +84,9 @@ body/context evidence; ordinary mode and product search stay unchanged. The
 `-compare-noise`, including both prior baselines, query-only question-word removal
 and one explicit half-overlap threshold. It selects no product rule. Development
 is the default. The [local reranking trial](../experiments/local-reranking.md) adds
-mutually exclusive development-only `-rerank-export` and `-rerank-scores FILE` modes.
+mutually exclusive `-rerank-export` and `-rerank-scores FILE` modes, defaulting to
+development. Explicit `-split reserved -validate-reserved` selects only the released
+validation intents; comparison flags and all remain forbidden for this route.
 Export carries no relevance labels; checked local scores bind the exact reconstructed
 first-100 any-word bundle. This selects no production model or search behavior.
 The Go audit requires no PostgreSQL, R2, model runtime or credentials

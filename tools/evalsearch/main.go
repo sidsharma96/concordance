@@ -88,8 +88,9 @@ func run(parent context.Context, args []string, out io.Writer) error {
 	setPath := f.String("set", "", "reviewed evaluation-set JSON; kept outside source history")
 	compare := f.Bool("compare-any", false, "compare any-word matching on development only; diagnostic full quotes")
 	noise := f.Bool("compare-noise", false, "compare fixed question-word and minimum-half rules on development only")
-	export := f.Bool("rerank-export", false, "export first100 any-word candidates for local scoring; development only")
-	scores := f.String("rerank-scores", "", "checked local score file for the reconstructed first100 bundle; development only")
+	export := f.Bool("rerank-export", false, "export first100 candidates; reserved requires explicit validation")
+	scores := f.String("rerank-scores", "", "checked local scores; reserved requires explicit validation")
+	validateReserved := f.Bool("validate-reserved", false, "explicit frozen validation; requires -split reserved and one rerank mode")
 	split := f.String("split", "development", "development, reserved or all; controls accompany development")
 	timeout := f.Duration("timeout", 2*time.Minute, "whole audit deadline; local file I/O is not preemptive")
 	if err := f.Parse(args); err != nil {
@@ -98,8 +99,15 @@ func run(parent context.Context, args []string, out io.Writer) error {
 	if parent == nil || out == nil || f.NArg() != 0 || *directory == "" || *setPath == "" || *timeout <= 0 || (*split != "development" && *split != "reserved" && *split != "all") {
 		return errors.New("provide -capture, -set, a valid -split and positive -timeout")
 	}
-	if (*compare || *noise || *export || *scores != "") && *split != "development" {
+	rerankMode := *export || *scores != ""
+	if *validateReserved && (*split != "reserved" || !rerankMode || *compare || *noise) {
+		return errors.New("-validate-reserved requires -split reserved and one rerank mode")
+	}
+	if (*compare || *noise) && *split != "development" {
 		return errors.New("comparison flags require the development split")
+	}
+	if rerankMode && *split != "development" && !*validateReserved {
+		return errors.New("reserved reranking requires explicit -validate-reserved")
 	}
 	if (*export && *scores != "") || ((*export || *scores != "") && (*compare || *noise)) {
 		return errors.New("rerank modes are mutually exclusive and cannot combine with comparison flags")
@@ -145,7 +153,7 @@ func run(parent context.Context, args []string, out io.Writer) error {
 		}
 	}
 	if *export || *scores != "" {
-		bundle, err := buildRerankBundle(ctx, editions, s, hash)
+		bundle, err := buildRerankBundle(ctx, editions, s, hash, *split)
 		if err != nil {
 			return err
 		}
@@ -156,7 +164,7 @@ func run(parent context.Context, args []string, out io.Writer) error {
 		if err != nil {
 			return err
 		}
-		r, err := evaluate(ctx, editions, s, hash, "development", true, false)
+		r, err := evaluate(ctx, editions, s, hash, *split, true, false)
 		if err != nil {
 			return err
 		}

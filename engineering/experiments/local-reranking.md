@@ -2,6 +2,9 @@
 
 Status: completed user-authorized local BGE reranker v2-m3 development trial.
 Product search, preparation, indexes, storage and frozen positives remain unchanged.
+The original development method and outcomes below remain fixed; the separately
+authorized [reserved validation](reserved-reranking-validation.md) adds explicit
+scope selection without changing the model or ranking configuration.
 
 ## Workload, model and local runtime
 
@@ -230,7 +233,7 @@ SHA-256 `9055dd7ec90a66eb4998ee6374d02cf99941813fd4ba36a8d632d474710b7d76`;
 the pinned installed dependency list is under .tools/reranking/requirements.txt.
 Partial checkpoints are not valid input to completed evaluation.
 
-Keep this setup frozen for a separately authorized reserved-set validation before
+Keep this setup frozen for the separately recorded reserved-set validation before
 deciding on production behavior. Do not infer representativeness, calibrated scores
 or a preferred fusion/threshold from this development run. Product search remains
 unchanged.

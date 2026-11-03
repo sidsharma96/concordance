@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -43,28 +44,35 @@ type rerankInputCase struct {
 	Candidates     []rerankCandidate `json:"candidates"`
 }
 type rerankBundle struct {
-	Format         string            `json:"format"`
-	SetSHA256      string            `json:"set_sha256"`
-	CaptureSHA256  string            `json:"capture_sha256"`
-	InputVersion   string            `json:"input_version"`
-	Model          string            `json:"model"`
-	Revision       string            `json:"revision"`
-	CandidateLimit int               `json:"candidate_limit"`
-	Cases          []rerankInputCase `json:"cases"`
+	ValidationSplit string            `json:"validation_split,omitempty"`
+	Format          string            `json:"format"`
+	SetSHA256       string            `json:"set_sha256"`
+	CaptureSHA256   string            `json:"capture_sha256"`
+	InputVersion    string            `json:"input_version"`
+	Model           string            `json:"model"`
+	Revision        string            `json:"revision"`
+	CandidateLimit  int               `json:"candidate_limit"`
+	Cases           []rerankInputCase `json:"cases"`
 }
 
 // Build borrows capture aliases unchanged synchronously. It owns returned slice
 // storage and strings assembled by Quote/modelText. No label is exported. Memory
 // includes all input buffers, one edition, full ranking and the accumulated bundle.
-func buildRerankBundle(ctx context.Context, inputs []preparedimport.Edition, s evaluationSet, setHash string) (rerankBundle, error) {
+func buildRerankBundle(ctx context.Context, inputs []preparedimport.Edition, s evaluationSet, setHash, split string) (rerankBundle, error) {
+	if split != "development" && split != "reserved" {
+		return rerankBundle{}, errors.New("invalid rerank split")
+	}
 	b := rerankBundle{Format: "concordance.rerank-input/v1", SetSHA256: setHash, CaptureSHA256: s.CaptureSHA256, InputVersion: rerankInputVersion, Model: rerankModel, Revision: rerankRevision, CandidateLimit: rerankWindow, Cases: []rerankInputCase{}}
+	if split == "reserved" {
+		b.ValidationSplit = split
+	}
 	for _, input := range inputs {
 		o, err := openEdition(ctx, input, s)
 		if err != nil {
 			return rerankBundle{}, err
 		}
 		for _, q := range s.Intents {
-			if q.Split != "development" {
+			if q.Split != split {
 				continue
 			}
 			for fi, raw := range []string{q.Keywords, q.Natural} {
@@ -76,12 +84,14 @@ func buildRerankBundle(ctx context.Context, inputs []preparedimport.Edition, s e
 				b.Cases = append(b.Cases, c)
 			}
 		}
-		for _, q := range s.Controls {
-			c, err := exportRerankCase(ctx, o, q.ID, "control", q.Query)
-			if err != nil {
-				return rerankBundle{}, err
+		if split == "development" {
+			for _, q := range s.Controls {
+				c, err := exportRerankCase(ctx, o, q.ID, "control", q.Query)
+				if err != nil {
+					return rerankBundle{}, err
+				}
+				b.Cases = append(b.Cases, c)
 			}
-			b.Cases = append(b.Cases, c)
 		}
 	}
 	return b, ctx.Err()
@@ -154,14 +164,15 @@ type rerankedCase struct {
 	Top                    []rerankedHit `json:"top_five"`
 }
 type rerankReport struct {
-	Policy         string         `json:"policy"`
-	BundleSHA256   string         `json:"bundle_sha256"`
-	InputVersion   string         `json:"input_version"`
-	CandidateLimit int            `json:"candidate_limit"`
-	Runtime        rerankRuntime  `json:"runtime"`
-	Summaries      []summary      `json:"summaries"`
-	Cases          []rerankedCase `json:"cases"`
-	Controls       []rerankedCase `json:"scope_controls"`
+	ValidationSplit string         `json:"validation_split,omitempty"`
+	Policy          string         `json:"policy"`
+	BundleSHA256    string         `json:"bundle_sha256"`
+	InputVersion    string         `json:"input_version"`
+	CandidateLimit  int            `json:"candidate_limit"`
+	Runtime         rerankRuntime  `json:"runtime"`
+	Summaries       []summary      `json:"summaries"`
+	Cases           []rerankedCase `json:"cases"`
+	Controls        []rerankedCase `json:"scope_controls"`
 }
 
 // A complete score set is checked before entry. Model sorting changes only the
@@ -171,7 +182,7 @@ func describeReranked(ctx context.Context, b rerankBundle, scores rerankScores, 
 	for _, row := range scores.Entries {
 		values[row.PairID] = *row.Score
 	}
-	r := &rerankReport{Policy: "bge-v2-m3/lexical100/v1", BundleSHA256: scores.BundleSHA256, InputVersion: b.InputVersion, CandidateLimit: b.CandidateLimit, Runtime: scores.Runtime, Summaries: []summary{}, Cases: []rerankedCase{}, Controls: []rerankedCase{}}
+	r := &rerankReport{ValidationSplit: b.ValidationSplit, Policy: "bge-v2-m3/lexical100/v1", BundleSHA256: scores.BundleSHA256, InputVersion: b.InputVersion, CandidateLimit: b.CandidateLimit, Runtime: scores.Runtime, Summaries: []summary{}, Cases: []rerankedCase{}, Controls: []rerankedCase{}}
 	for _, c := range b.Cases {
 		if err := ctx.Err(); err != nil {
 			return nil, err
