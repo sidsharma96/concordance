@@ -2,8 +2,8 @@
 
 Status: accepted option A. Keep the tested model loaded in a separately started
 local worker. Ordinary search remains every-word/BM25; an explicit reranking mode
-will use the evaluated first-100 any-word pool. The worker and command integration
-are proposed until their implementations and checks are recorded here.
+will use the evaluated first-100 any-word pool. The framed worker and opt-in command now implement this direction; read the
+[protocol](worker-protocol.md) and [functional experiment](../experiments/local-worker.md).
 
 ## Ownership and lifecycle
 
@@ -22,7 +22,8 @@ proof that inference ran. One whole query owns the scorer at a time; reject busy
 requests rather than accumulate waiting inference work. Bound parsing, connections,
 request/response bytes, candidate count and actual token work as well as inference.
 
-Readiness, cancellation, draining and shutdown need implementation-level review.
+The protocol implementation supplies readiness, bounded receipt, cooperative
+cancellation and joined draining; the functional experiment records its checks.
 Client cancellation cannot instantly interrupt an active tensor operation. Keep
 ownership until computation has actually stopped; no overlapping admission after
 the client leaves. Explicit reranking errors must not silently become lexical or
@@ -43,7 +44,8 @@ requested ranking and adds a successful degraded state. We keep failures visible
 for this first trusted-operator command. Revisit an explicitly enabled fallback
 only with a concrete user-facing availability requirement. Authorization, article
 integrity, binding, budget and caller-cancellation failures always remain errors.
-The worker/protocol/command implementation is still pending.
+The worker/protocol/command implementation now exists under the explicit
+[worker contract](worker-protocol.md).
 
 ## Candidate work comes before the model
 
@@ -69,8 +71,8 @@ per-read limits remain necessary. At 100 candidates the simple path can require
 At an 8 MiB article cap that is up to 800 MiB of candidate article bodies, a derived
 ceiling, not observed normal traffic. The accepted [grouped-read operation](grouped-article-reads.md)
 now charges distinct article bytes with separate limits and reuses one encoded body
-within a candidate batch. Per-passage verification/decoding remains. The worker
-composition is still pending; the uncached API keeps its original budget meaning.
+within a candidate batch. Per-passage verification/decoding remains. The worker composition now uses that grouped operation; the uncached API keeps its
+original budget meaning.
 
 ## Alternatives, evidence and revisit conditions
 
@@ -99,7 +101,6 @@ selected as a replacement runtime. The
 scoring; its model and automatic truncation are not inherited.
 
 The [development trial](../experiments/local-reranking.md) and
-[frozen validation](../experiments/reserved-reranking-validation.md) support an opt-in
-implementation, not production latency, relevance confidence, abstention or a claim
+[frozen validation](../experiments/reserved-reranking-validation.md) support the opt-in implementation, not production latency, relevance confidence, abstention or a claim
 that a single local worker handles enterprise traffic. Embeddings/vector retrieval
 remain separate work.

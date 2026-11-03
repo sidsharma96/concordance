@@ -409,12 +409,10 @@ development. The user released the reserved intents for frozen validation record
 `-split reserved -validate-reserved` for that scope. These are now observed validation
 evidence, never an untouched tuning set; keep the model/configuration fixed. Scores bind a reconstructed exact candidate
 bundle; runtime metadata is a trusted producer assertion, not proof of inference.
-No model dependency or reranking is added to the product command. Explicit any-word
-candidate library APIs now exist; the command remains every-word.
-The user accepted a persistent local worker and opt-in mode in
-`engineering/decisions/local-reranking.md`. Implement and review candidate retrieval,
-exact context and article-byte admission before worker/CLI composition. Accepted
-direction is not a claim that the worker or opt-in command already exists.
+Explicit any-word candidate APIs provide the model pool. Ordinary search remains
+every-word; the opt-in worker composition below uses the frozen first-100 policy
+from `engineering/decisions/local-reranking.md`. No ML dependency is linked into
+the Go binary.
 `termsearch.Index.RankBM25Any` and the explicit edition/published SearchAny wrappers
 preserve the evaluated lexical-order single-term sum and complete-union admission.
 `publishedsearch.SearchAnyEvidenceFirst` preflights per-hit declared article bytes
@@ -429,8 +427,17 @@ per complete physical Ref within one authorized reader/call, while manifest,
 edition, decode and canonical-context checks stay per passage. Keep its separate
 MaxDistinctArticleBytes budget, preflight before GET, original ranked output
 positions and zero result on every error. No decoded or cross-query article cache.
-The uncached API and per-hit budget remain the oracle. No worker, score transport,
-model-input formatter or CLI opt-in is implemented by this slice.
+The uncached API and per-hit budget remain the oracle.
+`engineering/decisions/worker-protocol.md` records the accepted framed-JSON local
+worker and the exact Python exception. `internal/rerank` owns bounded input/text
+bindings and score transport; `worker/rerank.py` owns one reserved operation thread,
+complete token admission and the pinned offline MPS model. Keep reservations through
+actual compute drain, worker-enforced request-receipt deadlines, model/runtime/pair
+bindings and all-or-zero results. The opt-in CLI composes grouped first100 retrieval,
+complete scoring and requested display; ordinary search remains unchanged. Never
+pass catalog/R2 credentials to the worker or add a fake-scorer flag to production.
+Only the separate test file exposes a fake interop entry point. No fallback,
+truncation, automatic retry or general model/device selection is included.
 
 Implement the core learning algorithms deliberately. Use libraries for infrastructure
 such as HTTP, database and object clients. The user and agent build together; do not
@@ -486,6 +493,9 @@ a test run) and come back. A link adds to code on the page; it never replaces it
 - Put `<!-- excerpt: <path>.go#L<a>-L<b> @<commit> current -->` on the line above
   each excerpt of implemented code and fence it as ```` ```go ```` (or
   ```` ```sql ````). Paste output as ```` ```text ````.
+- The maintained worker's `.py` excerpts use the same current markers and
+  ```` ```python ```` fences. Explain its process/thread and inference behavior;
+  the narrow source exception does not exempt worker lessons from Rule 7.
 - `current` means the excerpt matches the working source. The project changes at
   every checkpoint, so a checkpoint that changes excerpted code also refreshes the
   excerpt, its walk-through and its marker; the check fails until it does. Use
@@ -532,7 +542,9 @@ for book changes. Before opening or updating a PR, run `make verify` with an exp
 dedicated local test database; it includes check, uncached race tests and build.
 GitHub Actions is disabled: do not introduce hosted workflows or required remote
 checks without user agreement. Record checks actually run and their limits. Maintained repository
-tools use Go; disposable probes may use ignored `scripts/utils/`, but shared workflows
+tools use Go. Only `worker/rerank.py` and `worker/test_rerank.py` are approved
+maintained Python exceptions, with a pinned text dependency lock; checkrepo enforces
+those exact paths. Disposable probes may use ignored `scripts/utils/`, but shared workflows
 must not depend on them. Keep JSON/JSONL/NDJSON, profiler captures, credentials and
 build output out of source history. This policy does not dictate runtime formats.
 Source files are limited to 1 MiB. Inspect the actual index and README/CONTRIBUTING

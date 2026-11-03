@@ -10,6 +10,7 @@ check: fmt-check
 	go vet ./...
 	go test ./...
 	go run ./tools/checkrepo
+	python3 -I -B worker/test_rerank.py
 
 fmt-check:
 	@test -z "$$(gofmt -l cmd internal tools)" || { gofmt -l cmd internal tools; exit 1; }

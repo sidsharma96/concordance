@@ -1,8 +1,8 @@
 # Concordance
 
 Concordance searches technical documentation by product version and identifies the
-exact captured source behind each result. It is written in Go. Code search is a
-possible later extension.
+exact captured source behind each result. Core search is written in Go; optional
+reranking uses a local Python worker. Code search is a possible later extension.
 
 The CLI searches previously published Git/HTML generations through named catalog
 targets. It is a trusted operator tool that connects directly to PostgreSQL and
@@ -79,7 +79,7 @@ another positive count, or `--all` to quote every admitted match. Enabled `--all
 conflicts with an explicit `--limit`. The header reports shown quotes and total
 indexed matches separately; unshown article bodies have not been verified.
 
-Search requires every prepared technical term and ranks matches with BM25. It is
+Ordinary search requires every prepared technical term and ranks matches with BM25. It is
 lexical retrieval. A missing requested edition fails rather than falling back;
 a known-empty edition or no matches succeeds with zero matching passages.
 
@@ -92,7 +92,7 @@ saved-citation format; JSON is deferred.
 `search --help` lists independent query, artifact, count, quote, display and timeout
 ceilings. Excess candidate matches or bytes fail rather than truncate. The quote
 limit selects a ranked prefix after complete candidate admission. The selected index
-and whole generation manifest are loaded into memory. Each selected hit downloads its whole
+and whole generation manifest are loaded into memory. In ordinary search, each selected hit downloads its whole
 bounded article, including repeated hits sharing bytes; there is no article cache.
 These limits are not whole-process memory quotas or million-document support.
 Other initial structural ceilings are listed in the
@@ -102,6 +102,60 @@ index and ten articles. `--all` can entail up to 1,002 under the default candida
 ceiling. `--max-matches` still bounds the complete ranking; exceeding it is an
 error even when `--limit` is smaller. The quote limit does not reduce index loading
 or complete matching and sorting.
+
+## Search with the local reranker
+
+The optional `--rerank` mode accepts ordinary questions, retrieves up to 100 any-word
+keyword candidates and uses the pinned local model to reorder them. It returns
+verified passages and source references, not generated answers. Candidate retrieval
+is still lexical: the model cannot recover a passage outside that pool.
+
+The real worker is currently tested on an Apple M1 Mac with 16 GiB and MPS. It
+requires Python 3.14.2 and the pinned dependencies; startup refuses another device
+or incompatible assets/runtime. From this checkout, prepare it once:
+
+```sh
+python3.14 -m venv .tools/reranking/venv
+.tools/reranking/venv/bin/python -m pip install -r worker/requirements.txt
+go run ./tools/fetchreranker
+```
+
+The fetcher obtains about 2.3 GB of public model assets from an exact revision. It
+verifies existing files locally and refuses to overwrite mismatches. Model files,
+Python environment and caches stay under ignored `.tools/`.
+
+In a separate terminal, start the persistent worker. The launcher passes a minimal
+environment rather than forwarding database/cloud credentials:
+
+```sh
+./bin/concordance worker --socket "$PWD/.tools/reranking/run/worker.sock"
+```
+
+With normal catalog/R2 operator access configured, query from another terminal:
+
+```sh
+PGSERVICE=concordance-read ./bin/concordance search --rerank --edition 1.35 \
+  --worker-socket "$PWD/.tools/reranking/run/worker.sock" kubernetes \
+  "Why is my Pod stuck in Pending?"
+```
+
+`CONCORDANCE_WORKER_SOCKET` can supply the socket instead of the flag. Reranking
+shows ten passages by default; `--limit` selects at most 100 after the whole candidate
+pool is scored. `--all` conflicts with this fixed pool. The output identifies model
+reranking and distinguishes scored candidates, displayed passages and total matches.
+
+Each distinct candidate article is strictly downloaded once within the request;
+every passage still receives independent verification/decoding. The default distinct
+article budget is 64 MiB (`--max-candidate-article-bytes`), candidate evidence is
+bounded separately, and the worker admits complete untruncated inputs within its
+byte/token limits. The timeout defaults to five minutes for this mode. These bounds
+are not process/GPU memory quotas; the loaded model occupies GiB of memory.
+
+A busy, missing, incompatible or failed worker is an error without lexical fallback.
+An empty candidate set succeeds without contacting a worker. Ctrl-C/SIGTERM requests
+graceful worker draining: an active tensor operation can finish before exit. Startup
+refuses an existing socket path; inspect a stale worker/path before removing it.
+See the [worker contract](engineering/decisions/worker-protocol.md) for precise bounds.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for local checks and
 [the architecture](engineering/ARCHITECTURE.md) for boundaries and scaling work.

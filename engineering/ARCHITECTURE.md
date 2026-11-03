@@ -277,8 +277,12 @@ and can suffer partial writes after verification. This is neither a public outpu
 schema nor a CLI, cache, top-k or transactional-output implementation.
 
 The accepted [local reranking direction](decisions/local-reranking.md) keeps a
-separate persistent model worker and an opt-in command; that worker/command remain
-unimplemented. The explicit candidate prerequisites now exist: RankBM25Any and
+separate persistent model worker and an opt-in command, now composed through the
+[bounded framed protocol](decisions/worker-protocol.md). Go retains exact reader
+handles and citations; the Python process receives texts and bindings without
+catalog/R2 configuration. The model stays the pinned offline MPS runtime, with
+whole-query admission, complete token preflight and joined draining. Every error
+fails the rerank request rather than falling back. The explicit candidate prerequisites now exist: RankBM25Any and
 SearchAny retain exact-edition statistics with any-word eligibility and lexical
 sum/tie order. Existing Search stays match-all. SearchAnyEvidenceFirst admits the
 complete union, selects a positive prefix and checks its entire per-hit declared
@@ -288,7 +292,8 @@ admission, or zero result on any error. SearchAnyEvidenceGroupedFirst now adds
 [request-scoped encoded-body reuse](decisions/grouped-article-reads.md) with a distinct
 article-byte read plan before GET. It preserves each passage's independent checks,
 owned text and ranked position; no body state is retained between calls. The
-uncached API remains the oracle. Neither operation adds a model or worker. See
+uncached API remains the oracle. The explicit --rerank command uses the grouped operation before complete model
+scoring and display-prefix selection; ordinary search remains separate. See
 [the candidate experiment](experiments/search-candidates.md) for ownership/work
 limits and the offline composition oracle.
 
