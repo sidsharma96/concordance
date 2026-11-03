@@ -2,9 +2,11 @@
 
 Status: research and a derived operation-count probe, not an implemented storage
 optimization. The accepted [worker failure policy](../decisions/local-reranking.md)
-is recorded separately. Candidate retrieval remains uncached; worker and opt-in
-command implementation remain pending. No schema, codec, runtime or query policy
-changes are selected by these comparisons.
+is recorded separately. The uncached candidate API remains the oracle; the accepted
+[grouped-read follow-up](../decisions/grouped-article-reads.md) now reuses encoded
+downloads within a request, keeping per-passage verification/decoding. Worker and
+opt-in command implementation remain pending. No schema, codec or relevance policy
+change follows from the comparisons.
 
 ## What the primary reports establish
 
@@ -53,24 +55,26 @@ These are counts derived from exported metadata, not measured R2 requests, bytes
 latency, billing or model speed. Sixty cases repeat twenty needs across editions;
 they are not independent production users. Model pair counts remain unchanged.
 
-The useful next experiment groups selected passages by exact physical article
+The implemented follow-up groups selected passages by exact physical article
 reference within one authorized reader/request, fetches an article strictly once,
 validates every logical-slot association and fills owned candidate texts back into
 their original lexical positions. It can process one article group at a time to
 avoid retaining all decoded articles. Preserve each logical citation even when
 bytes are shared. Grouping by a digest alone is not source identity or permission.
 
-Before implementing this proposal, specify owned immutable checked-article state,
+Sharing decoded state would additionally require owned immutable checked-article state,
 per-read and distinct-body work limits, aggregate extracted-text/plan bounds,
 failure/cancellation behavior and the exact uncached oracle. Compare refs, scores,
 quotes, headings, labels, ordering, limits, body GETs and decode work. A failed group
 still yields no successful batch. The current per-hit article-byte admission cannot
-simply be left unchanged and claimed to describe a new grouped read plan.
+simply be left unchanged and claimed to describe a new grouped read plan. The new
+operation therefore has separate distinct-byte limits; the old API is unchanged.
 
 The model needs every candidate's text to choose the final display prefix. We can
 avoid repeated article work; we cannot fetch only the final ten texts before the
 model has chosen them. Batching within a request adds a different ownership contract
-from a persistent cache with eviction and invalidation. Neither is implemented here.
+from a persistent cache with eviction and invalidation. The follow-up implements
+encoded-body grouping only; decoded-state reuse and persistent caching remain deferred.
 
 ## Protect completeness and authority
 

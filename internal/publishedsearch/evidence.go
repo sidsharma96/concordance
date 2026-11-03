@@ -51,11 +51,23 @@ func (r *Reader) readArticle(ctx context.Context, ref Reference) (articleRead, e
 	if err != nil {
 		return articleRead{}, fmt.Errorf("read quoted article: %w", err)
 	}
+	return r.verifyArticle(ctx, ref, body)
+}
+
+// The buffer is borrowed unchanged through return. Both read paths keep these
+// manifest checks per logical passage, even when they share encoded article bytes.
+func (r *Reader) verifyArticle(ctx context.Context, ref Reference, body []byte) (articleRead, error) {
+	if err := ready(ctx); err != nil {
+		return articleRead{}, err
+	}
+	if r == nil || r.data == nil || ref.owner != r.data {
+		return articleRead{}, ErrInvalid
+	}
 	position, err := r.data.edition.Location(ref.passage)
 	if err != nil {
 		return articleRead{}, err
 	}
-	a, err := r.data.manifest.VerifyArticle(ctx, loc.Selection.Edition, position.Article, body, r.data.article)
+	a, err := r.data.manifest.VerifyArticle(ctx, r.data.selection.Edition, position.Article, body, r.data.article)
 	if err != nil {
 		return articleRead{}, fmt.Errorf("verify quoted article: %w", err)
 	}
@@ -77,6 +89,12 @@ func (r *Reader) Evidence(ctx context.Context, ref Reference, l EvidenceLimits) 
 	if err != nil {
 		return Evidence{}, err
 	}
+	return r.evidence(ctx, ref, read, l)
+}
+
+// Only internal checked reads reach this helper. The decoded article and buffer
+// stay borrowed through return; output owns text/slices and retains no read state.
+func (r *Reader) evidence(ctx context.Context, ref Reference, read articleRead, l EvidenceLimits) (Evidence, error) {
 	quote, err := r.data.edition.Quote(ctx, ref.passage, read.body, r.data.article, l.MaxQuoteBytes)
 	if err != nil {
 		return Evidence{}, err

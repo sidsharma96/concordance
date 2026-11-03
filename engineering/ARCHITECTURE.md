@@ -284,7 +284,11 @@ sum/tie order. Existing Search stays match-all. SearchAnyEvidenceFirst admits th
 complete union, selects a positive prefix and checks its entire per-hit declared
 article-byte plan before GET. It returns strictly verified body quotes with separate
 canonical ancestor headings/notice labels, reader-bound handles and aggregate text
-admission, or zero result on any error. It adds no cache, model or worker. See
+admission, or zero result on any error. SearchAnyEvidenceGroupedFirst now adds
+[request-scoped encoded-body reuse](decisions/grouped-article-reads.md) with a distinct
+article-byte read plan before GET. It preserves each passage's independent checks,
+owned text and ranked position; no body state is retained between calls. The
+uncached API remains the oracle. Neither operation adds a model or worker. See
 [the candidate experiment](experiments/search-candidates.md) for ownership/work
 limits and the offline composition oracle.
 

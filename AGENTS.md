@@ -422,8 +422,15 @@ before any candidate GET, then returns a bounded prefix of verified body/context
 with reader-bound handles. Read `engineering/experiments/search-candidates.md`.
 Keep context outside the verbatim body, all-or-zero errors and separate complete
 match/prefix counts. The uncached path charges shared article bodies repeatedly;
-its byte budget is not an all-wire-traffic or whole-process memory bound. No worker,
-score transport, model-input formatter or CLI opt-in is implemented by this slice.
+its byte budget is not an all-wire-traffic or whole-process memory bound.
+SearchAnyEvidenceGroupedFirst now implements option A in
+`engineering/decisions/grouped-article-reads.md`: one strict encoded-body download
+per complete physical Ref within one authorized reader/call, while manifest,
+edition, decode and canonical-context checks stay per passage. Keep its separate
+MaxDistinctArticleBytes budget, preflight before GET, original ranked output
+positions and zero result on every error. No decoded or cross-query article cache.
+The uncached API and per-hit budget remain the oracle. No worker, score transport,
+model-input formatter or CLI opt-in is implemented by this slice.
 
 Implement the core learning algorithms deliberately. Use libraries for infrastructure
 such as HTTP, database and object clients. The user and agent build together; do not
