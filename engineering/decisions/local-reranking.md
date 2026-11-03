@@ -30,6 +30,21 @@ hosted results. A successful batch needs complete finite scores bound to that ex
 request and reader. Keep final output buffered, with the existing output-device
 partial-write caveat.
 
+## An unavailable scorer fails the requested operation
+
+Status: accepted option A. If scoring is needed and the local worker is absent,
+busy, crashes or cannot complete, return a clear error and no successful result.
+Do not automatically return lexical results, use another model or contact a hosted
+provider. Ordinary search remains a separate explicit invocation. Successful empty
+candidate queries retain their empty result; there are no pairs to score.
+
+A labelled lexical fallback could preserve availability, but it changes the
+requested ranking and adds a successful degraded state. We keep failures visible
+for this first trusted-operator command. Revisit an explicitly enabled fallback
+only with a concrete user-facing availability requirement. Authorization, article
+integrity, binding, budget and caller-cancellation failures always remain errors.
+The worker/protocol/command implementation is still pending.
+
 ## Candidate work comes before the model
 
 Add explicit any-word APIs without changing existing Search/RankBM25 semantics.
