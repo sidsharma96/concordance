@@ -16,6 +16,10 @@ func TestIndexCannotHidePrivateOrOversizedStagedContent(t *testing.T) {
 		{"design/mockup.html", "private design"},
 		{"review/upstream.json", "{}"},
 		{"capture.JSON", "{}"},
+		{"other.py", "print('not a worker')"},
+		{"worker/extra.py", "print('not allowlisted')"},
+		{"worker/rerank.PY", "print('wrong case')"},
+		{"worker/__pycache__/rerank.pyc", "bytecode"},
 		{"nested/.env.local", "TOKEN=fixture"},
 		{"large.txt", strings.Repeat("x", maxSourceBytes+1)},
 	} {
@@ -58,5 +62,13 @@ func TestIndexAcceptsSourceWithoutPrivateBook(t *testing.T) {
 	}
 	if n, err := checkIndex(root); err != nil || n != 1 {
 		t.Fatalf("count %d: %v", n, err)
+	}
+}
+
+func TestPythonExceptionIsExact(t *testing.T) {
+	for _, name := range []string{"worker/rerank.py", "worker/test_rerank.py"} {
+		if forbidden(name) {
+			t.Fatal("rejected maintained worker source", name)
+		}
 	}
 }

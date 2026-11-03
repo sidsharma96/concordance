@@ -1,6 +1,8 @@
 # Contributing
 
-Use Go 1.27 or later, Git and Make.
+Use Go 1.27 or later, Git, Make and Python 3 for the worker's standard-library tests.
+The optional real model requires the pinned Python 3.14.2 environment described in
+README; normal checks need no ML packages, model weights, GPU or downloads.
 
 Git capture tests require support for `git --no-lazy-fetch --version`; upgrade Git
 if that command rejects the option. Tests use synthetic local repositories and
@@ -14,7 +16,9 @@ make build
 ```
 
 `make check` checks formatting, runs `go vet` and tests, and inspects the Git index
-for private or generated artifacts. Stage intended source changes before relying
+for private or generated artifacts. It also runs the worker's Python standard-library
+suite; Go/worker interoperability and lifecycle checks use an explicitly test-only
+fake scorer. Stage intended source changes before relying
 on the index check. Run `make race` when changing concurrent behavior.
 
 Catalog integration tests use PostgreSQL when `CONCORDANCE_TEST_DATABASE_URL` is set:

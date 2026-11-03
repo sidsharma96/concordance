@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -19,6 +20,7 @@ import (
 	"github.com/sidsharma96/concordance/internal/htmledition"
 	"github.com/sidsharma96/concordance/internal/objectstore"
 	"github.com/sidsharma96/concordance/internal/publishedsearch"
+	"github.com/sidsharma96/concordance/internal/rerank"
 	"github.com/sidsharma96/concordance/internal/searchtarget"
 	"github.com/sidsharma96/concordance/internal/termsearch"
 	"github.com/sidsharma96/concordance/internal/textterms"
@@ -42,6 +44,16 @@ func commandFailure(stage string, err error) error {
 		stage += ": canceled"
 	case errors.Is(err, context.DeadlineExceeded):
 		stage += ": deadline exceeded"
+	case errors.Is(err, os.ErrNotExist):
+		stage += ": worker socket is missing; start the worker or check --worker-socket"
+	case errors.Is(err, rerank.ErrInvalid):
+		stage += ": invalid reranking input or worker protocol"
+	case errors.Is(err, rerank.ErrBusy):
+		stage += ": worker busy; retry after its current operation drains"
+	case errors.Is(err, rerank.ErrLimit):
+		stage += ": worker input or token budget exceeded; inputs were not truncated"
+	case errors.Is(err, rerank.ErrWorker):
+		stage += ": worker failed or is incompatible; inspect its setup"
 	case errors.Is(err, errOutputLimit):
 		stage += ": increase --max-output-bytes"
 	case errors.Is(err, catalog.ErrTargetOutcomeUnknown):
@@ -165,6 +177,9 @@ func runSearch(parent context.Context, args []string, out io.Writer, getenv func
 	read.flags(f)
 	limit := f.Int("limit", 10, "maximum verified quotes to show; ranking admission is separate")
 	all := f.Bool("all", false, "verify and show every admitted match; conflicts with explicit --limit")
+	modelRank := f.Bool("rerank", false, "rerank the first 100 any-word candidates through the pinned local worker")
+	socket := f.String("worker-socket", "", "private reranking socket; defaults to CONCORDANCE_WORKER_SOCKET")
+	candidateBytes := f.Int64("max-candidate-article-bytes", 64<<20, "reranking distinct article-body read budget")
 	edition := f.String("edition", "", "exact edition; omitted uses the target's configured default")
 	queryBytes := f.Int("max-query-bytes", 4096, "raw query UTF-8 byte ceiling")
 	queryTerms := f.Int("max-query-terms", 64, "query term occurrence ceiling")
@@ -181,10 +196,16 @@ func runSearch(parent context.Context, args []string, out io.Writer, getenv func
 	if f.NArg() != 2 || !validName(f.Arg(0)) || !read.valid() || *queryBytes <= 0 || *queryTerms <= 0 || *matches <= 0 || *limit <= 0 || *quote <= 0 || *total <= 0 || *output <= 0 {
 		return errors.New("provide a target, one quoted query and positive search limits; use search --help")
 	}
-	editionSet, limitSet := false, false
+	editionSet, limitSet, timeoutSet, socketSet := false, false, false, false
 	f.Visit(func(v *flag.Flag) {
 		if v.Name == "edition" {
 			editionSet = true
+		}
+		if v.Name == "timeout" {
+			timeoutSet = true
+		}
+		if v.Name == "worker-socket" {
+			socketSet = true
 		}
 		if v.Name == "limit" {
 			limitSet = true
@@ -195,6 +216,29 @@ func runSearch(parent context.Context, args []string, out io.Writer, getenv func
 	}
 	if editionSet && !validName(*edition) {
 		return errors.New("provide a nonempty exact edition or omit --edition")
+	}
+	if *modelRank {
+		if *all || *limit > rerank.MaxPairs || *candidateBytes <= 0 {
+			return errors.New("reranking requires --limit at most 100, positive candidate bytes, and no --all")
+		}
+		if len(f.Arg(1)) > rerank.MaxQueryBytes {
+			return errors.New("reranking raw question exceeds 4096 UTF-8 bytes")
+		}
+		if *socket == "" {
+			*socket = getenv("CONCORDANCE_WORKER_SOCKET")
+		}
+		var err error
+		if *socket != "" {
+			*socket, err = workerSocket(*socket)
+			if err != nil {
+				return err
+			}
+		}
+		if !timeoutSet {
+			read.timeout = 5 * time.Minute
+		}
+	} else if socketSet {
+		return errors.New("--worker-socket requires --rerank")
 	}
 	ctx, cancel := context.WithTimeout(parent, read.timeout)
 	defer cancel()
@@ -230,15 +274,26 @@ func runSearch(parent context.Context, args []string, out io.Writer, getenv func
 	searchLimits := termsearch.Limits{MaxEditions: 1, MaxPassages: read.passages, MaxTerms: read.terms, MaxQueryTerms: *queryTerms, MaxInputBytes: read.prepared, MaxMatches: *matches}
 	quoteLimits := publishedsearch.QuoteLimits{MaxQuoteBytes: *quote, MaxTotalQuoteBytes: *total}
 	var batch publishedsearch.QuotedResult
-	if *all {
+	count := 0
+	if *modelRank {
+		batch, count, err = collectReranked(ctx, r, f.Arg(1), q, searchLimits, read, *socket, *quote, *total, *limit, *candidateBytes)
+	} else if *all {
 		batch, err = r.SearchQuoted(ctx, q, searchLimits, quoteLimits)
 	} else {
 		batch, err = r.SearchQuotedFirst(ctx, q, searchLimits, quoteLimits, *limit)
 	}
 	if err != nil {
+		if *modelRank {
+			return commandFailure("collect verified reranking candidates and scores failed", err)
+		}
 		return commandFailure("collect verified search quotes failed", err)
 	}
-	body, err := renderSearch(ctx, r, f.Arg(0), selection, batch, *output)
+	var body []byte
+	if *modelRank {
+		body, err = renderReranked(ctx, r, f.Arg(0), selection, batch, count, *output)
+	} else {
+		body, err = renderSearch(ctx, r, f.Arg(0), selection, batch, *output)
+	}
 	if err != nil {
 		return commandFailure("format search results failed", err)
 	}

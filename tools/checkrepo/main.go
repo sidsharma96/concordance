@@ -27,6 +27,10 @@ func forbidden(name string) bool {
 			return true
 		}
 	}
+	// The model worker and its stdlib tests are the only maintained Python source.
+	if name == "worker/rerank.py" || name == "worker/test_rerank.py" {
+		return false
+	}
 	base := path.Base(name)
 	if base == ".DS_Store" || base == "coverage.out" || base == ".env" || (strings.HasPrefix(base, ".env.") && base != ".env.example") {
 		return true

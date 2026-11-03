@@ -8,10 +8,12 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"syscall"
 )
 
 const topUsage = `Usage: concordance version
        concordance search [flags] TARGET "QUERY"
+       concordance worker [flags]
        concordance target show [flags] NAME
        concordance target activate [flags] NAME
 
@@ -34,11 +36,13 @@ func run(args []string, out io.Writer) error {
 	if len(args) == 1 && args[0] == "version" {
 		return writeCommand(out, []byte("concordance dev\n"))
 	}
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	switch args[0] {
 	case "search":
 		return runSearch(ctx, args[1:], out, os.Getenv, connectSearch)
+	case "worker":
+		return runWorker(ctx, args[1:], out)
 	case "target":
 		return runTarget(ctx, args[1:], out, os.Getenv, connectSearch)
 	}
