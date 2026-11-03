@@ -72,6 +72,10 @@ type bundle struct {
 // edition has its own actual index. This does not certify a real renderer/capture.
 func makeBundle(t testing.TB, generation, text string) bundle {
 	t.Helper()
+	return makeHTMLBundle(t, generation, text, `<main class="fixture"><h1>Pods</h1><p>`+text+`</p><img src="/images/pod.svg" alt="Pod diagram"></main>`)
+}
+func makeHTMLBundle(t testing.TB, generation, text, markup string) bundle {
+	t.Helper()
 	ctx, l := testContext(t), testLimits()
 	b := bundle{}
 	seen := map[gm.Ref]bool{}
@@ -83,8 +87,8 @@ func makeBundle(t testing.TB, generation, text string) bundle {
 		}
 		return r
 	}
-	html := []byte(`<main class="fixture"><h1>Pods</h1><p>` + text + `</p><img src="/images/pod.svg" alt="Pod diagram"></main>`)
-	a, err := htmlarticle.Extract(ctx, html, htmlarticle.Profile{ID: "fixture/v1", ArticleClass: "fixture"}, htmlarticle.Limits{MaxInputBytes: 1 << 20, MaxTokenBytes: 65536, MaxTokens: 10000, MaxNodes: 10000, MaxDepth: 64, MaxBlocks: 1000, MaxGroups: 1000, MaxBlockBytes: 65536, MaxOutputBytes: 1 << 20})
+	html := []byte(markup)
+	a, err := htmlarticle.Extract(ctx, html, htmlarticle.Profile{ID: "fixture/v1", ArticleClass: "fixture", NoticeClasses: []string{"notice"}}, htmlarticle.Limits{MaxInputBytes: 1 << 20, MaxTokenBytes: 65536, MaxTokens: 10000, MaxNodes: 10000, MaxDepth: 64, MaxBlocks: 1000, MaxGroups: 1000, MaxBlockBytes: 65536, MaxOutputBytes: 1 << 20})
 	if err != nil {
 		t.Fatal(err)
 	}

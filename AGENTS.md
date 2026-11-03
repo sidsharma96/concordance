@@ -409,7 +409,21 @@ development. The user released the reserved intents for frozen validation record
 `-split reserved -validate-reserved` for that scope. These are now observed validation
 evidence, never an untouched tuning set; keep the model/configuration fixed. Scores bind a reconstructed exact candidate
 bundle; runtime metadata is a trusted producer assertion, not proof of inference.
-No model dependency, reranking or any-word matching is added to product search.
+No model dependency or reranking is added to the product command. Explicit any-word
+candidate library APIs now exist; the command remains every-word.
+The user accepted a persistent local worker and opt-in mode in
+`engineering/decisions/local-reranking.md`. Implement and review candidate retrieval,
+exact context and article-byte admission before worker/CLI composition. Accepted
+direction is not a claim that the worker or opt-in command already exists.
+`termsearch.Index.RankBM25Any` and the explicit edition/published SearchAny wrappers
+preserve the evaluated lexical-order single-term sum and complete-union admission.
+`publishedsearch.SearchAnyEvidenceFirst` preflights per-hit declared article bytes
+before any candidate GET, then returns a bounded prefix of verified body/context
+with reader-bound handles. Read `engineering/experiments/search-candidates.md`.
+Keep context outside the verbatim body, all-or-zero errors and separate complete
+match/prefix counts. The uncached path charges shared article bodies repeatedly;
+its byte budget is not an all-wire-traffic or whole-process memory bound. No worker,
+score transport, model-input formatter or CLI opt-in is implemented by this slice.
 
 Implement the core learning algorithms deliberately. Use libraries for infrastructure
 such as HTTP, database and object clients. The user and agent build together; do not

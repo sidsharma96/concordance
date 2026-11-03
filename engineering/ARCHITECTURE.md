@@ -276,6 +276,18 @@ per hit, including shared articles. Rendering needs its own encoded-output budge
 and can suffer partial writes after verification. This is neither a public output
 schema nor a CLI, cache, top-k or transactional-output implementation.
 
+The accepted [local reranking direction](decisions/local-reranking.md) keeps a
+separate persistent model worker and an opt-in command; that worker/command remain
+unimplemented. The explicit candidate prerequisites now exist: RankBM25Any and
+SearchAny retain exact-edition statistics with any-word eligibility and lexical
+sum/tie order. Existing Search stays match-all. SearchAnyEvidenceFirst admits the
+complete union, selects a positive prefix and checks its entire per-hit declared
+article-byte plan before GET. It returns strictly verified body quotes with separate
+canonical ancestor headings/notice labels, reader-bound handles and aggregate text
+admission, or zero result on any error. It adds no cache, model or worker. See
+[the candidate experiment](experiments/search-candidates.md) for ownership/work
+limits and the offline composition oracle.
+
 Semantic embeddings and vector search remain future work. Exact vector search is
 the oracle before ANN experiments; keep embedding model/dimensions/metric and
 processing versions compatible. Measure neighbor recall separately from reader-judged
