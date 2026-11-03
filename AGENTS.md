@@ -403,8 +403,11 @@ are unknown, not irrelevant; never turn query/fixture errors into relevance miss
 The fixed development-only `-compare-noise` experiment is recorded in
 `engineering/experiments/query-noise.md`; its word list and half-overlap rule are
 experimental controls, not product defaults. Do not tune them in place.
-The local BGE trial in `engineering/experiments/local-reranking.md` uses development-only
-`-rerank-export` and `-rerank-scores` modes. Scores bind a reconstructed exact candidate
+The local BGE trial in `engineering/experiments/local-reranking.md` defaults to
+development. The user released the reserved intents for frozen validation recorded in
+`engineering/experiments/reserved-reranking-validation.md`; rerank modes require explicit
+`-split reserved -validate-reserved` for that scope. These are now observed validation
+evidence, never an untouched tuning set; keep the model/configuration fixed. Scores bind a reconstructed exact candidate
 bundle; runtime metadata is a trusted producer assertion, not proof of inference.
 No model dependency, reranking or any-word matching is added to product search.
 
