@@ -1,8 +1,8 @@
 # Import completion
 
 Status: accepted design. The user chose synchronous publication after comparing
-completion on publication with durable acceptance of a background job. This contract
-is not implemented yet.
+completion on publication with durable acceptance of a background job. The bounded
+prepared importer and trusted-operator CLI now implement it.
 
 ## Decision
 
@@ -82,12 +82,17 @@ cancellation must preserve that contract. Synchronous completion does not automa
 of every unsuccessful attempt.
 
 The subsequent [catalog/publication decision](catalog-publication.md) selects
-PostgreSQL as the publication authority and R2 for immutable files/manifests. A private
-R2 bucket is provisioned and its creation/reuse/fresh-client-read smoke probe passes;
-provider fault experiments, hosted PostgreSQL and the combined recovery path remain pending.
-The detailed transaction, generation retention and reader-safe
-cleanup remain open. Searchable means the returned generation can be opened; this does not
-promise that existing readers switch generations or define a global `latest` cache.
+PostgreSQL as the publication authority and R2 for immutable files/manifests. The
+bounded publisher confirms required objects before guarded catalog publication;
+[the native CLI exercise](../experiments/hosted-import-command.md) checks this path
+and completed-result recovery on the hosted providers.
+
+A completed saved-key retry returns the record of an earlier publication before
+object access; it is not a fresh availability check. The native blocked-route
+experiment returns that original result while a query fails to reach object storage.
+Opening and quoting still require their stores to be reachable. Existing readers
+remain pinned, and no global `latest` cache is implied. Complete provider faults,
+production recovery targets, generation retention and reader-safe cleanup remain open.
 
 Revisit background submission when concrete imports exceed acceptable caller wait
 times, need to outlive client connections, or need scheduled multi-tenant processing.

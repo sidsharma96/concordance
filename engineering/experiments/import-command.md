@@ -86,7 +86,9 @@ provider was used. Original capture and Git material remained unchanged. These
 counts are functional evidence, not a latency/throughput benchmark. Its disposable
 job, database schema and HTTP bodies were local and removed after the probe.
 
-The next native-hosted exercise should preserve an original job/key and verify
-publication, explicit activation and strict quotes through native configuration.
+The subsequent [native hosted exercise](hosted-import-command.md) now preserves a
+new job/key, publishes through the real providers, recovers its completed result
+with the R2 route blocked, and explicitly activates a separate test target for six
+strict quotes. The local evidence above remains a distinct controlled experiment.
 No automatic schema/namespace setup, restore reactivation, durable upload journal,
 managed renderer, retention/deletion or background resume was added.

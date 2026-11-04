@@ -138,7 +138,11 @@ OpenNamespace only observes an existing exact physical binding, including inacti
 state for completed-key recovery. Receipt confirmation and guarded publication still
 check active state/epoch; a new key can bind inputs before failing quarantine.
 No namespace setup, automatic resume/activation/deletion or distributed lease is
-provided. Preserve original captures/keys used by earlier live imports.
+provided. The [native CLI exercise](engineering/experiments/hosted-import-command.md)
+publishes the retained corpus with a new saved job, recovers the completed result
+with its object route blocked, and checks six strict quotes under a separate test
+target. The original kubernetes target remains unchanged. Preserve original and
+new captures/keys; private operator-context records locate retained test targets.
 `tools/captureaudit` checks the handoff without Git, a renderer or remote stores.
 The 38-page reference audit does not establish a minimal/complete renderer dependency
 inventory or publish a real-corpus generation; read
