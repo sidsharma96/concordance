@@ -325,7 +325,7 @@ func TestPublicBinaryHelpAndLocalAdmission(t *testing.T) {
 	if b, err := exec.Command("go", "build", "-o", binary, ".").CombinedOutput(); err != nil {
 		t.Fatal(string(b), err)
 	}
-	for _, args := range [][]string{{"--help"}, {"version"}, {"search", "--help"}, {"target", "activate", "--help"}} {
+	for _, args := range [][]string{{"--help"}, {"version"}, {"search", "--help"}, {"target", "activate", "--help"}, {"import", "--help"}, {"import", "start", "--help"}, {"import", "retry", "--help"}} {
 		if b, err := exec.Command(binary, args...).CombinedOutput(); err != nil || len(b) == 0 {
 			t.Fatal(args, err, string(b))
 		}

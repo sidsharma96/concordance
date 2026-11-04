@@ -124,7 +124,7 @@ func New(p *generationpublish.Publisher, collection string, sources []Source, l 
 // No request buffers are retained after return; generated/acquired bytes are local.
 //
 // Success returns a complete published generation, usable by existing internal
-// readers (there is no search CLI). Errors return zero but publication may already
+// readers and the search CLI. Errors return zero but publication may already
 // have committed; retain the exact handoff and retry the saved key to resolve an
 // uncertain outcome. A completed retry rebuilds/preflights locally, then returns
 // its original result without S3 access. Cancellation is cooperative, not rollback.
