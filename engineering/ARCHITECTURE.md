@@ -9,6 +9,9 @@ and verified quotes in a fresh process. The reusable internal published-generati
 for repeated searches. The import CLI saves verified retry material before
 synchronous publication, with explicit retry and separate activation. See the
 [publication experiment](experiments/kubernetes-publication.md) for that run's scope.
+The [native CLI exercise](experiments/hosted-import-command.md) now publishes another
+result over the same retained corpus, recovers it with the object route blocked,
+and verifies a separate test target without redirecting the existing default.
 
 ## The implemented path
 

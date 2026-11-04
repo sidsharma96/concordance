@@ -1,8 +1,8 @@
 # Import identity and retries
 
-Status: accepted design. Use a saved key for each requested import. The CLI will
-create and persist the key before the first request and reuse it after a timeout;
-ordinary users need not invent keys manually. The full CLI workflow is not built.
+Status: accepted and implemented by the bounded prepared importer and CLI. Start
+creates and persists a key with owned local inputs before remote writes; explicit
+retry reopens that same job after uncertainty. Ordinary users need not invent keys.
 
 ## Contract
 
@@ -25,8 +25,9 @@ URL or branch name alone cannot identify the captured revision.
 
 The [snapshot contract](import-snapshots.md) selects the complete intended scope;
 the adapter derives its captured inventory. Include that actual inventory, pinned
-selection and settings in the trusted input description. The full fingerprint
-encoding remains open.
+selection and settings in the trusted input description. The
+[captured-input identity](captured-input-identity.md) now defines the bounded
+versioned fingerprint used by the prepared importer.
 
 The following is a sketch of caller intent, not a finalized API:
 
