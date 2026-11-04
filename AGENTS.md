@@ -121,6 +121,17 @@ verify and import the same owned buffer; returned aliases may share that buffer.
 Keep routes/credentials and operation identity outside the descriptor. The native
 `os.Root` boundary is not a filesystem snapshot or hostile-local-filesystem sandbox.
 Unreferenced directory files are not read; Git membership remains importer work.
+`internal/importjob` now owns a verified local HTML/recipe copy beside a generated
+saved key and candidate; read `engineering/decisions/saved-import-jobs.md` and its
+experiment. Capture copying uses one verified source read and the same buffers,
+with flat transport names. ReadDirectoryExpected checks its pin against the same
+owned descriptor it decodes. Keep local readiness distinct from publication;
+Prepare errors can leave partial or complete local material, and Open validates
+all saved bytes/current processing labels. No credential fields or local Git routes are
+serialized. Git inputs and compatible processing remain external prerequisites;
+caller-owned source registration must match observed identities. No import CLI,
+namespace setup, automatic resume/activation/deletion or distributed lease is
+provided by this slice. Preserve original captures/keys used by earlier live imports.
 `tools/captureaudit` checks the handoff without Git, a renderer or remote stores.
 The 38-page reference audit does not establish a minimal/complete renderer dependency
 inventory or publish a real-corpus generation; read

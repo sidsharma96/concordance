@@ -170,6 +170,16 @@ prepared fields. `htmlsearch` remains a borrowed in-memory search snapshot. Thes
 components and the scan ranker provide independent bindings/oracles; the durable
 edition reader does not change their ownership contracts.
 
+The [saved-job component](decisions/saved-import-jobs.md) owns a bounded verified
+HTML/recipe copy and generated retry identity in a private local directory.
+`capturefiles.Copy` writes the same buffers it verified; only transport paths
+change. `importjob` synchronizes local inputs/metadata before installing a complete
+readiness marker, then Open rechecks every pin and compatible processing label.
+Local readiness is separate from catalog publication, and errors can leave either
+partial or complete local material. Jobs keep no local Git routes or credential
+fields. Pinned Git objects remain required; no importer command or automatic resume
+is included. See the [local experiment](experiments/saved-import-jobs.md).
+
 ## Publication and recovery
 
 [PostgreSQL is the publication authority; R2 holds immutable objects](decisions/catalog-publication.md).
