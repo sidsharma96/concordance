@@ -26,48 +26,95 @@ import (
 // files or prevent mount/device access. Lstat/Stat regular-file checks assume no
 // adversarial concurrent filesystem replacement. Context checks cannot preempt
 // blocked local I/O. No goroutines, automatic journal, resume or durability writes.
-func ReadDirectory(ctx context.Context, directory string, l Limits) (out []preparedimport.Edition, err error) {
-	if err = ready(ctx, l); err != nil {
+func ReadDirectory(ctx context.Context, directory string, l Limits) ([]preparedimport.Edition, error) {
+	loaded, err := readCapture(ctx, directory, nil, l)
+	if err != nil {
 		return nil, err
 	}
+	return loaded.editions(ctx)
+}
+
+// DescriptorRef pins exact local descriptor bytes, not semantic input identity.
+type DescriptorRef struct {
+	SHA256 [sha256.Size]byte
+	Bytes  int64
+}
+
+// ReadDirectoryExpected compares the pin against the SAME owned descriptor that
+// is decoded. Payload verification and importer inputs also share owned buffers.
+// All other ownership, trust and cancellation rules match ReadDirectory.
+func ReadDirectoryExpected(ctx context.Context, directory string, expected DescriptorRef, l Limits) ([]preparedimport.Edition, error) {
+	loaded, err := readCapture(ctx, directory, &expected, l)
+	if err != nil {
+		return nil, err
+	}
+	return loaded.editions(ctx)
+}
+
+type loadedCapture struct {
+	descriptor  []byte
+	description Description
+	files       []File
+	payloads    map[string][]byte
+}
+
+func readCapture(ctx context.Context, directory string, expected *DescriptorRef, l Limits) (out loadedCapture, err error) {
+	if err = ready(ctx, l); err != nil {
+		return loadedCapture{}, err
+	}
+	if expected != nil && (expected.Bytes <= 0 || expected.Bytes > int64(l.MaxDescriptorBytes)) {
+		return loadedCapture{}, ErrInvalid
+	}
 	if directory == "" {
-		return nil, ErrInvalid
+		return loadedCapture{}, ErrInvalid
 	}
 	root, err := os.OpenRoot(directory)
 	if err != nil {
-		return nil, fmt.Errorf("open capture directory: %w", err)
+		return loadedCapture{}, fmt.Errorf("open capture directory: %w", err)
 	}
 	defer func() {
 		err = errors.Join(err, root.Close())
 		if err != nil {
-			out = nil
+			out = loadedCapture{}
 		}
 	}()
-	body, err := readRegular(ctx, root, DescriptorName, int64(l.MaxDescriptorBytes), -1)
+	ceiling, exact := int64(l.MaxDescriptorBytes), int64(-1)
+	if expected != nil {
+		exact = expected.Bytes
+	}
+	body, err := readRegular(ctx, root, DescriptorName, ceiling, exact)
 	if err != nil {
-		return nil, fmt.Errorf("read capture description: %w", err)
+		return loadedCapture{}, fmt.Errorf("read capture description: %w", err)
+	}
+	if expected != nil && (int64(len(body)) != expected.Bytes || sha256.Sum256(body) != expected.SHA256) {
+		return loadedCapture{}, ErrMismatch
 	}
 	d, err := decode(ctx, body, l)
 	if err != nil {
-		return nil, err
+		return loadedCapture{}, err
 	}
 	files, err := validate(ctx, d, l)
 	if err != nil {
-		return nil, err
+		return loadedCapture{}, err
 	}
 	payloads := make(map[string][]byte, len(files))
 	for _, f := range files {
 		b, e := readRegular(ctx, root, f.Path, f.Bytes, f.Bytes)
 		if e != nil {
-			return nil, fmt.Errorf("read captured payload: %w", e)
+			return loadedCapture{}, fmt.Errorf("read captured payload: %w", e)
 		}
 		if sha256.Sum256(b) != f.SHA256 {
-			return nil, ErrMismatch
+			return loadedCapture{}, ErrMismatch
 		}
 		payloads[f.Path] = b
 	}
-	out = make([]preparedimport.Edition, 0, len(d.Editions))
-	for _, e := range d.Editions {
+	return loadedCapture{descriptor: body, description: d, files: files, payloads: payloads}, nil
+}
+
+func (d loadedCapture) editions(ctx context.Context) ([]preparedimport.Edition, error) {
+	payloads := d.payloads
+	out := make([]preparedimport.Edition, 0, len(d.description.Editions))
+	for _, e := range d.description.Editions {
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
@@ -127,7 +174,11 @@ func readRegular(ctx context.Context, root *os.Root, name string, maxBytes, expe
 	if expected >= 0 && info.Size() != expected {
 		return nil, ErrMismatch
 	}
-	body, err = io.ReadAll(io.LimitReader(&contextReader{ctx: ctx, r: f}, maxBytes+1))
+	readCeiling := maxBytes
+	if expected >= 0 {
+		readCeiling = min(readCeiling, expected)
+	}
+	body, err = io.ReadAll(io.LimitReader(&contextReader{ctx: ctx, r: f}, readCeiling+1))
 	if err != nil {
 		return nil, err
 	}

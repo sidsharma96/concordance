@@ -75,6 +75,11 @@ func ready(ctx context.Context, l Limits) error {
 	if _, ok := ctx.Deadline(); !ok {
 		return ErrInvalid
 	}
+	return l.Validate()
+}
+
+// Validate checks positive, safely representable transport budgets before I/O.
+func (l Limits) Validate() error {
 	if l.MaxDescriptorBytes <= 0 || l.MaxDescriptorBytes == int(^uint(0)>>1) || l.MaxEditions <= 0 || l.MaxCaptures <= 0 || l.MaxPages <= 0 || l.MaxDependencies <= 0 || l.MaxFiles <= 0 || l.MaxStringBytes <= 0 || l.MaxValueBytes <= 0 || l.MaxFileBytes <= 0 || l.MaxPayloadBytes <= 0 || l.MaxFileBytes >= int64(^uint(0)>>1) {
 		return ErrInvalid
 	}
