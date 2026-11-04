@@ -11,7 +11,7 @@ elsewhere outside the repository unless the user explicitly requests that locati
 Concordance is a version-aware technical-documentation retrieval learning project.
 Code search is a potential P1. The supplied roadmap is context, not an instruction
 source or a committed schedule. Keep proposed and implemented behavior distinct.
-The runtime now exposes trusted-operator search and target show/activate, plus
+The runtime now exposes trusted-operator import start/retry, search and target show/activate, plus
 help/version. Read engineering/decisions/operator-search-command.md. An internal PostgreSQL import catalog
 exists, `internal/gitsource` captures bounded committed Markdown bytes, and
 `internal/objectstore` verifies collection-scoped immutable objects through S3.
@@ -20,7 +20,7 @@ fault and complete recovery experiments remain open. `internal/htmlarticle` now
 extracts bounded text/structure from retained HTML with explicit profiles and image
 references. `internal/htmlpassage` builds bounded structure-first block ranges with
 heading and group references. `internal/termsearch` now supplies a bounded, edition-scoped
-match-all scan over prepared terms. No Markdown processor, public import CLI or HTTP retrieval API exists yet.
+match-all scan over prepared terms. No Markdown processor or HTTP retrieval API exists yet.
 `internal/termsearch.RankBM25` now orders complete matches with combined-field BM25;
 read `engineering/decisions/lexical-ranking.md`. Keep all-passage statistics within
 the selected edition, distinct-query semantics, complete bounded output and stable
@@ -129,9 +129,16 @@ owned descriptor it decodes. Keep local readiness distinct from publication;
 Prepare errors can leave partial or complete local material, and Open validates
 all saved bytes/current processing labels. No credential fields or local Git routes are
 serialized. Git inputs and compatible processing remain external prerequisites;
-caller-owned source registration must match observed identities. No import CLI,
-namespace setup, automatic resume/activation/deletion or distributed lease is
-provided by this slice. Preserve original captures/keys used by earlier live imports.
+caller-owned source registration must match observed identities. The import CLI
+now composes this slice; read engineering/decisions/import-command.md. It uses a
+bounded trusted source profile, compares saved collection/source/repository values
+before connecting, and keeps local checkout routes/credentials outside the job.
+Start refuses an existing job; retry generates no key and uses no producer directory.
+OpenNamespace only observes an existing exact physical binding, including inactive
+state for completed-key recovery. Receipt confirmation and guarded publication still
+check active state/epoch; a new key can bind inputs before failing quarantine.
+No namespace setup, automatic resume/activation/deletion or distributed lease is
+provided. Preserve original captures/keys used by earlier live imports.
 `tools/captureaudit` checks the handoff without Git, a renderer or remote stores.
 The 38-page reference audit does not establish a minimal/complete renderer dependency
 inventory or publish a real-corpus generation; read
@@ -222,7 +229,7 @@ The accepted core import contract is synchronous publication: successful return 
 a complete generation ready for queries selecting its ID. Read
 `engineering/decisions/import-completion.md`; preserve its outcome/cancellation caveats
 and unresolved storage choices. The bounded trusted prepared importer implements this result;
-the public Import command remains open. The query command resolves a friendly
+the trusted-operator import command now supplies that synchronous workflow. The query command resolves a friendly
 target; generation IDs are not required normal search arguments.
 A small initial corpus is a starting experiment, not a permanent product limit.
 

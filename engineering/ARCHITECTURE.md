@@ -1,17 +1,23 @@
 # Concordance architecture
 
 Concordance retrieves technical documentation from exact captured revisions and
-product editions. The public CLI provides trusted-operator search, target inspection and explicit
+product editions. The public CLI provides trusted-operator prepared import, search, target inspection and explicit
 activation alongside help/version. The
 internal Git/HTML import path builds and publishes searchable generations; an
 operator experiment has published the first Kubernetes corpus and read its indexes
 and verified quotes in a fresh process. The reusable internal published-generation reader now owns one exact selection
-for repeated searches; a public import CLI remains open work. See the
+for repeated searches. The import CLI saves verified retry material before
+synchronous publication, with explicit retry and separate activation. See the
 [publication experiment](experiments/kubernetes-publication.md) for that run's scope.
 
 ## The implemented path
 
 ```text
+operator import start -> save owned local job -> open/check saved job
+operator import retry -> open/check existing job, same key
+  -> trusted source identity/collection comparison -> existing namespace observation
+  -> preparedimport below -> published generation, activation remains separate
+
 operator search CLI
   -> admit/prepare query -> resolve target once -> check configured collection
   -> publishedsearch.Open -> SearchQuotedFirst (--all: SearchQuoted)
@@ -177,8 +183,12 @@ change. `importjob` synchronizes local inputs/metadata before installing a compl
 readiness marker, then Open rechecks every pin and compatible processing label.
 Local readiness is separate from catalog publication, and errors can leave either
 partial or complete local material. Jobs keep no local Git routes or credential
-fields. Pinned Git objects remain required; no importer command or automatic resume
-is included. See the [local experiment](experiments/saved-import-jobs.md).
+fields. Pinned Git objects remain required. The [import command](decisions/import-command.md)
+composes start/retry with trusted runtime source registration and native connections.
+It compares saved collection/source IDs/repository identities before connecting and
+opens an existing namespace by exact physical binding without setup. Inactive handles
+permit completed-key recovery, while receipt confirmation and guarded publication
+retain their active/epoch checks. No automatic resume is included. See the [local experiment](experiments/saved-import-jobs.md).
 
 ## Publication and recovery
 
@@ -326,8 +336,8 @@ No shared engine/schema/service, cross-checkout imports or shared cache is impli
 
 The supplied roadmap is context rather than a committed schedule. Broad crawling,
 hybrid search, content-hash document identity and reusing Rewind unchanged are not
-current contracts. A managed preparer, durable capture journal/WAL, automatic resume,
-a public import command and HTTP API are unimplemented.
+current contracts. A managed preparer, durable capture journal/WAL, automatic resume
+and an HTTP API are unimplemented.
 A small first corpus is an experiment, not a permanent product limit. Explicit
 target activation and trusted-operator search are exposed by the CLI. Native
 PostgreSQL profiles and explicit R2 environment settings configure connections;

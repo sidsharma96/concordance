@@ -6,7 +6,8 @@ reranking uses a local Python worker. Code search is a possible later extension.
 
 The CLI searches previously published Git/HTML generations through named catalog
 targets. It is a trusted operator tool that connects directly to PostgreSQL and
-Cloudflare R2. Importing is currently an internal Go API, not a public command.
+Cloudflare R2. A trusted preparer supplies rendered Git/HTML captures; the import
+command saves their retry inputs and publishes them.
 
 ## Getting started
 
@@ -22,7 +23,10 @@ Help and version need no database or credentials. The version prints `concordanc
 
 ## Configure operator access
 
-The catalog must already contain a published generation. An administrator installs
+The catalog schema must already be installed. Search needs a published generation
+and a target; importing additionally needs an explicitly provisioned storage
+namespace matching its R2 endpoint, bucket and collection. The CLI creates none of
+these schemas or namespaces. An administrator installs
 `internal/catalog/targets.sql` in that catalog's schema and grants suitable access.
 For the existing droplet layout, use the transactional
 [named-target setup](deploy/postgres/README.md#add-named-search-targets).
@@ -40,7 +44,8 @@ Configure these settings locally:
   private bucket.
 - `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`: bucket-scoped credentials supplied
   through local credential tooling, not source, command arguments or shell history.
-  Search and activation need object reads, not object writes.
+  Search and activation need object reads, not object writes. Import also needs
+  object creation and the catalog/receipt write privileges from explicit setup.
 
 An operator with catalog target-write permission explicitly activates a generation.
 `GENERATION_ID` below is the saved result of that published import; `kubernetes` is
@@ -57,6 +62,65 @@ An activation error, interruption or output failure can conceal an applied chang
 Keep the original generation, edition and expected revision for a deliberate retry;
 inspect `target show` rather than automatically advancing the revision. Show needs
 only `PGSERVICE` and `CONCORDANCE_COLLECTION`, so it works without R2 credentials.
+
+## Import a prepared capture
+
+Import accepts an existing trusted Git/HTML capture, not a website URL or an
+instruction to run a renderer. Keep the pinned commits and declared build inputs
+in local Git checkouts. In a private source profile, register exactly the sources
+named by this capture. For example, save this locally under ignored `.tools/`:
+
+```json
+{
+  "format": "concordance.git-sources/v1",
+  "sources": [{
+    "id": "docs",
+    "repository": "https://example.invalid/docs.git",
+    "path": "/absolute/path/to/checkout"
+  }]
+}
+```
+
+The ID must match the capture source ID; the nonsecret repository identity must
+remain identical across retries. The absolute path is trusted operator routing,
+never taken from the capture.
+The profile is bounded to 1 MiB and 32 sources, with closed required fields.
+Keep connection credentials in the native configuration above.
+
+With an existing prepared directory and provisioned catalog/storage namespace:
+
+```sh
+mkdir -p .tools/jobs
+PGSERVICE=concordance-write ./bin/concordance import start \
+  --capture /absolute/path/to/capture --job .tools/jobs/docs-update \
+  --sources .tools/sources.json
+```
+
+Start refuses an existing job path. It saves a verified HTML/recipe copy and
+generated key before publishing. Success prints the catalog's actual generation;
+activate that generation separately using the command above. Source preparation
+remains responsible for truthful rendered HTML and complete build-input declarations.
+
+Keep the job after errors or interruption. Remove/rebuild the producer directory
+only after local preparation is complete; retain the job and exact Git objects.
+Retry uses the saved copy and original key:
+
+```sh
+PGSERVICE=concordance-write ./bin/concordance import retry \
+  --job .tools/jobs/docs-update --sources .tools/sources.json
+```
+
+A failed reply or stdout write can conceal successful publication. Retry that same
+job instead of starting another one. An incomplete or changed job is refused.
+Existing completed results remain recoverable while receipt reuse is quarantined;
+new object confirmation/publication remains blocked.
+
+`import --help` lists aggregate byte/count limits, object size, confirmation
+concurrency and timeout. Defaults admit bounded work in memory, not a whole-process
+memory quota. Additional fixed structural ceilings are in the
+[import contract](engineering/decisions/import-command.md). Jobs copy HTML/recipe
+inputs, not Git repositories or credentials. No automatic activation, deletion,
+managed rendering or background resume is included.
 
 ## Search a published target
 

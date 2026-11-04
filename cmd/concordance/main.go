@@ -13,13 +13,14 @@ import (
 
 const topUsage = `Usage: concordance version
        concordance search [flags] TARGET "QUERY"
+       concordance import start|retry [flags]
        concordance worker [flags]
        concordance target show [flags] NAME
        concordance target activate [flags] NAME
 
 Search is for trusted operators with a configured PostgreSQL service and R2 access.
 Use search --help or target activate --help for settings and admission limits.
-Imports are prepared and published through internal APIs; there is no import command.
+Use import --help to save and publish a trusted prepared Git/HTML capture.
 `
 
 func main() {
@@ -41,6 +42,8 @@ func run(args []string, out io.Writer) error {
 	switch args[0] {
 	case "search":
 		return runSearch(ctx, args[1:], out, os.Getenv, connectSearch)
+	case "import":
+		return runImport(ctx, args[1:], out, os.Getenv, connectSearch)
 	case "worker":
 		return runWorker(ctx, args[1:], out)
 	case "target":

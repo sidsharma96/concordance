@@ -161,11 +161,13 @@ func (b *bundle) encode(t testing.TB) {
 }
 
 type remote struct {
-	mu        sync.Mutex
-	bodies    map[string][]byte
-	calls     map[string]int
-	failGETAt int
-	onGET     func(int)
+	mu           sync.Mutex
+	bodies       map[string][]byte
+	calls        map[string]int
+	failGETAt    int
+	denyPUT      bool
+	maxBodyBytes int64
+	onGET        func(int)
 }
 
 func (s *remote) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -200,6 +202,10 @@ func (s *remote) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write(b)
 		}
 	case "PUT":
+		if s.denyPUT {
+			w.WriteHeader(403)
+			return
+		}
 		if r.Header.Get("If-None-Match") != "*" {
 			w.WriteHeader(400)
 			return
@@ -208,8 +214,12 @@ func (s *remote) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(412)
 			return
 		}
-		body, err := io.ReadAll(io.LimitReader(r.Body, (1<<20)+1))
-		if err != nil || len(body) > 1<<20 {
+		ceiling := s.maxBodyBytes
+		if ceiling == 0 {
+			ceiling = 1 << 20
+		}
+		body, err := io.ReadAll(io.LimitReader(r.Body, ceiling+1))
+		if err != nil || int64(len(body)) > ceiling {
 			w.WriteHeader(400)
 			return
 		}
