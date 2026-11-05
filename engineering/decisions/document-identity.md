@@ -2,9 +2,10 @@
 
 Status: accepted design. The user accepted refined option A after external research:
 separate document identity from location, use reliable source-provided identity where
-available, and start Git with explicit source-plus-path identity. The bounded initial
-Git/HTML manifest now records these bindings; source registration, trusted complete
-capture, publication integration and a cross-move registry remain unimplemented.
+available, and start Git with explicit source-plus-path identity. The bounded
+Git/HTML manifest and prepared importer now bind these identities to complete
+captured inputs and publication. Source registration and rendering provenance
+remain trusted configuration/assertions; a cross-move registry is not implemented.
 
 ## Contract
 
@@ -42,13 +43,20 @@ Git's rename classifications. Keep those relationships separate from authorizati
 
 The coordinator's trusted captured-input description must include the resolved
 source/document/location/revision associations and processing settings before binding
-the saved import key and making remote writes. The supported manifest binding schema
-now exists, but full captured-input comparison, source registration and preparation
-remain open; metadata encoding does not establish them.
-Bound aggregate and per-source entry counts, per-key/path bytes and total metadata
-before allocation. Exact admission ceilings still need a concrete workload.
+the saved import key and making remote writes. The supported manifest and
+[captured-input comparison](captured-input-identity.md) now implement the initial Git/HTML bindings, and the prepared importer checks complete
+selected Git membership. Neither metadata encoding nor hashing establishes source
+authorization, truthful HTML provenance or dependency completeness. Aggregate and
+per-source entry counts, per-key/path bytes and total metadata have explicit admission
+limits; production ceilings still need a concrete workload.
 
 ## Evidence behind the choice
+
+The [complete-snapshot regression](../experiments/prepared-import.md#complete-replacements-preserve-earlier-evidence)
+now checks removal, addition, exact-byte rename and reuse of a removed path. Old
+reader references preserve their original path/revision/quote; new generations
+record the new path set without inferring lineage. This is local synthetic evidence,
+separate from the real-corpus update replay and provider behavior.
 
 - Git stores snapshots rather than persistent per-file identities. Rename and copy
   detection compare content; the configured similarity policy affects the result.

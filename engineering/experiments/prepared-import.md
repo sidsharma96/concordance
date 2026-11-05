@@ -117,6 +117,49 @@ Selected local output/check/review evidence is ignored under
 `.tools/reviews/prepared-import-*`. No new live R2 writes, Kubernetes publication
 or Cloudflare book deployment is claimed.
 
+## Complete replacements preserve earlier evidence
+
+`TestCompleteSnapshotsChangeMembershipWithoutChangingOldEvidence` exercises the
+existing importer, target coordinator and published reader together. It commits
+three complete synthetic Git snapshots, with one authored HTML passage per document:
+
+| Snapshot | Exact document paths under `docs/` |
+| --- | --- |
+| Before | `a.md`, `b.md`, `c.md` |
+| After | `0-added.md`, `a.md`, `moved/c.md` |
+| Reused path | `0-added.md`, `a.md`, `b.md`, `moved/c.md` |
+
+The first two have equal document counts but different membership. Every hit for
+`guidance` is checked against an explicit path-to-quote map, exact source ID,
+captured Git revision, generation and edition. The added path sorts before the
+stable document, so rank/slot positions cannot stand in for document identity.
+The removed `legacy` text has no match after activation. The renamed file keeps
+identical raw and article references while its new Git path is a different key.
+
+Publishing After leaves the target selecting Before. Explicit activations advance
+target revisions 1, 2 and 3; rollback selects Before at revision 4. Previously opened
+readers keep their own sets. Recreating `docs/b.md` with replacement text does not
+redirect an earlier reference: it still strictly quotes `Guide` followed by
+`Legacy rollback guidance.` with unchanged old provenance. A new reader rejects
+that old temporary reference rather than interpreting its position in the new set.
+
+Before replacement publication, an old three-page handoff against the new three-file
+tree, a missing page and a missing declared dependency all fail. Each returns zero,
+leaves no operation binding, makes no object request and preserves the target.
+Changed membership under the original completed key conflicts before object access.
+All three completed keys later recover their original generations with no new
+object requests. These are actual fixture request counters, not latency claims.
+
+Run the test with `go test -count=1 -v ./internal/preparedimport -run
+TestCompleteSnapshotsChangeMembershipWithoutChangingOldEvidence` and a dedicated
+local `CONCORDANCE_TEST_DATABASE_URL`, following CONTRIBUTING. Never point it at the
+hosted catalog: setup creates and drops an isolated schema and uses a local HTTP
+object fixture behind the actual S3 client. The observed run used PostgreSQL 14.17
+and Go 1.27.2 on darwin/arm64. No renderer, CLI, hosted provider, source-permission
+revocation, physical deletion, ambiguous-commit fault or relevance evaluation is
+exercised. The earlier [native update replay](documentation-update.md) remains the
+separate one-page real-corpus/provider evidence. Runtime behavior is unchanged.
+
 ## Local construction of the selected Kubernetes corpus
 
 The accepted [restricted build-input profile](../decisions/kubernetes-build-inputs.md)
