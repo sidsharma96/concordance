@@ -141,7 +141,9 @@ No namespace setup, automatic resume/activation/deletion or distributed lease is
 provided. The [native CLI exercise](engineering/experiments/hosted-import-command.md)
 publishes the retained corpus with a new saved job, recovers the completed result
 with its object route blocked, and checks six strict quotes under a separate test
-target. The original kubernetes target remains unchanged. Preserve original and
+target. The [historical update replay](engineering/experiments/documentation-update.md)
+checks changed 1.36 source through native publication, explicit activation, a held old
+reader, stale/absent-edition refusal and rollback. The original kubernetes target remains unchanged. Preserve original and
 new captures/keys; private operator-context records locate retained test targets.
 `tools/captureaudit` checks the handoff without Git, a renderer or remote stores.
 The 38-page reference audit does not establish a minimal/complete renderer dependency

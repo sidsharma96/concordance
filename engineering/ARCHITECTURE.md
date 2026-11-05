@@ -12,6 +12,9 @@ synchronous publication, with explicit retry and separate activation. See the
 The [native CLI exercise](experiments/hosted-import-command.md) now publishes another
 result over the same retained corpus, recovers it with the object route blocked,
 and verifies a separate test target without redirecting the existing default.
+The [historical update replay](experiments/documentation-update.md) additionally
+checks changed source, explicit selection, a held old reader and rollback through
+the native CLI and hosted stores.
 
 ## The implemented path
 
