@@ -177,6 +177,7 @@ func runSearch(parent context.Context, args []string, out io.Writer, getenv func
 	read.flags(f)
 	limit := f.Int("limit", 10, "maximum verified quotes to show; ranking admission is separate")
 	all := f.Bool("all", false, "verify and show every admitted match; conflicts with explicit --limit")
+	jsonOutput := f.Bool("json", false, "emit versioned documentation evidence JSON instead of text")
 	modelRank := f.Bool("rerank", false, "rerank the first 100 any-word candidates through the pinned local worker")
 	socket := f.String("worker-socket", "", "private reranking socket; defaults to CONCORDANCE_WORKER_SOCKET")
 	candidateBytes := f.Int64("max-candidate-article-bytes", 64<<20, "reranking distinct article-body read budget")
@@ -273,14 +274,15 @@ func runSearch(parent context.Context, args []string, out io.Writer, getenv func
 	q := termsearch.Query{Edition: selection.Edition, TermsVersion: prepared.Version, Terms: prepared.Terms}
 	searchLimits := termsearch.Limits{MaxEditions: 1, MaxPassages: read.passages, MaxTerms: read.terms, MaxQueryTerms: *queryTerms, MaxInputBytes: read.prepared, MaxMatches: *matches}
 	quoteLimits := publishedsearch.QuoteLimits{MaxQuoteBytes: *quote, MaxTotalQuoteBytes: *total}
-	var batch publishedsearch.QuotedResult
-	count := 0
+	var batch searchBatch
 	if *modelRank {
-		batch, count, err = collectReranked(ctx, r, f.Arg(1), q, searchLimits, read, *socket, *quote, *total, *limit, *candidateBytes)
+		batch, err = collectReranked(ctx, r, f.Arg(1), q, searchLimits, read, *socket, *quote, *total, *limit, *candidateBytes)
+	} else if *jsonOutput {
+		batch, err = collectJSONSearch(ctx, r, q, searchLimits, read, *quote, *total, *output, *limit, *all)
 	} else if *all {
-		batch, err = r.SearchQuoted(ctx, q, searchLimits, quoteLimits)
+		batch.Quotes, err = r.SearchQuoted(ctx, q, searchLimits, quoteLimits)
 	} else {
-		batch, err = r.SearchQuotedFirst(ctx, q, searchLimits, quoteLimits, *limit)
+		batch.Quotes, err = r.SearchQuotedFirst(ctx, q, searchLimits, quoteLimits, *limit)
 	}
 	if err != nil {
 		if *modelRank {
@@ -289,10 +291,12 @@ func runSearch(parent context.Context, args []string, out io.Writer, getenv func
 		return commandFailure("collect verified search quotes failed", err)
 	}
 	var body []byte
-	if *modelRank {
-		body, err = renderReranked(ctx, r, f.Arg(0), selection, batch, count, *output)
+	if *jsonOutput {
+		body, err = renderSearchJSON(ctx, r, f.Arg(0), selection, prepared.Version, batch, *modelRank, *output)
+	} else if *modelRank {
+		body, err = renderReranked(ctx, r, f.Arg(0), selection, batch.Quotes, batch.RankedCandidates, *output)
 	} else {
-		body, err = renderSearch(ctx, r, f.Arg(0), selection, batch, *output)
+		body, err = renderSearch(ctx, r, f.Arg(0), selection, batch.Quotes, *output)
 	}
 	if err != nil {
 		return commandFailure("format search results failed", err)

@@ -127,8 +127,9 @@ Current complete-match admission, exact edition selection and all-or-zero strict
 quote verification remain unchanged. Do not truncate a retained authored unit to
 meet a new presentation budget silently.
 
-The next checkpoint is the first agent consumer and its entry point. Define its
-machine result and failure contract before exposing it. Existing reader handles
+The first entry point is now optional CLI JSON, with its
+[machine result and failure contract](agent-search-json.md). The next checkpoint
+is evaluating complete tasks in an actual selected agent client. Existing reader handles
 are temporary, not persisted citation or authorization tokens. A later read must
 bind exact retained evidence, not resolve a friendly target again and accidentally
 read a newer source.

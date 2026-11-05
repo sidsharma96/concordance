@@ -150,8 +150,15 @@ a known-empty edition or no matches succeeds with zero matching passages.
 Every selected quote is verified and the complete display buffered before stdout
 is written.
 A read, validation or formatting failure produces no result body. A later device
-failure can still leave partial bytes. Text is for reading, not a stable script or
-saved-citation format; JSON is deferred.
+failure can still leave partial bytes. Text is for reading. Add `--json` before
+the target for versioned machine output with exact selection/source details,
+body quotes, separate headings/notices and match counts. It also works with
+`--rerank`. Check the exit status before parsing: errors use stderr and return
+no success object. Empty successful results contain `results: []`. Result labels
+such as `r1` belong only to their response; they are not permanent read tokens.
+See the [JSON contract](engineering/decisions/agent-search-json.md) for fields and
+compatibility. Ordinary JSON additionally verifies canonical heading/notice
+context, capped at 64 KiB per passage; text keeps its quote-only path.
 
 `search --help` lists independent query, artifact, count, quote, display and timeout
 ceilings. Excess candidate matches or bytes fail rather than truncate. The quote

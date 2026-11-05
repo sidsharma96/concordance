@@ -69,8 +69,14 @@ complete candidate overflow an error and unshown article bodies uncertified. Rea
 positive per-quote/aggregate quote-byte limits and the existing complete-match
 limit. References retain reader state; results own their mutable hit slice and
 quote strings. Aggregate quote bytes exclude encoding/metadata and do not bound
-whole-process heap. Every selected hit still performs its own strict article read. The command adds bounded escaped text rendering; no persisted citation schema or
-JSON output is included.
+whole-process heap. Every selected hit still performs its own strict article read.
+The command supports bounded escaped text and optional versioned `--json`
+documentation evidence; read `engineering/decisions/agent-search-json.md`. Keep
+source-native identity, exact selection, separate canonical body/context and
+indexed/scored/returned counts. Ordinary JSON rebuilds context per selected
+passage; reranking retains verified candidate context without another download.
+JSON failures use sanitized stderr and no success object; labels are response-local,
+not durable read or permission tokens.
 
 `internal/searchtarget` now resolves a catalog-backed friendly name to an exact
 published selection and verifies a candidate default through `publishedsearch.Open`

@@ -4,8 +4,9 @@ The accepted [project direction](decisions/agent-retrieval.md) is retrieval of
 verified evidence for agents over deliberately captured collections. Documentation
 is the first working task; discovery of recorded Rewind operations is the intended
 second consumer to test the boundary. Rewind retains record acceptance and playback
-authority. A machine interface, native second-source contract and performance
-targets remain decisions, rather than implemented capabilities.
+authority. The trusted CLI exposes optional versioned documentation-evidence
+[JSON](decisions/agent-search-json.md). A native second-source contract, durable
+read resolver and performance targets remain open.
 
 Concordance retrieves technical documentation from exact captured revisions and
 product editions. The public CLI provides trusted-operator prepared import, search, target inspection and explicit
@@ -34,7 +35,7 @@ operator import retry -> open/check existing job, same key
 operator search CLI
   -> admit/prepare query -> resolve target once -> check configured collection
   -> publishedsearch.Open -> SearchQuotedFirst (--all: SearchQuoted)
-  -> bounded escaped text -> stdout
+  -> bounded escaped text or explicit --json evidence -> stdout
 operator target show/activate -> catalog inspection / checked conditional update
 
 trusted offline preparer
@@ -354,6 +355,7 @@ and an HTTP API are unimplemented.
 A small first corpus is an experiment, not a permanent product limit. Explicit
 target activation and trusted-operator search are exposed by the CLI. Native
 PostgreSQL profiles and explicit R2 environment settings configure connections;
-text is for reading, with no stable JSON/citation codec. Hosted target setup now passes;
+text is for reading; optional --json has a versioned Git/HTML evidence contract,
+with response-local labels rather than durable read tokens. Hosted target setup now passes;
 reader-safe retention remains open. Roadmap performance claims are not Concordance
 measurements.

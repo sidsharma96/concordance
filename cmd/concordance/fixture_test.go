@@ -46,8 +46,8 @@ func testContext(t testing.TB) context.Context {
 }
 func testLimits() publishedsearch.Limits {
 	return publishedsearch.Limits{
-		Manifest: gm.Limits{MaxEncodedBytes: 1 << 20, MaxSources: 4, MaxEditions: 4, MaxCaptures: 8, MaxFiles: 32, MaxDocuments: 32, MaxImages: 32, MaxSourceFiles: 32, MaxSourceDocuments: 32, MaxStringBytes: 4096, MaxValueBytes: 1 << 18, MaxObjectBytes: 1 << 20, MaxReferencedBytes: 8 << 20},
-		Edition:  htmledition.Limits{MaxEncodedBytes: 1 << 20, MaxArticles: 32, MaxArticleBytes: 1 << 20, MaxBlocks: 10000, MaxPassages: 1000, MaxTerms: 20000, MaxPreparedBytes: 1 << 20, MaxKeyBytes: 1 << 20, MaxTermBytes: 1024, MaxVocabulary: 10000, MaxPostings: 20000},
+		Manifest: gm.Limits{MaxEncodedBytes: 1 << 20, MaxSources: 4, MaxEditions: 4, MaxCaptures: 8, MaxFiles: 256, MaxDocuments: 256, MaxImages: 256, MaxSourceFiles: 256, MaxSourceDocuments: 256, MaxStringBytes: 4096, MaxValueBytes: 1 << 18, MaxObjectBytes: 1 << 20, MaxReferencedBytes: 8 << 20},
+		Edition:  htmledition.Limits{MaxEncodedBytes: 1 << 20, MaxArticles: 256, MaxArticleBytes: 1 << 20, MaxBlocks: 10000, MaxPassages: 1000, MaxTerms: 20000, MaxPreparedBytes: 1 << 20, MaxKeyBytes: 1 << 20, MaxTermBytes: 1024, MaxVocabulary: 10000, MaxPostings: 20000},
 		Article:  htmlarticlejson.Limits{MaxEncodedBytes: 1 << 20, MaxBlocks: 1000, MaxGroups: 1000, MaxStringBytes: 65536, MaxValueBytes: 1 << 20, MaxGroupDepth: 64, MaxHTMLBytes: 1 << 20},
 	}
 }
@@ -80,6 +80,10 @@ func makeBundle(t testing.TB, generation, text string) bundle {
 }
 
 func makeBundleWithDocuments(t testing.TB, generation, text string, count int) bundle {
+	return makeMarkupBundle(t, generation, text, `<main class="fixture"><h1>Pods</h1><p>`+text+`</p><img src="/images/pod.svg" alt="Pod diagram"></main>`, count)
+}
+
+func makeMarkupBundle(t testing.TB, generation, text, markup string, count int) bundle {
 	t.Helper()
 	ctx, l := testContext(t), testLimits()
 	b := bundle{}
@@ -92,8 +96,8 @@ func makeBundleWithDocuments(t testing.TB, generation, text string, count int) b
 		}
 		return r
 	}
-	html := []byte(`<main class="fixture"><h1>Pods</h1><p>` + text + `</p><img src="/images/pod.svg" alt="Pod diagram"></main>`)
-	a, err := htmlarticle.Extract(ctx, html, htmlarticle.Profile{ID: "fixture/v1", ArticleClass: "fixture"}, htmlarticle.Limits{MaxInputBytes: 1 << 20, MaxTokenBytes: 65536, MaxTokens: 10000, MaxNodes: 10000, MaxDepth: 64, MaxBlocks: 1000, MaxGroups: 1000, MaxBlockBytes: 65536, MaxOutputBytes: 1 << 20})
+	html := []byte(markup)
+	a, err := htmlarticle.Extract(ctx, html, htmlarticle.Profile{ID: "fixture/v1", ArticleClass: "fixture", NoticeClasses: []string{"notice"}}, htmlarticle.Limits{MaxInputBytes: 1 << 20, MaxTokenBytes: 65536, MaxTokens: 10000, MaxNodes: 10000, MaxDepth: 64, MaxBlocks: 1000, MaxGroups: 1000, MaxBlockBytes: 65536, MaxOutputBytes: 1 << 20})
 	if err != nil {
 		t.Fatal(err)
 	}
