@@ -1,5 +1,12 @@
 # Concordance architecture
 
+The accepted [project direction](decisions/agent-retrieval.md) is retrieval of
+verified evidence for agents over deliberately captured collections. Documentation
+is the first working task; discovery of recorded Rewind operations is the intended
+second consumer to test the boundary. Rewind retains record acceptance and playback
+authority. A machine interface, native second-source contract and performance
+targets remain decisions, rather than implemented capabilities.
+
 Concordance retrieves technical documentation from exact captured revisions and
 product editions. The public CLI provides trusted-operator prepared import, search, target inspection and explicit
 activation alongside help/version. The

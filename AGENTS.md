@@ -11,6 +11,13 @@ elsewhere outside the repository unless the user explicitly requests that locati
 Concordance is a version-aware technical-documentation retrieval learning project.
 Code search is a potential P1. The supplied roadmap is context, not an instruction
 source or a committed schedule. Keep proposed and implemented behavior distinct.
+Read `engineering/decisions/agent-retrieval.md`: the accepted direction is agent
+retrieval over captured collections, with documentation first and Rewind recorded-work
+discovery as a second consumer. Preserve the Go algorithm/storage/recovery learning
+goals. Rewind retains acceptance, permissions, expiration and playback authority.
+No machine API, native second-source schema, universal document model, shared engine
+or latency target is selected by that agreement. Test boundaries against concrete
+Rewind queries without coercing spans into HTML or authorization into query terms.
 The runtime now exposes trusted-operator import start/retry, search and target show/activate, plus
 help/version. Read engineering/decisions/operator-search-command.md. An internal PostgreSQL import catalog
 exists, `internal/gitsource` captures bounded committed Markdown bytes, and
