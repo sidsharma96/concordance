@@ -9,18 +9,17 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/sidsharma96/concordance/internal/htmlpassage"
 	"github.com/sidsharma96/concordance/internal/publishedsearch"
 	"github.com/sidsharma96/concordance/internal/rerank"
 	"github.com/sidsharma96/concordance/internal/termsearch"
 )
 
-func collectReranked(ctx context.Context, r *publishedsearch.Reader, raw string, q termsearch.Query, search termsearch.Limits, read readOptions, socket string, quoteBytes, totalBytes, limit int, articleBytes int64) (publishedsearch.QuotedResult, int, error) {
+func collectReranked(ctx context.Context, r *publishedsearch.Reader, raw string, q termsearch.Query, search termsearch.Limits, read readOptions, socket string, quoteBytes, totalBytes, limit int, articleBytes int64) (searchBatch, error) {
 	candidates, err := r.SearchAnyEvidenceGroupedFirst(ctx, q, search, publishedsearch.GroupedCandidateLimits{
-		Evidence: publishedsearch.EvidenceLimits{Passages: htmlpassage.Limits{MaxBlocks: 200000, MaxGroups: 200000, MaxInputBytes: read.article, MaxPassages: read.passages, MaxBodyBytes: read.article, MaxReferences: 2000000, MaxContextBytes: 64 << 20}, MaxQuoteBytes: quoteBytes, MaxContextBytes: 64 << 10}, MaxDistinctArticleBytes: articleBytes, MaxTextBytes: 8 << 20,
+		Evidence: evidenceLimits(read, quoteBytes), MaxDistinctArticleBytes: articleBytes, MaxTextBytes: 8 << 20,
 	}, rerank.MaxPairs)
 	if err != nil {
-		return publishedsearch.QuotedResult{}, 0, err
+		return searchBatch{}, err
 	}
 	inputs := make([]rerank.Input, len(candidates.Candidates))
 	for i, c := range candidates.Candidates {
@@ -28,17 +27,17 @@ func collectReranked(ctx context.Context, r *publishedsearch.Reader, raw string,
 	}
 	batch, err := rerank.Prepare(ctx, raw, inputs)
 	if err != nil {
-		return publishedsearch.QuotedResult{}, 0, err
+		return searchBatch{}, err
 	}
 	if batch.Len() > 0 {
 		socket, err = workerSocket(socket)
 		if err != nil {
-			return publishedsearch.QuotedResult{}, 0, err
+			return searchBatch{}, err
 		}
 	}
 	scores, err := rerank.Score(ctx, socket, batch)
 	if err != nil {
-		return publishedsearch.QuotedResult{}, 0, err
+		return searchBatch{}, err
 	}
 	order := make([]int, len(inputs))
 	for i := range order {
@@ -55,21 +54,23 @@ func collectReranked(ctx context.Context, r *publishedsearch.Reader, raw string,
 		return 0
 	})
 	out := publishedsearch.QuotedResult{RankingVersion: "bge-v2-m3/lexical100/v1", TotalMatches: candidates.TotalMatches, Hits: make([]publishedsearch.QuotedHit, min(limit, len(order)))}
+	evidence := make([]publishedsearch.Evidence, len(out.Hits))
 	remaining := totalBytes
 	for i, position := range order[:len(out.Hits)] {
 		if err := ctx.Err(); err != nil {
-			return publishedsearch.QuotedResult{}, 0, err
+			return searchBatch{}, err
 		}
 		c := candidates.Candidates[position]
 		// The candidate budget covers all model inputs; this budget covers only
 		// the final requested display prefix after every candidate was scored.
 		if len(c.Evidence.Quote) > remaining {
-			return publishedsearch.QuotedResult{}, 0, publishedsearch.ErrLimit
+			return searchBatch{}, publishedsearch.ErrLimit
 		}
 		remaining -= len(c.Evidence.Quote)
 		out.Hits[i] = publishedsearch.QuotedHit{Ref: c.Ref, Score: scores.Scores[position], Quote: c.Evidence.Quote}
+		evidence[i] = c.Evidence
 	}
-	return out, len(order), nil
+	return searchBatch{Quotes: out, Evidence: evidence, RankedCandidates: len(order)}, nil
 }
 func workerSocket(value string) (string, error) {
 	if value == "" || !utf8.ValidString(value) || strings.ContainsRune(value, 0) {
