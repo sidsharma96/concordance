@@ -1,8 +1,10 @@
 # Complete snapshot imports
 
 Status: accepted design. The user chose option A: an import describes the complete
-intended scope, rather than a patch to a previous generation. The complete importer
-and generation manifest are not implemented.
+intended scope, rather than a patch to a previous generation. The bounded prepared
+importer and generation manifest now implement this contract; the
+[historical update replay](../experiments/documentation-update.md) exercises changed
+source and explicit selection on the hosted stores.
 
 ## Contract
 
@@ -38,8 +40,10 @@ The coordinator must compute a trusted, versioned fingerprint of the complete
 captured-input description, including actual inventory, pinned selection and
 settings. Bind that description to the saved operation key before remote writes,
 as required by the [retry contract](import-retries.md). A caller-asserted digest or
-a mutable branch name alone cannot establish equality. Exact encoding and complete
-source/document identity records remain open.
+a mutable branch name alone cannot establish equality. The
+[captured-input identity](captured-input-identity.md) specifies the implemented
+Git/HTML fingerprint; [document identity](document-identity.md) specifies source/path
+bindings. Other provider formats still need deliberate contracts.
 
 Success still means [synchronous publication](import-completion.md) of a complete,
 queryable generation. Confirm all required immutable artifacts before catalog
@@ -51,7 +55,8 @@ budgets, activation, cancellation, resume or physical retention/deletion.
 The concrete starting workload is 38 Kubernetes article-version entries across
 three pinned release snapshots. Complete selection keeps membership explicit and
 avoids requiring a prior generation, stale-base policy or removal protocol just to
-describe the first import. No experiment has measured either request form end to end.
+describe the first import. No end-to-end cost comparison between the request forms
+has been measured.
 
 A complete snapshot does not require re-uploading or reprocessing all bytes. Reuse
 unchanged objects or whole edition files only when exact input and processing
