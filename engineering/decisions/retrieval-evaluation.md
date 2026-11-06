@@ -131,3 +131,7 @@ phrasing. A larger public benchmark would provide more questions while losing
 this corpus's exact edition/processing bindings. Revisit size and metrics when
 labels stabilize, additional source topics or actual user questions arrive, or
 judging returned unknown passages exposes a systematically incomplete pool.
+
+The next, separate [RFC corpus and question preparation](rfc-text-evaluation.md)
+retains raw text and source-span evidence. It does not reuse this HTML passage
+fixture schema or make the reserved Kubernetes cases pristine again.
