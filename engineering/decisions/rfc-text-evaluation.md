@@ -127,9 +127,16 @@ The private question-set SHA-256 is
 ignored under `.tools/`. No model, normalizer, chunker or approximate index is
 selected by this preparation record.
 
-Next compare lexical retrieval, an agent using file search, and exact vector
-retrieval on the same prepared text, questions, source checks and work budgets.
-First settle preparation and the encoder through their own evidence checkpoints.
-Measure source availability, candidate coverage, ordering and read/model costs
-separately; preserve errors as errors. Revisit the corpus if practical agent tasks
-need live information, operational traces, richer media or different topic coverage.
+The [first controlled passage trial](../experiments/rfc-chunking.md) now compares
+paragraph-first and fixed-window ranges with one experimental local encoder and
+the existing lexical engine. It runs the 54 evidence-seeking development intents
+and six controls on an explicit 996-file supported-input subset. The reserved
+40 questions remain unqueried. Neither splitter has a quality-and-cost win under
+the predeclared rule, and unjudged useful hits limit answer-quality conclusions.
+No production model, native RFC processor or passage contract is selected.
+
+An agent using file search and end-to-end answer/source checks remain untested.
+Before changing retrieval, separate source availability, candidate coverage,
+ordering, context and read/model cost; preserve errors as errors. Revisit the
+corpus if practical tasks need live information, operational traces, richer media
+or different topic coverage.
