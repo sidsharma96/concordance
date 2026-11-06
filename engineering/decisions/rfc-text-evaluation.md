@@ -135,7 +135,12 @@ and six controls on an explicit 996-file supported-input subset. The reserved
 the predeclared rule, and unjudged useful hits limit answer-quality conclusions.
 No production model, native RFC processor or passage contract is selected.
 
-An agent using file search and end-to-end answer/source checks remain untested.
+The [fixed-context answer pilot](../experiments/rfc-supported-answers.md) now checks
+12 development intents, six controls and one separate DNSSEC diagnostic under the
+four saved configurations. It finds no splitter winner, and post-run inspection
+flags potentially biased completeness judgments; the frozen automated scores remain
+unchanged. Calibrate outcome-based accepted answers before expanding that grading.
+An agent using file search, choosing queries or following a tool loop remains untested.
 Before changing retrieval, separate source availability, candidate coverage,
 ordering, context and read/model cost; preserve errors as errors. Revisit the
 corpus if practical tasks need live information, operational traces, richer media
