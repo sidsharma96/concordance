@@ -119,9 +119,10 @@ type searchJSONModel struct {
 	Runtime      string `json:"runtime"`
 }
 type searchJSONPassage struct {
-	ID       string             `json:"id"`
-	Source   searchJSONSource   `json:"source"`
-	Evidence searchJSONEvidence `json:"evidence"`
+	SourceRef string             `json:"source_ref"`
+	ID        string             `json:"id"`
+	Source    searchJSONSource   `json:"source"`
+	Evidence  searchJSONEvidence `json:"evidence"`
 }
 type searchJSONSource struct {
 	Kind       string `json:"kind"`
@@ -179,10 +180,19 @@ func renderSearchJSON(ctx context.Context, r *publishedsearch.Reader, target str
 		if labels == nil {
 			labels = []string{}
 		}
+		ref, err := r.SourceReference(ctx, hit.Ref)
+		if err != nil {
+			return nil, err
+		}
+		token, err := encodeSourceReference(ref)
+		if err != nil {
+			return nil, err
+		}
 		out.Results = append(out.Results, searchJSONPassage{
-			ID:       "r" + strconv.Itoa(i+1),
-			Source:   searchJSONSource{Kind: "git", ID: d.Source.ID, Repository: d.Source.Repository, Revision: d.Revision, NativeID: d.NativeID, Location: d.Location, BlobID: d.Input.BlobID},
-			Evidence: searchJSONEvidence{Kind: "retained_html_blocks/v1", ArticleSHA256: hex.EncodeToString(d.Article.SHA256[:]), ArticleBytes: d.Article.Bytes, FirstBlock: loc.Body.First, AfterBlock: loc.Body.After, Quote: e.Quote, Headings: headings, NoticeLabels: labels},
+			SourceRef: token,
+			ID:        "r" + strconv.Itoa(i+1),
+			Source:    searchJSONSource{Kind: "git", ID: d.Source.ID, Repository: d.Source.Repository, Revision: d.Revision, NativeID: d.NativeID, Location: d.Location, BlobID: d.Input.BlobID},
+			Evidence:  searchJSONEvidence{Kind: "retained_html_blocks/v1", ArticleSHA256: hex.EncodeToString(d.Article.SHA256[:]), ArticleBytes: d.Article.Bytes, FirstBlock: loc.Body.First, AfterBlock: loc.Body.After, Quote: e.Quote, Headings: headings, NoticeLabels: labels},
 		})
 	}
 	// Encoder escapes controls and HTML-sensitive text and adds LF. Its scratch

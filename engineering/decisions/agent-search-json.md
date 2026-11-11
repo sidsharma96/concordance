@@ -152,3 +152,9 @@ and compact records on fixed complete tasks after selecting an actual consumer:
 correct source/edition/citations, abstention and errors, tool actions, repairs and
 whole-trajectory cost. Existing serialization/token screens are not proof of a
 best agent format or faster complete tasks.
+
+
+Captured source follow-up adds `source_ref` to each result. This bounded locator
+pins the published selection, document and article range; it does not change
+response-local labels or grant permission. See [captured-source reading](captured-source-reading.md)
+for the exact-read command, encoding, navigation and limits.

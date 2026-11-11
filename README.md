@@ -155,7 +155,21 @@ the target for versioned machine output with exact selection/source details,
 body quotes, separate headings/notices and match counts. It also works with
 `--rerank`. Check the exit status before parsing: errors use stderr and return
 no success object. Empty successful results contain `results: []`. Result labels
-such as `r1` belong only to their response; they are not permanent read tokens.
+such as `r1` belong only to their response. Use `source_ref` to read surrounding
+source from that exact capture:
+
+```sh
+./bin/concordance read --scope section "$SOURCE_REF"
+```
+
+Copy `source_ref` from a JSON result into `SOURCE_REF`. Read returns JSON with the
+exact source, body and `navigation.previous`, `next` and `parent` references. Follow
+one with `concordance read "$SOURCE_REF"`; null means unavailable. References do
+not grant access, and activating a newer target does not redirect old references.
+Oversized sections fail explicitly; `read --help` lists the limits. Each fresh read
+loads the manifest, index and whole article even when returning a small section.
+See the [source-read contract](engineering/decisions/captured-source-reading.md).
+
 See the [JSON contract](engineering/decisions/agent-search-json.md) for fields and
 compatibility. Ordinary JSON additionally verifies canonical heading/notice
 context, capped at 64 KiB per passage; text keeps its quote-only path.
@@ -163,8 +177,8 @@ context, capped at 64 KiB per passage; text keeps its quote-only path.
 `search --help` lists independent query, artifact, count, quote, display and timeout
 ceilings. Excess candidate matches or bytes fail rather than truncate. The quote
 limit selects a ranked prefix after complete candidate admission. The selected index
-and whole generation manifest are loaded into memory. In ordinary search, each selected hit downloads its whole
-bounded article, including repeated hits sharing bytes; there is no article cache.
+and whole generation manifest are loaded into memory. JSON search downloads each distinct selected article once per request. Text search
+still reads each selected hit separately. Neither retains an article cache across calls.
 These limits are not whole-process memory quotas or million-document support.
 Other initial structural ceilings are listed in the
 [command design](engineering/decisions/operator-search-command.md). The default

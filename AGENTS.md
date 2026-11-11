@@ -98,6 +98,15 @@ reranking retains verified candidate context without another download.
 JSON failures use sanitized stderr and no success object; labels are response-local,
 not durable read or permission tokens.
 
+JSON results now include a bounded `source_ref` for exact captured-source reading.
+Read `engineering/decisions/captured-source-reading.md`. `read` reopens the pinned
+published generation/edition under the configured collection, checks source/slot/hash
+bindings and strictly verifies the complete article before whole-passage navigation.
+Keep HTML section rules in htmlpassage, exact/section/parent/previous/next explicit,
+labels separate from verbatim body, all-or-zero verification and bounded output.
+Locators grant no permission; target activation must never redirect an old read.
+No cache, implicit paging, live fallback or new ranking policy is included.
+
 `internal/searchtarget` now resolves a catalog-backed friendly name to an exact
 published selection and verifies a candidate default through `publishedsearch.Open`
 before explicit activation. Read `engineering/decisions/search-targets.md` and
