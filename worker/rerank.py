@@ -276,7 +276,8 @@ class Server:
             self._check(conn, deadline)
             write_frame(conn, dict(version=PROTOCOL, kind="result", nonce=nonce, request_id=request["request_id"], input_sha256=request["input_sha256"], scores=scores, **_tags()), MAX_RESPONSE, deadline)
         except (Rejected, ValueError, UnicodeError, OSError, TimeoutError) as error:
-            code = error.code if isinstance(error, Rejected) else "timeout" if isinstance(error, TimeoutError) else "invalid"
+            # socket.timeout became an alias of TimeoutError in Python 3.10.
+            code = error.code if isinstance(error, Rejected) else "timeout" if isinstance(error, (TimeoutError, socket.timeout)) else "invalid"
             self._error(conn, nonce, request, code)
         except Exception:
             # An uncertain model/device state cannot serve the next caller.

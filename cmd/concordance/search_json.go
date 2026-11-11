@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"strconv"
 
 	"github.com/sidsharma96/concordance/internal/htmlpassage"
@@ -28,27 +29,29 @@ func evidenceLimits(read readOptions, quoteBytes int) publishedsearch.EvidenceLi
 	}
 }
 
-// Complete ranking precedes selection. Each selected passage gets one strict
-// article read and canonical context rebuild. O(K+B) presentation state for K
-// hits/B text bytes coexists with full ranking and one article/plan's scratch.
+// Complete ranking precedes selection. Each distinct selected article gets one
+// strict read; every passage retains its independent checks and context rebuild.
+// O(K+U+B) state for K hits, U articles and B text bytes coexists with full ranking
+// and one article/plan's scratch. No article bytes survive this call.
 // Body and aggregate body/context admission are distinct; neither is a heap cap.
 // Every error returns a zero batch, including after successful earlier reads.
 func collectJSONSearch(ctx context.Context, r *publishedsearch.Reader, q termsearch.Query, search termsearch.Limits, read readOptions, quoteBytes, totalBytes, outputBytes, limit int, all bool) (searchBatch, error) {
-	ranked, err := r.Search(ctx, q, search)
+	if all {
+		limit = search.MaxMatches
+	}
+	ranked, err := r.SearchEvidenceGroupedFirst(ctx, q, search, publishedsearch.GroupedCandidateLimits{
+		Evidence: evidenceLimits(read, quoteBytes), MaxDistinctArticleBytes: int64(read.editionArticles), MaxTextBytes: outputBytes,
+	}, limit)
+	if errors.Is(err, publishedsearch.ErrTextLimit) {
+		return searchBatch{}, errOutputLimit
+	}
 	if err != nil {
 		return searchBatch{}, err
 	}
-	selected := ranked.Hits
-	if !all {
-		selected = selected[:min(limit, len(selected))]
-	}
-	out := searchBatch{Quotes: publishedsearch.QuotedResult{RankingVersion: ranked.RankingVersion, TotalMatches: len(ranked.Hits), Hits: make([]publishedsearch.QuotedHit, 0, len(selected))}, Evidence: make([]publishedsearch.Evidence, 0, len(selected)), RankedCandidates: len(ranked.Hits)}
+	out := searchBatch{Quotes: publishedsearch.QuotedResult{RankingVersion: ranked.RankingVersion, TotalMatches: ranked.TotalMatches, Hits: make([]publishedsearch.QuotedHit, 0, len(ranked.Candidates))}, Evidence: make([]publishedsearch.Evidence, 0, len(ranked.Candidates)), RankedCandidates: ranked.TotalMatches}
 	quoteLeft, textLeft := totalBytes, outputBytes
-	for _, hit := range selected {
-		e, err := r.Evidence(ctx, hit.Ref, evidenceLimits(read, quoteBytes))
-		if err != nil {
-			return searchBatch{}, err
-		}
+	for _, hit := range ranked.Candidates {
+		e := hit.Evidence
 		if len(e.Quote) > quoteLeft {
 			return searchBatch{}, publishedsearch.ErrLimit
 		}

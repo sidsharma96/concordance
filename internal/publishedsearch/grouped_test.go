@@ -123,6 +123,49 @@ func TestGroupedCandidatesMatchUncachedOrderAndOwnOutput(t *testing.T) {
 	t.Log("ranked articles=A,B,A; uncached GET=3 grouped GET=2; exact refs/scores/body/headings/labels preserved; next request GET=2")
 }
 
+func TestGroupedAllTermsMatchesIndependentEvidence(t *testing.T) {
+	f := setup(t)
+	f.publish(t, makeGroupedBundle(t))
+	r, q := f.open(t, "generation-a"), prepared(t, "retry")
+	ranked, err := r.Search(testContext(t), q, queryLimits())
+	if err != nil || len(ranked.Hits) != 3 {
+		t.Fatal(ranked, err)
+	}
+	want := CandidateResult{RankingVersion: ranked.RankingVersion, TotalMatches: len(ranked.Hits)}
+	f.remote.reset()
+	for _, hit := range ranked.Hits {
+		evidence, err := r.Evidence(testContext(t), hit.Ref, candidateLimits().Evidence)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want.Candidates = append(want.Candidates, Candidate{Ref: hit.Ref, Score: hit.Score, Evidence: evidence})
+	}
+	if f.remote.counts()["GET"] != 3 {
+		t.Fatal("uncached oracle", f.remote.counts())
+	}
+	for range 2 {
+		f.remote.reset()
+		got, err := r.SearchEvidenceGroupedFirst(testContext(t), q, queryLimits(), groupedLimits(), queryLimits().MaxMatches)
+		if err != nil || !reflect.DeepEqual(got, want) || f.remote.counts()["GET"] != 2 {
+			t.Fatal("all-term grouping changed output or retained bytes between calls", got, err, f.remote.counts())
+		}
+	}
+	f.remote.reset()
+	got, err := r.SearchEvidenceGroupedFirst(testContext(t), prepared(t, "retry absent"), queryLimits(), groupedLimits(), 3)
+	if err != nil || got.TotalMatches != 0 || len(got.Candidates) != 0 || len(f.remote.counts()) != 0 {
+		t.Fatal("all-term policy became any-term", got, err, f.remote.counts())
+	}
+	search := queryLimits()
+	search.MaxMatches = 2
+	if got, err := r.SearchEvidenceGroupedFirst(testContext(t), q, search, groupedLimits(), 1); !errors.Is(err, termsearch.ErrLimit) || !reflect.DeepEqual(got, CandidateResult{}) || len(f.remote.counts()) != 0 {
+		t.Fatal("prefix bypassed complete ranking admission", got, err)
+	}
+	if _, err := r.SearchEvidenceGroupedFirst(testContext(t), q, queryLimits(), groupedLimits(), 0); !errors.Is(err, ErrInvalid) {
+		t.Fatal("invalid prefix", err)
+	}
+	t.Log("all-term A,B,A: strict per-hit oracle GET=3; grouped GET=2 on each fresh call; exact values/order preserved")
+}
+
 func TestGroupedCandidatesPreflightAndTextBudgets(t *testing.T) {
 	f := setup(t)
 	b := makeGroupedBundle(t)
