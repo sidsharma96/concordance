@@ -24,6 +24,10 @@ type articleGroup struct {
 	positions []int // Original selected-hit positions, not passage or document IDs.
 }
 
+// ErrTextLimit identifies aggregate quote/context overflow in a grouped result.
+// It wraps ErrLimit so callers can retain general admission-error handling.
+var ErrTextLimit = fmt.Errorf("candidate text bytes: %w", ErrLimit)
+
 // SearchAnyEvidenceGroupedFirst has the same successful values and complete-match
 // admission as SearchAnyEvidenceFirst. It admits a distinct-article read plan
 // before its first candidate GET, then reads each group strictly once. Manifest,
@@ -50,6 +54,26 @@ func (r *Reader) SearchAnyEvidenceGroupedFirst(ctx context.Context, q termsearch
 	if err != nil {
 		return CandidateResult{}, err
 	}
+	return r.evidenceGroupedFirst(ctx, ranked, l, limit)
+}
+
+// SearchEvidenceGroupedFirst retains Search's all-term eligibility and complete
+// ranking admission, then verifies the requested prefix using the same scoped
+// download sharing as SearchAnyEvidenceGroupedFirst. It changes neither scores
+// nor result order. Passing search.MaxMatches selects every admitted match.
+// All limits, ownership, request isolation and zero-on-error rules above apply.
+func (r *Reader) SearchEvidenceGroupedFirst(ctx context.Context, q termsearch.Query, search termsearch.Limits, l GroupedCandidateLimits, limit int) (CandidateResult, error) {
+	if limit <= 0 || !validEvidenceLimits(l.Evidence) || l.MaxDistinctArticleBytes <= 0 || l.MaxTextBytes <= 0 {
+		return CandidateResult{}, ErrInvalid
+	}
+	ranked, err := r.Search(ctx, q, search)
+	if err != nil {
+		return CandidateResult{}, err
+	}
+	return r.evidenceGroupedFirst(ctx, ranked, l, limit)
+}
+
+func (r *Reader) evidenceGroupedFirst(ctx context.Context, ranked Result, l GroupedCandidateLimits, limit int) (CandidateResult, error) {
 	selected := ranked.Hits[:min(limit, len(ranked.Hits))]
 	groups, err := r.groupArticleReads(ctx, selected, l.MaxDistinctArticleBytes)
 	if err != nil {
@@ -74,7 +98,7 @@ func (r *Reader) SearchAnyEvidenceGroupedFirst(ctx context.Context, q termsearch
 			}
 			textLeft, err = admitEvidence(evidence, textLeft)
 			if err != nil {
-				return CandidateResult{}, err
+				return CandidateResult{}, ErrTextLimit
 			}
 			out.Candidates[i] = Candidate{Ref: hit.Ref, Score: hit.Score, Evidence: evidence}
 		}

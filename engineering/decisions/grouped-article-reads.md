@@ -3,7 +3,9 @@
 Status: accepted option A, implemented by
 publishedsearch.Reader.SearchAnyEvidenceGroupedFirst. Reuse encoded downloads only;
 keep per-passage manifest, edition, decoding and context checks. The model worker
-and opt-in command remain pending. Ordinary search and quote APIs are unchanged.
+and opt-in command are implemented. The ordinary JSON command now uses
+SearchEvidenceGroupedFirst with all-term eligibility. The text command and
+standalone quote APIs remain unchanged.
 
 ## Workload and invariant
 

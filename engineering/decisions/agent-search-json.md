@@ -97,9 +97,11 @@ do not coerce operational records or RFC formats into Git/HTML.
 
 ## Cost, bounds and ownership
 
-Ordinary JSON composes the existing complete Search, selected prefix, Location
-and Evidence calls. It performs one strict whole article GET and canonical context
-rebuild per selected passage, including repeated articles. Human text keeps its
+Ordinary JSON uses complete all-term Search and a selected prefix, sharing one
+strict whole article GET per distinct physical reference within that request.
+Every logical passage still gets its own manifest/index checks, article decoding
+and canonical context rebuild. The existing edition-wide article-byte ceiling
+also bounds the selected distinct-byte read plan before GET. Human text keeps its
 existing quote-only path. JSON can therefore fail an additional canonical-context
 limit even when text would succeed. Per-passage context uses the existing rerank
 ceiling of 64 KiB and existing canonical-plan bounds.
@@ -111,8 +113,14 @@ complete encoded envelope against that same ceiling, including metadata, escapes
 and LF. Never silently shorten/skip a passage or lower the requested count. Match
 overflow still fails before quoting; output count does not bound ranking work.
 
-For K selected passages and B body/context bytes, presentation retains O(K+B)
-values alongside existing complete ranking and article/plan scratch. Immutable
+For K selected passages, U distinct articles and B body/context bytes, presentation
+retains O(K+U+B) values alongside complete ranking and one article/plan's scratch.
+No article bytes survive the request. Groups fill the original ranked positions;
+failure order can differ from the old per-hit loop. A group observes one verified
+body, not a later storage change within the request; the next request reads afresh.
+Output text admission precedes the CLI's separate aggregate quote check, so an
+aggregate quote failure can occur after more reads than in the per-hit loop.
+Immutable
 owned evidence strings/slices stay unchanged through encoding. JSON output is
 assembled before stdout; encoding/json can allocate complete-value scratch before
 the bounded writer rejects a write. Output admission is not a process heap, model

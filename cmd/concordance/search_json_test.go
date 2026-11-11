@@ -8,13 +8,18 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/sidsharma96/concordance/internal/catalog"
+	gm "github.com/sidsharma96/concordance/internal/generationmanifest"
+	"github.com/sidsharma96/concordance/internal/htmledition"
+	"github.com/sidsharma96/concordance/internal/htmlterms"
 	"github.com/sidsharma96/concordance/internal/publishedsearch"
 	"github.com/sidsharma96/concordance/internal/rerank"
 	"github.com/sidsharma96/concordance/internal/termsearch"
+	"github.com/sidsharma96/concordance/internal/textterms"
 )
 
 func decodeSearchJSON(t *testing.T, body []byte) searchJSON {
@@ -32,6 +37,52 @@ func decodeSearchJSON(t *testing.T, body []byte) searchJSON {
 		t.Fatal("trailing output", err)
 	}
 	return got
+}
+
+// A later read must target a distinct object now that one request shares bodies.
+// Keep both passages eligible so a failure really follows successful evidence.
+func makeDistinctJSONBundle(t *testing.T) bundle {
+	t.Helper()
+	b := makeBundle(t, "generation-a", "Retry uploads safely.")
+	other := makeBundle(t, "generation-b", "Retry requests carefully.")
+	available := make(map[gm.Ref][]byte)
+	for _, body := range append(slices.Clone(b.artifacts), other.artifacts...) {
+		available[ref(body)] = body
+	}
+	e := &b.description.Editions[0]
+	e.Documents[1].HTML = other.description.Editions[0].Documents[0].HTML
+	e.Documents[1].Article = ref(other.article)
+	l := testLimits()
+	prep := htmlterms.Limits{Passages: evidenceLimits(readOptions{article: 1 << 20, passages: 1000}, 65536).Passages, Field: textterms.Limits{MaxInputBytes: 65536, MaxTerms: 10000, MaxTermBytes: 1024, MaxOutputBytes: 1 << 20}, MaxViewBytes: 1 << 20, MaxTerms: 20000, MaxOutputBytes: 1 << 20}
+	var err error
+	b.index, err = htmledition.Build(testContext(t), "one", [][]byte{b.article, other.article}, htmledition.BuildLimits{File: l.Edition, Article: l.Article, Preparation: prep})
+	if err != nil {
+		t.Fatal(err)
+	}
+	wire, err := htmledition.Encode(testContext(t), b.index, l.Edition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e.Index = ref(wire)
+	available[ref(wire)] = wire
+	b.encode(t)
+	m, err := gm.Open(testContext(t), b.manifest, ref(b.manifest), "guide", "generation-a", l.Manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	objects, err := m.Objects(testContext(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b.artifacts = nil
+	for _, object := range objects {
+		body, ok := available[object]
+		if !ok {
+			t.Fatal("missing fixture object")
+		}
+		b.artifacts = append(b.artifacts, body)
+	}
+	return b
 }
 
 func TestSearchJSONVerifiedSourceContextAndPrefix(t *testing.T) {
@@ -91,7 +142,7 @@ func TestSearchJSONAllEmptyAndMissing(t *testing.T) {
 		hits, total, gets int
 		fail              bool
 	}{
-		{"all", []string{"--all", "kubernetes", "retry"}, 2, 2, 4, false},
+		{"all", []string{"--all", "kubernetes", "retry"}, 2, 2, 3, false},
 		{"no matches", []string{"kubernetes", "nonexistent"}, 0, 0, 2, false},
 		{"known empty", []string{"--edition=empty", "kubernetes", "retry"}, 0, 0, 2, false},
 		{"missing edition", []string{"--edition=missing", "kubernetes", "retry"}, 0, 0, 1, true},
@@ -132,6 +183,9 @@ func TestSearchJSONFailuresHaveNoOutput(t *testing.T) {
 		t.Run(kind, func(t *testing.T) {
 			f := setup(t)
 			b := makeBundle(t, "generation-a", "Retry uploads safely.")
+			if kind == "later read" || kind == "cancel" {
+				b = makeDistinctJSONBundle(t)
+			}
 			f.publish(t, b)
 			activateFixture(t, f, "generation-a")
 			ctx, cancel := context.WithCancel(testContext(t))
@@ -164,6 +218,9 @@ func TestSearchJSONFailuresHaveNoOutput(t *testing.T) {
 			err := runSearch(ctx, append(args, "kubernetes", "retry"), &out, environment(configEnvironment()), cliConnector(f, &opened, &closed))
 			if err == nil || out.Len() != 0 || closed != 1 {
 				t.Fatal("partial output or missing cleanup", err, out.String(), closed)
+			}
+			if kind == "output limit" && !errors.Is(err, errOutputLimit) {
+				t.Fatalf("text overflow lost output-limit remedy: %v", err)
 			}
 			if kind == "match limit" && f.remote.counts()["GET"] != 2 {
 				t.Fatal("match overflow fetched body")

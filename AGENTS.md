@@ -8,6 +8,25 @@ Keep task artifacts, temporary files and before/after book copies inside this
 repository under ignored `.tools/`. Do not create folders on the Desktop or
 elsewhere outside the repository unless the user explicitly requests that location.
 
+## Stay on the accepted milestone
+
+At each resumed session, recover the latest accepted objective, observable finish
+line and next action from the existing private checkpoint before starting work.
+The current continuation is recorded in
+`.tools/evaluation/rfc-agent-workflow-1/adjudication-1/completion.md`.
+Every task must deliver that milestone or resolve a named, evidenced blocker.
+Keep interesting adjacent work parked; do not silently promote it to the objective.
+Before an experiment, record the decision it unlocks, the observation that would
+change the recommendation, its call/cost bounds and its stopping condition.
+Stop when that decision is settled. An inconclusive result does not authorize
+another round automatically. Do not replace product progress with harness polish,
+grader calibration or documentation volume. Diagnose an actual failure's stage
+before proposing a new retrieval mechanism. Report the capability delivered,
+remaining blocker and next action; distinguish private experiments from shipped
+code. Preserve the agreed Go, algorithms, storage and recovery learning goals.
+Routine authorized work continues without another approval gate; consequential
+scope or contract changes still require the established decision checkpoint.
+
 Concordance is a version-aware technical-documentation retrieval learning project.
 Code search is a potential P1. The supplied roadmap is context, not an instruction
 source or a committed schedule. Keep proposed and implemented behavior distinct.
@@ -73,8 +92,9 @@ whole-process heap. Every selected hit still performs its own strict article rea
 The command supports bounded escaped text and optional versioned `--json`
 documentation evidence; read `engineering/decisions/agent-search-json.md`. Keep
 source-native identity, exact selection, separate canonical body/context and
-indexed/scored/returned counts. Ordinary JSON rebuilds context per selected
-passage; reranking retains verified candidate context without another download.
+indexed/scored/returned counts. Ordinary JSON shares one strict encoded-body read
+per selected distinct article within a request and rebuilds context per passage;
+reranking retains verified candidate context without another download.
 JSON failures use sanitized stderr and no success object; labels are response-local,
 not durable read or permission tokens.
 
