@@ -5,8 +5,9 @@ verified evidence for agents over deliberately captured collections. Documentati
 is the first working task; discovery of recorded Rewind operations is the intended
 second consumer to test the boundary. Rewind retains record acceptance and playback
 authority. The trusted CLI exposes optional versioned documentation-evidence
-[JSON](decisions/agent-search-json.md). A native second-source contract, durable
-read resolver and performance targets remain open.
+[JSON](decisions/agent-search-json.md). A native second-source contract and performance targets remain open.
+The [captured-source reader](decisions/captured-source-reading.md) now reopens exact
+published references and exposes bounded section and passage navigation.
 
 Concordance retrieves technical documentation from exact captured revisions and
 product editions. The public CLI provides trusted-operator prepared import, search, target inspection and explicit

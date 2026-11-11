@@ -13,6 +13,7 @@ import (
 
 const topUsage = `Usage: concordance version
        concordance search [flags] TARGET "QUERY"
+       concordance read [flags] SOURCE_REF
        concordance import start|retry [flags]
        concordance worker [flags]
        concordance target show [flags] NAME
@@ -42,6 +43,8 @@ func run(args []string, out io.Writer) error {
 	switch args[0] {
 	case "search":
 		return runSearch(ctx, args[1:], out, os.Getenv, connectSearch)
+	case "read":
+		return runRead(ctx, args[1:], out, os.Getenv, connectSearch)
 	case "import":
 		return runImport(ctx, args[1:], out, os.Getenv, connectSearch)
 	case "worker":
