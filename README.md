@@ -188,6 +188,30 @@ ceiling. `--max-matches` still bounds the complete ranking; exceeding it is an
 error even when `--limit` is smaller. The quote limit does not reduce index loading
 or complete matching and sorting.
 
+## Connect an agent client
+
+Configure an MCP client to launch this executable with arguments
+`tools --target kubernetes`, using the operator environment above. MCP is the
+protocol the client uses to discover and call tools over the process's input and
+output. Use an absolute executable path in client configuration.
+
+```sh
+./bin/concordance tools --target kubernetes
+```
+
+The client gets `search` with required `edition` and `query` strings, and `read`
+with a required `source_ref` and optional `scope`. Read defaults to `exact`; use
+`section` to inspect surrounding source. Results contain the same verified JSON
+as the CLI. Client permissions still apply. Configure credentials on the host,
+never in tool arguments.
+
+`tools --help` lists operator settings, including an optional existing reranker.
+Each call opens a fresh CLI reader. Overlapping calls return busy. A session closes
+on malformed input or after its input bounds are exceeded: 256 messages, 256 KiB
+per message and 8 MiB total payload. Reconnect explicitly after closure. Search
+and read are the only exposed operations. See the
+[tool contract](engineering/decisions/agent-tools.md) for limits and failures.
+
 ## Search with the local reranker
 
 The optional `--rerank` mode accepts ordinary questions, retrieves up to 100 any-word
