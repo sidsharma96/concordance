@@ -25,6 +25,11 @@ The [historical update replay](experiments/documentation-update.md) additionally
 checks changed source, explicit selection, a held old reader and rollback through
 the native CLI and hosted stores.
 
+The [local MCP adapter](decisions/agent-tools.md) exposes typed search/read calls
+through stdin/stdout. It starts the same executable with fixed argument slices,
+opens fresh CLI readers and owns bounded session input, subprocess cancellation
+and stream shutdown. It adds no reader cache or network listener.
+
 ## The implemented path
 
 ```text

@@ -120,6 +120,14 @@ Read `engineering/experiments/hosted-search-target.md`; native profiles remain p
 No import auto-activation or target deletion/reset is included. The owner authorizes collection use and keeps
 trusted routes stable; automatic retention/deletion remains disabled.
 
+The local `concordance tools --target NAME` adapter exposes only typed search/read
+MCP calls. Read `engineering/decisions/agent-tools.md`. Keep exact-edition search,
+reference-pinned reads, fresh CLI subprocesses, operator-owned configuration and
+sanitized all-or-error results. The adapter owns cancellation independently of the
+SDK, closes streams before shutdown waits, and joins each child. Preserve cumulative
+session input caps as well as nonwaiting single-operation admission. SDK protocol
+support is not client permission, evidence quality, reader reuse or a speed claim.
+
 ## Design and implementation
 
 Read `engineering/GO.md` before Go changes and `engineering/ARCHITECTURE.md` before
