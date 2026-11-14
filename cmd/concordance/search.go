@@ -95,6 +95,7 @@ type readOptions struct {
 	editionArticles int
 	documents       int
 	passages        int
+	vocabulary      int
 	terms           int
 	prepared        int
 	timeout         time.Duration
@@ -108,11 +109,12 @@ func (o *readOptions) flags(f *flag.FlagSet) {
 	f.IntVar(&o.editionArticles, "max-edition-article-bytes", 64<<20, "sum of declared article bytes in the selected edition")
 	f.IntVar(&o.documents, "max-documents", 10000, "manifest document count and edition article count ceiling")
 	f.IntVar(&o.passages, "max-passages", 20000, "selected edition passage count ceiling")
+	f.IntVar(&o.vocabulary, "max-vocabulary", 20000, "selected edition distinct indexed word ceiling")
 	f.IntVar(&o.terms, "max-terms", 1000000, "selected edition term occurrence/posting ceiling")
 	f.IntVar(&o.prepared, "max-prepared-bytes", 16<<20, "selected edition prepared-term byte admission ceiling")
 }
 func (o readOptions) valid() bool {
-	for _, n := range []int{o.manifest, o.index, o.article, o.editionArticles, o.documents, o.passages, o.terms, o.prepared} {
+	for _, n := range []int{o.manifest, o.index, o.article, o.editionArticles, o.documents, o.passages, o.vocabulary, o.terms, o.prepared} {
 		if n <= 0 || n == int(^uint(0)>>1) {
 			return false
 		}
@@ -132,7 +134,7 @@ func (o readOptions) limits() publishedsearch.Limits {
 			MaxEncodedBytes: o.index, MaxArticles: o.documents, MaxArticleBytes: o.editionArticles,
 			MaxBlocks: 200000, MaxPassages: o.passages, MaxTerms: o.terms,
 			MaxPreparedBytes: o.prepared, MaxKeyBytes: 2 << 20, MaxTermBytes: 64 << 10,
-			MaxVocabulary: 20000, MaxPostings: o.terms,
+			MaxVocabulary: o.vocabulary, MaxPostings: o.terms,
 		},
 		Article: htmlarticlejson.Limits{
 			MaxEncodedBytes: o.article, MaxBlocks: 200000, MaxGroups: 200000,

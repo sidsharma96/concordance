@@ -27,6 +27,9 @@ type toolsOptions struct {
 	timeout       time.Duration
 	rerank        bool
 	socket        string
+	// passages and vocabulary forward edition index ceilings to each child;
+	// zero keeps the child's own defaults.
+	passages, vocabulary int
 }
 
 func runTools(ctx context.Context, args []string, in io.ReadCloser, out io.Writer) error {
@@ -39,13 +42,15 @@ func runTools(ctx context.Context, args []string, in io.ReadCloser, out io.Write
 	f.DurationVar(&o.timeout, "timeout", 0, "explicit operation deadline, at most 5m; unset keeps CLI defaults")
 	f.BoolVar(&o.rerank, "rerank", false, "use the existing opt-in local reranker for search")
 	f.StringVar(&o.socket, "worker-socket", "", "existing reranking socket, otherwise CONCORDANCE_WORKER_SOCKET")
+	f.IntVar(&o.passages, "max-passages", 0, "edition passage ceiling passed to search/read; unset keeps CLI defaults")
+	f.IntVar(&o.vocabulary, "max-vocabulary", 0, "edition distinct-word ceiling passed to search/read; unset keeps CLI defaults")
 	if err := f.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return searchHelp(f, out, "Usage: concordance tools --target NAME [flags]\nServe read-only search/read tools over MCP stdin/stdout. Credentials stay in the host environment.\nSessions accept at most 256 JSON messages and 8 MiB of input payload; reconnect explicitly on closure.")
 		}
 		return errors.New("invalid tool server flags; use tools --help")
 	}
-	if f.NArg() != 0 || !validName(o.target) || o.limit < 1 || o.limit > 100 || o.output < 0 || o.output > 16<<20 || o.timeout < 0 || o.timeout > 5*time.Minute || (!o.rerank && o.socket != "") {
+	if f.NArg() != 0 || !validName(o.target) || o.limit < 1 || o.limit > 100 || o.output < 0 || o.output > 16<<20 || o.timeout < 0 || o.timeout > 5*time.Minute || (!o.rerank && o.socket != "") || o.passages < 0 || o.vocabulary < 0 {
 		return errors.New("invalid tool server settings; use tools --help")
 	}
 	writer, ok := out.(io.WriteCloser)
@@ -184,6 +189,12 @@ func (a *agentTools) invoke(request context.Context, args, positions []string, f
 	defer cancel()
 	if a.base.Err() != nil || ctx.Err() != nil {
 		return toolError("operation canceled")
+	}
+	if a.options.passages > 0 {
+		args = append(args, "--max-passages", strconv.Itoa(a.options.passages))
+	}
+	if a.options.vocabulary > 0 {
+		args = append(args, "--max-vocabulary", strconv.Itoa(a.options.vocabulary))
 	}
 	args = append(args, "--max-output-bytes", strconv.Itoa(maxBytes), "--timeout", timeout.String(), "--")
 	args = append(args, positions...)

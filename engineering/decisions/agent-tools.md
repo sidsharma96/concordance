@@ -50,8 +50,10 @@ Search defaults to ten results; the operator may choose 1 through 100. The norma
 CLI encoded-output limits remain 16 MiB for search and 256 KiB for read. An explicit
 `--max-output-bytes` cap can lower them. Read keeps its separate 64 KiB body cap.
 The default deadline is one minute, or five for opt-in reranked search; an explicit
-operator deadline may be at most five minutes. Other CLI admission checks remain
-in force. Valid source text can exceed an encoded budget and fail without truncation.
+operator deadline may be at most five minutes. Explicit `--max-passages` and
+`--max-vocabulary` values are forwarded to every search and read child, so a
+larger published edition can be opened; unset values keep the CLI defaults of
+20,000 each. Other CLI admission checks remain in force. Valid source text can exceed an encoded budget and fail without truncation.
 
 Tool success carries the existing CLI JSON in one MCP text item. It is not copied
 into `structuredContent`. The MCP envelope escapes that text again; the payload

@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -26,7 +27,29 @@ import (
 )
 
 func importDefaults() importOptions {
-	return importOptions{timeout: 10 * time.Minute, input: 512 << 20, staged: 256 << 20, payload: 64 << 20, object: 8 << 20, documents: 1000, files: 20000, concurrent: 1}
+	return importOptions{timeout: 10 * time.Minute, input: 512 << 20, staged: 256 << 20, payload: 64 << 20, object: 8 << 20, documents: 1000, files: 20000, concurrent: 1, passages: 20000, vocabulary: 20000}
+}
+
+func TestImportEditionCeilingFlags(t *testing.T) {
+	f := flag.NewFlagSet("import", flag.ContinueOnError)
+	var o importOptions
+	o.flags(f)
+	if err := f.Parse(nil); err != nil || o != importDefaults() {
+		t.Fatalf("defaults changed: %+v %v", o, err)
+	}
+	if err := f.Parse([]string{"--max-passages", "40000", "--max-vocabulary", "30000"}); err != nil || !o.valid() {
+		t.Fatal(o, err)
+	}
+	if e := o.importerLimits().Edition.File; e.MaxPassages != 40000 || e.MaxVocabulary != 30000 {
+		t.Fatalf("edition ceilings not applied: %+v", e)
+	}
+	for _, edit := range []func(*importOptions){func(o *importOptions) { o.passages = 0 }, func(o *importOptions) { o.vocabulary = -1 }} {
+		bad := importDefaults()
+		edit(&bad)
+		if bad.valid() {
+			t.Fatalf("nonpositive edition ceiling accepted: %+v", bad)
+		}
+	}
 }
 
 func gitFixture(t *testing.T) (string, func(...string) string) {
