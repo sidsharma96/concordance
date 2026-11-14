@@ -24,6 +24,7 @@ type importOptions struct {
 	timeout                              time.Duration
 	input, staged, payload               int64
 	object, documents, files, concurrent int
+	passages, vocabulary                 int
 }
 
 func (o *importOptions) flags(f *flag.FlagSet) {
@@ -34,6 +35,8 @@ func (o *importOptions) flags(f *flag.FlagSet) {
 	f.IntVar(&o.object, "max-object-bytes", 8<<20, "one encoded object or captured file byte ceiling")
 	f.IntVar(&o.documents, "max-documents", 1000, "generation logical document occurrence ceiling")
 	f.IntVar(&o.files, "max-files", 20000, "generation raw file occurrence ceiling")
+	f.IntVar(&o.passages, "max-passages", 20000, "passage count ceiling per built edition index")
+	f.IntVar(&o.vocabulary, "max-vocabulary", 20000, "distinct indexed word ceiling per built edition index")
 	f.IntVar(&o.concurrent, "object-concurrency", 1, "object confirmation chains per call, 1..8")
 }
 
@@ -43,7 +46,7 @@ func (o importOptions) valid() bool {
 	if o.timeout <= 0 || o.concurrent < 1 || o.concurrent > 8 {
 		return false
 	}
-	for _, v := range []int64{o.input, o.staged, o.payload, int64(o.object), int64(o.documents), int64(o.files)} {
+	for _, v := range []int64{o.input, o.staged, o.payload, int64(o.object), int64(o.documents), int64(o.files), int64(o.passages), int64(o.vocabulary)} {
 		if v <= 0 || v > capacity {
 			return false
 		}
@@ -62,8 +65,8 @@ func (o importOptions) jobLimits() importjob.Limits {
 func (o importOptions) importerLimits() preparedimport.Limits {
 	a := htmlarticlejson.Limits{MaxEncodedBytes: o.object, MaxBlocks: 20000, MaxGroups: 40000, MaxStringBytes: 1 << 20, MaxValueBytes: o.object, MaxGroupDepth: 512, MaxHTMLBytes: o.object}
 	e := htmledition.Limits{MaxEncodedBytes: o.object, MaxArticles: o.documents, MaxArticleBytes: 64 << 20,
-		MaxBlocks: 200000, MaxPassages: 20000, MaxTerms: 1000000, MaxPreparedBytes: 16 << 20,
-		MaxKeyBytes: 2 << 20, MaxTermBytes: 64 << 10, MaxVocabulary: 20000, MaxPostings: 1000000}
+		MaxBlocks: 200000, MaxPassages: o.passages, MaxTerms: 1000000, MaxPreparedBytes: 16 << 20,
+		MaxKeyBytes: 2 << 20, MaxTermBytes: 64 << 10, MaxVocabulary: o.vocabulary, MaxPostings: 1000000}
 	p := htmlterms.Limits{
 		Passages: htmlpassage.Limits{MaxBlocks: 20000, MaxGroups: 40000, MaxInputBytes: 8 << 20,
 			MaxPassages: 20000, MaxBodyBytes: 8192, MaxReferences: 200000, MaxContextBytes: 8 << 20},

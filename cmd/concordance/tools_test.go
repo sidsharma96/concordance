@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -367,12 +368,52 @@ func TestToolsDeadlineAndRejectedArgumentsDoNotLaunch(t *testing.T) {
 	}
 }
 
+func TestToolsForwardEditionCeilingsOnlyWhenSet(t *testing.T) {
+	for _, tc := range []struct {
+		passages, vocabulary int
+		want                 []string
+	}{
+		{0, 0, nil},
+		{40000, 30000, []string{"--max-passages", "40000", "--max-vocabulary", "30000"}},
+	} {
+		a := newTestTools(childCommand("success", nil, nil))
+		a.options.passages, a.options.vocabulary = tc.passages, tc.vocabulary
+		for _, call := range []func() (*mcp.CallToolResult, error){
+			func() (*mcp.CallToolResult, error) {
+				return a.search(context.Background(), toolRequest(`{"edition":"1.36","query":"q"}`))
+			},
+			func() (*mcp.CallToolResult, error) {
+				return a.read(context.Background(), toolRequest(`{"source_ref":"ref"}`))
+			},
+		} {
+			result, err := call()
+			if err != nil || result.IsError {
+				t.Fatal(result, err)
+			}
+			var v struct{ Arguments []string }
+			if json.Unmarshal([]byte(resultText(result)), &v) != nil {
+				t.Fatal(result)
+			}
+			flags := v.Arguments[:slices.Index(v.Arguments, "--")]
+			var got []string
+			for i, arg := range flags {
+				if arg == "--max-passages" || arg == "--max-vocabulary" {
+					got = append(got, arg, flags[i+1])
+				}
+			}
+			if !slices.Equal(got, tc.want) {
+				t.Fatalf("forwarded %q, want %q in %q", got, tc.want, v.Arguments)
+			}
+		}
+	}
+}
+
 func TestToolsHelpAndSettings(t *testing.T) {
 	var out bytes.Buffer
 	if err := runTools(context.Background(), []string{"--help"}, nil, &out); err != nil || !strings.Contains(out.String(), "256 JSON messages") {
 		t.Fatal(out.String(), err)
 	}
-	for _, args := range [][]string{nil, {"--target", "t", "--limit", "0"}, {"--target", "t", "--max-output-bytes", "16777217"}, {"--target", "t", "--timeout", "6m"}, {"--target", "t", "--worker-socket", "sock"}} {
+	for _, args := range [][]string{nil, {"--target", "t", "--limit", "0"}, {"--target", "t", "--max-output-bytes", "16777217"}, {"--target", "t", "--timeout", "6m"}, {"--target", "t", "--worker-socket", "sock"}, {"--target", "t", "--max-passages", "-1"}, {"--target", "t", "--max-vocabulary", "-1"}} {
 		out.Reset()
 		if err := runTools(context.Background(), args, nil, &out); err == nil || out.Len() != 0 {
 			t.Fatal(args, err, out.String())

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"strings"
 	"testing"
@@ -79,5 +80,24 @@ func TestSearchLimitDoesNotBypassMatchCeilingOrLaterQuoteFailure(t *testing.T) {
 				t.Fatal("lost cancellation", err)
 			}
 		})
+	}
+}
+
+func TestReadVocabularyCeilingFlag(t *testing.T) {
+	f := flag.NewFlagSet("search", flag.ContinueOnError)
+	var o readOptions
+	o.flags(f)
+	if err := f.Parse(nil); err != nil || o.limits().Edition.MaxVocabulary != 20000 {
+		t.Fatalf("default changed: %+v %v", o.limits().Edition, err)
+	}
+	if err := f.Parse([]string{"--max-vocabulary", "30000", "--max-passages", "40000"}); err != nil || !o.valid() {
+		t.Fatal(o, err)
+	}
+	if e := o.limits().Edition; e.MaxVocabulary != 30000 || e.MaxPassages != 40000 {
+		t.Fatalf("ceilings not applied: %+v", e)
+	}
+	o.vocabulary = 0
+	if o.valid() {
+		t.Fatal("zero vocabulary ceiling accepted")
 	}
 }
