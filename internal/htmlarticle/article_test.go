@@ -214,6 +214,7 @@ func FuzzExtract(f *testing.F) {
 	f.Add([]byte(`<div class="article-body"><h1>Title</h1><p>one <code>x</code></p></div>`))
 	f.Add([]byte(`<div class="article-body"><table><tr><td>x<td>y</table></div>`))
 	f.Add([]byte(`<div class="article-body"><img alt="reference only" src="/diagram.svg"></div>`))
+	f.Add([]byte(tabFixture))
 	f.Fuzz(func(t *testing.T, body []byte) {
 		if len(body) > 16<<10 {
 			t.Skip()
@@ -257,4 +258,121 @@ func FuzzExtract(f *testing.F) {
 			t.Fatal("determinism invariant")
 		}
 	})
+}
+
+const tabFixture = `<div class="article-body"><h2>Example</h2><ul class="nav" role="tablist"><li>
+  <button id="t0" role="tab" aria-controls="p0">
+    Linux <code>node</code>
+  </button><li><button id="t1" role="tab" aria-controls="p1">Windows node</button></ul>
+<div class="tab-content"><div id="p0" role="tabpanel" aria-labelledby="t0"><pre>path: /data</pre>
+<div class="notice" title="Note">Read only.</div></div><div id="p1" role="tabpanel" aria-labelledby="t1"><p>Use C:\data.</p></div></div>
+<p>After tabs.</p></div>`
+
+func TestTabPanelsKeepTheirTabLabels(t *testing.T) {
+	a, err := Extract(testContext(t), []byte(tabFixture), testProfile(), testLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	var texts []string
+	for _, b := range a.Blocks {
+		texts = append(texts, b.Text)
+	}
+	// Tab text becomes panel labels, never body blocks.
+	if want := []string{"Example", "path: /data", "Read only.", `Use C:\data.`, "After tabs."}; !reflect.DeepEqual(texts, want) {
+		t.Fatalf("blocks: got %q want %q", texts, want)
+	}
+	var notices []Group
+	for _, g := range a.Groups {
+		if g.Kind == Notice {
+			notices = append(notices, g)
+		}
+	}
+	want := []Group{{Kind: Notice, First: 1, After: 3, Label: "Linux node"}, {Kind: Notice, First: 2, After: 3, Label: "Note"}, {Kind: Notice, First: 3, After: 4, Label: "Windows node"}}
+	if !reflect.DeepEqual(notices, want) {
+		t.Fatalf("panel groups: got %+v want %+v", notices, want)
+	}
+	if a.Blocks[1].Anchor != "p0" || a.Blocks[3].Anchor != "p1" {
+		t.Fatal("panel anchors lost")
+	}
+}
+
+func TestMalformedTabStructuresFailWithoutPartialArticle(t *testing.T) {
+	tab := func(id, label string) string { return `<button id="` + id + `" role="tab">` + label + `</button>` }
+	panel := func(ref string) string { return `<div role="tabpanel" aria-labelledby="` + ref + `"><p>body</p></div>` }
+	list := func(inner string) string { return `<ul role="tablist"><li>` + inner + `</ul>` }
+	cases := map[string]string{
+		"tab-outside-list":    tab("t0", "A") + panel("t0"),
+		"text-in-list":        `<ul role="tablist">stray<li>` + tab("t0", "A") + `</ul>` + panel("t0"),
+		"element-in-list":     `<ul role="tablist"><li><img alt="x" src="/x.png">` + tab("t0", "A") + `</ul>` + panel("t0"),
+		"unreferenced-tab":    list(tab("t0", "A")+tab("t1", "B")) + panel("t0"),
+		"unknown-reference":   list(tab("t0", "A")) + panel("missing"),
+		"shared-reference":    list(tab("t0", "A")+tab("t1", "B")) + panel("t0") + panel("t0"),
+		"empty-label":         list(tab("t0", " <span> </span> ")) + panel("t0"),
+		"block-in-label":      list(`<button id="t0" role="tab"><p>A</p></button>`) + panel("t0"),
+		"missing-tab-id":      list(`<button role="tab">A</button>`) + panel(""),
+		"duplicate-tab-id":    list(tab("t0", "A")+tab("t0", "B")) + panel("t0") + panel("t0"),
+		"nested-list":         `<ul role="tablist"><li><ul role="tablist"><li>` + tab("t0", "A") + `</ul></ul>` + panel("t0"),
+		"panel-not-div":       list(tab("t0", "A")) + `<section role="tabpanel" aria-labelledby="t0">body</section>`,
+		"mixed-tab-elements":  list(tab("t0", "A")+`<a id="t1" role="tab">B</a>`) + panel("t0") + panel("t1"),
+		"button-outside-list": list(tab("t0", "A")) + panel("t0") + tab("t1", "B"),
+	}
+	for name, inner := range cases {
+		t.Run(name, func(t *testing.T) {
+			a, err := Extract(testContext(t), []byte(`<div class="article-body"><p>intro</p>`+inner+`</div>`), testProfile(), testLimits())
+			if !errors.Is(err, ErrUnsupported) || !reflect.DeepEqual(a, Article{}) {
+				t.Fatalf("got article=%+v error=%v", a, err)
+			}
+		})
+	}
+	// aria-labelledby resolves against the whole document, so an ID repeated
+	// outside the article is ambiguous too.
+	body := `<span id="t0">outside</span><div class="article-body"><ul role="tablist"><li>` +
+		`<button id="t0" role="tab">A</button></ul><div role="tabpanel" aria-labelledby="t0">body</div></div>`
+	if a, err := Extract(testContext(t), []byte(body), testProfile(), testLimits()); !errors.Is(err, ErrUnsupported) || !reflect.DeepEqual(a, Article{}) {
+		t.Fatalf("document-wide duplicate ID accepted: %+v %v", a, err)
+	}
+}
+
+func TestTabLabelsAreBudgeted(t *testing.T) {
+	body := []byte(`<div class="article-body"><ul role="tablist"><li><button id="t0" role="tab">` + strings.Repeat("x", 40) +
+		`</button></ul><div role="tabpanel" aria-labelledby="t0"><p>b</p></div></div>`)
+	for name, edit := range map[string]func(*Limits){
+		"label-over-block-bytes": func(l *Limits) { l.MaxBlockBytes, l.MaxOutputBytes = 32, 1<<10 },
+		"label-over-output":      func(l *Limits) { l.MaxBlockBytes, l.MaxOutputBytes = 64, len(Processor)+len(testProfile().ID)+40 },
+	} {
+		t.Run(name, func(t *testing.T) {
+			limits := testLimits()
+			edit(&limits)
+			if a, err := Extract(testContext(t), body, testProfile(), limits); !errors.Is(err, ErrLimit) || !reflect.DeepEqual(a, Article{}) {
+				t.Fatalf("label escaped budget: %+v %v", a, err)
+			}
+		})
+	}
+}
+
+func TestRolesWithoutButtonTabsKeepEarlierBehavior(t *testing.T) {
+	// Without a <button role="tab">, tab roles must not change extraction:
+	// such inputs were already accepted before tab panels were supported.
+	for name, body := range map[string]string{
+		"inline-tabs":      `<ul role="tablist"><li><a id="t0" role="tab" href="#p0">Linux</a></ul><div id="p0" role="tabpanel" aria-labelledby="t0"><p>body</p></div>`,
+		"panel-only":       `<div role="tabpanel" aria-labelledby="nowhere"><p>body</p></div>`,
+		"omitted-button":   `<div class="chrome"><button role="tab">x</button></div><div role="tabpanel"><p>body</p></div>`,
+		"button-in-script": `<script><button role="tab">x</button></script><div role="tabpanel"><p>body</p></div>`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			withRoles, err := Extract(testContext(t), []byte(`<div class="article-body">`+body+`</div>`), testProfile(), testLimits())
+			if err != nil {
+				t.Fatal(err)
+			}
+			plain := strings.NewReplacer(` role="tablist"`, "", ` role="tab"`, "", ` role="tabpanel"`, "").Replace(body)
+			without, err := Extract(testContext(t), []byte(`<div class="article-body">`+plain+`</div>`), testProfile(), testLimits())
+			if err != nil {
+				t.Fatal(err)
+			}
+			withRoles.HTMLSHA256, withRoles.HTMLBytes = without.HTMLSHA256, without.HTMLBytes
+			if !reflect.DeepEqual(withRoles, without) {
+				t.Fatalf("roles changed extraction:\n%+v\n%+v", withRoles, without)
+			}
+		})
+	}
 }

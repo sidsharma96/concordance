@@ -95,7 +95,9 @@ const (
 // Groups are in opening order, so nested groups follow their parents. Empty
 // groups are allowed; a quoted passage must select actual blocks separately.
 // Ordered applies to List; Header applies to Cell; Label identifies a notice.
-// Nondefault list numbering and table spans are explicitly unsupported for now.
+// A WAI-ARIA tab panel is also stored as a Notice whose Label is its tab's
+// whitespace-folded text; its tab list is not emitted as blocks. Nondefault
+// list numbering and table spans are explicitly unsupported for now.
 type Group struct {
 	Kind         GroupKind
 	First, After int
@@ -154,6 +156,9 @@ func Extract(ctx context.Context, body []byte, profile Profile, limits Limits) (
 	w := extractor{ctx: ctx, profile: profile, limits: limits}
 	if w.omit(selected) {
 		return Article{}, ErrSelection
+	}
+	if err := w.collectTabs(root, selected); err != nil {
+		return Article{}, err
 	}
 	if err := w.reserve(len(Processor) + len(profile.ID)); err != nil {
 		return Article{}, err

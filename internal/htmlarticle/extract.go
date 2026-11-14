@@ -16,8 +16,10 @@ type extractor struct {
 	article Article
 	used    int
 	text    strings.Builder
-	space   bool
-	anchor  string
+	// panelLabels maps each validated tab panel to its tab's folded text.
+	panelLabels map[*html.Node]string
+	space       bool
+	anchor      string
 }
 
 func (w *extractor) reserve(n int) error {
@@ -169,6 +171,20 @@ func (w *extractor) walk(n *html.Node, anchor string) error {
 	}
 	if id := attribute(n, "id"); id != "" {
 		anchor = id
+	}
+	switch role := attribute(n, "role"); {
+	case w.panelLabels == nil:
+		// No button tabs: roles keep their earlier meaning.
+	case role == "tablist":
+		// collectTabs checked that the list holds only tabs; their text now
+		// labels the matching panels.
+		return nil
+	case role == "tabpanel":
+		label, ok := w.panelLabels[n]
+		if !ok {
+			return ErrUnsupported
+		}
+		return w.grouped(n, anchor, Group{Kind: Notice, Label: label})
 	}
 	switch n.Data {
 	case "script", "style", "template", "meta", "link":

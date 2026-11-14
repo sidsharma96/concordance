@@ -44,7 +44,8 @@ exists, `internal/gitsource` captures bounded committed Markdown bytes, and
 Live R2 smoke testing covers creation, reuse and a fresh-client read; provider
 fault and complete recovery experiments remain open. `internal/htmlarticle` now
 extracts bounded text/structure from retained HTML with explicit profiles and image
-references. `internal/htmlpassage` builds bounded structure-first block ranges with
+references; WAI-ARIA tab panels become labelled notices, per
+`engineering/decisions/tab-panels.md`. `internal/htmlpassage` builds bounded structure-first block ranges with
 heading and group references. `internal/termsearch` now supplies a bounded, edition-scoped
 match-all scan over prepared terms. No Markdown processor or HTTP retrieval API exists yet.
 `internal/termsearch.RankBM25` now orders complete matches with combined-field BM25;
