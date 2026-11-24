@@ -1,4 +1,4 @@
--- Connect to the intended database as its administrator; never run on Receipt.
+-- Connect to the intended Concordance database as its administrator; no other database.
 -- A restored clone also needs these object grants after --no-acl restoration.
 -- CONNECT is deliberately separate: a restored clone must stay inaccessible.
 GRANT USAGE ON SCHEMA catalog TO concordance_app;

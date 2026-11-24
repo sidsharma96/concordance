@@ -1,25 +1,63 @@
 # Concordance
 
-Concordance searches technical documentation by product version and identifies the
-exact captured source behind each result. Core search is written in Go; optional
-reranking uses a local Python worker. Code search is a possible later extension.
+Concordance is a command-line tool that searches technical documentation by
+product version. Every result names the exact captured source behind it: the
+repository, commit, document and passage. Core search is written in Go; optional
+reranking uses a local Python worker.
 
-The CLI searches previously published Git/HTML generations through named catalog
-targets. It is a trusted operator tool that connects directly to PostgreSQL and
-Cloudflare R2. A trusted preparer supplies rendered Git/HTML captures; the import
-command saves their retry inputs and publishes them.
+**Status:** a learning project, not a production service. It explores retrieval
+algorithms, storage and failure recovery deliberately, and the records under
+[`engineering/`](engineering/ARCHITECTURE.md) explain each decision and its limits.
+It has been run only on macOS with Apple silicon.
 
-## Getting started
+## How it works
 
-Install Go 1.27 or later, Git and Make, then run from this checkout:
+```text
+prepared capture --import--> R2 objects + PostgreSQL catalog
+question --search--> target --> edition --> BM25 --> verified quotes
+```
+
+1. **Import** takes a trusted prepared capture: Markdown at pinned Git commits plus
+   its rendered HTML. It splits pages into passages, builds one keyword index per
+   product version (an *edition*) and publishes the set as one *generation*.
+2. Articles, indexes and a manifest are stored as immutable objects in Cloudflare
+   R2. A PostgreSQL catalog records which generations are completely published.
+3. **Search** resolves a friendly *target* name, such as `kubernetes`, to a published
+   generation and edition. Ordinary search keeps passages containing every query
+   term, ranks them with BM25 and checks each quoted article's bytes against its
+   published SHA-256 hash before printing.
+4. **Read** navigates around a result, **tools** exposes search and read to MCP
+   agent clients, and optional **`--rerank`** reorders keyword candidates with a
+   local model.
+
+## Try it without infrastructure
+
+Install Go 1.27 or later, Git, Make and Python 3, then run from this checkout:
 
 ```sh
 make build
 ./bin/concordance --help
 ./bin/concordance version
+make check
 ```
 
-Help and version need no database or credentials. The version prints `concordance dev`.
+Help and version need no database or credentials; the version prints
+`concordance dev`. `make check` runs formatting, vet, the Go tests and the worker's
+standard-library tests against synthetic fixtures. Database tests are skipped
+unless you configure a test database; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## What real use requires
+
+- **A PostgreSQL catalog.** [`deploy/postgres`](deploy/postgres/README.md) creates
+  the database, roles and schema. It was set up on PostgreSQL 16.
+- **A private Cloudflare R2 bucket.** The CLI accepts only HTTPS
+  `*.r2.cloudflarestorage.com` endpoints; other S3 providers are not supported.
+- **A prepared capture** in the format described in
+  [the prepared-capture decision](engineering/decisions/prepared-capture.md).
+  No sample corpus or renderer ships with this repository.
+- **A storage namespace** binding the bucket and collection in the catalog. No CLI
+  command creates one yet; an administrator must provision it before the first
+  import.
 
 ## Configure operator access
 
@@ -28,17 +66,17 @@ and a target; importing additionally needs an explicitly provisioned storage
 namespace matching its R2 endpoint, bucket and collection. The CLI creates none of
 these schemas or namespaces. An administrator installs
 `internal/catalog/targets.sql` in that catalog's schema and grants suitable access.
-For the existing droplet layout, use the transactional
+For a catalog created with `deploy/postgres`, use the transactional
 [named-target setup](deploy/postgres/README.md#add-named-search-targets).
 This explicit setup is separate from search; schema-creating tests must never run
-against the hosted catalog. Target names are unique within the configured schema.
+against a real catalog. Target names are unique within the configured schema.
 
 Configure these settings locally:
 
 - `PGSERVICE`: a native PostgreSQL connection profile, including the correct database
   and schema/search path. `PGSERVICEFILE` selects its file; use `PGPASSFILE` for a
-  password when needed. The existing droplet is reached through an operator-owned
-  SSH forward; the CLI does not create one.
+  password when needed. Reach a remote catalog through your own SSH forward or
+  other secure route; the CLI does not create one.
 - `CONCORDANCE_COLLECTION`: the authorized collection ID from the published import.
 - `CONCORDANCE_R2_ENDPOINT` and `CONCORDANCE_R2_BUCKET`: its HTTPS R2 S3 endpoint and
   private bucket.
@@ -266,5 +304,21 @@ graceful worker draining: an active tensor operation can finish before exit. Sta
 refuses an existing socket path; inspect a stale worker/path before removing it.
 See the [worker contract](engineering/decisions/worker-protocol.md) for precise bounds.
 
+## Repository layout
+
+- `cmd/concordance`: the command-line tool.
+- `internal/`: one package per step, for example `gitsource` (capture Git bytes),
+  `htmlarticle` and `htmlpassage` (extract and split pages), `textterms` and
+  `termsearch` (terms and BM25), `objectstore` and `catalog` (R2 and PostgreSQL)
+  and `publishedsearch` (the published-generation reader).
+- `worker/`: the optional Python reranking worker.
+- `tools/`: development, audit and evaluation commands.
+- `engineering/`: architecture, accepted decisions and recorded experiments.
+- `deploy/postgres/`: catalog setup SQL and procedures.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for local checks and
 [the architecture](engineering/ARCHITECTURE.md) for boundaries and scaling work.
+
+## License
+
+Concordance is released under the [MIT License](LICENSE).
