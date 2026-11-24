@@ -255,14 +255,14 @@ return or quarantine. One nonwaiting caller per importer/publisher instance is
 admission, not distributed ownership. Request/staging limits count logical admitted
 bytes, not whole-process heap or aggregate concurrency across instances.
 
-The [catalog on the existing droplet](decisions/catalog-hosting.md) uses a restricted
-runtime login over SSH. Live synthetic publication and encrypted off-host backup
-with isolated restore/read have been exercised; restored receipts stayed quarantined.
-The [real Kubernetes publication](experiments/kubernetes-publication.md) additionally
-exercises a deliberate same-key retry, completed-key recovery without S3, and a fresh
-strict read. This is not unattended backup, production HA, restored publication
-trust or exhaustive provider-fault coverage. Run schema-creating tests only on a
-dedicated local test database.
+The [catalog on an existing small cloud server](decisions/catalog-hosting.md) uses a
+restricted runtime login over SSH. Live synthetic publication and encrypted off-host
+backup with isolated restore/read have been exercised; restored receipts stayed
+quarantined. The [real Kubernetes publication](experiments/kubernetes-publication.md)
+additionally exercises a deliberate same-key retry, completed-key recovery without
+S3, and a fresh strict read. This is not unattended backup, production HA, restored
+publication trust or exhaustive provider-fault coverage. Run schema-creating tests
+only on a dedicated local test database.
 
 Automatic deletion stays disabled until references, in-flight writes and reader
 lifetimes have a safety protocol. Persistent indexing, paged metadata and safe

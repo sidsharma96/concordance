@@ -2,7 +2,7 @@
 
 ## Decision and scope
 
-The user chose borrowing caller data (option B) over copying the entire input for
+The maintainer chose borrowing caller data (option B) over copying the entire input for
 the in-memory search snapshot. `internal/htmlsearch.New` now implements that
 direction; it is not a persistent schema or a publication guarantee.
 Current `MatchAll` and `RankBM25` borrow only until their calls return; they retain
@@ -84,5 +84,5 @@ Tests exercise unchanged input, cross-state reference rejection, owned result
 storage, quote limits and concurrent read-only search/quotation under the race
 detector. The [component reference](../experiments/search-snapshot.md) records their
 scope; tests do not enforce the caller's lifetime discipline. A small
-private executable used for the book demonstrates shared and shallow-copied slices;
-it is an illustrative language experiment, not snapshot runtime coverage.
+private executable used for teaching notes demonstrates shared and shallow-copied
+slices; it is an illustrative language experiment, not snapshot runtime coverage.

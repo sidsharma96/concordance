@@ -1,7 +1,7 @@
 # Source-specific preparation, format-specific processing
 
 Status: accepted boundary and a Kubernetes-only offline rendering experiment.
-The user agreed that capturing and understanding different sources can vary, while
+The maintainer agreed that capturing and understanding different sources can vary, while
 retrieval remains shared. Rendering is not a requirement for every future source
 and is not implemented as a managed production build runner. The later accepted
 [prepared-capture handoff](prepared-capture.md) lets an internal importer consume

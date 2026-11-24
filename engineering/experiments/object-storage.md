@@ -76,11 +76,11 @@ pre-cancellation, post-write cancellation and read/close faults. Count requests 
 assert conditional headers; faults occur at explicit handler/channel boundaries,
 never arbitrary sleeps. These tests do not establish actual R2 behavior.
 
-The user authorized creation of the dedicated `concordance-data` bucket. Wrangler
-reports Standard storage in WNAM, public r2.dev access disabled and no custom domains.
-The only lifecycle rule aborts incomplete multipart uploads after seven days; no
-completed-object expiration rule was listed. Keep that provider cleanup distinct
-from application object deletion, and leave it unchanged.
+The maintainer authorized creation of a dedicated private bucket. Cloudflare's
+Wrangler CLI reports Standard storage in WNAM, public r2.dev access disabled and no
+custom domains. The only lifecycle rule aborts incomplete multipart uploads after
+seven days; no completed-object expiration rule was listed. Keep that provider
+cleanup distinct from application object deletion, and leave it unchanged.
 
 With S3 credentials configured locally, the opt-in `TestR2LiveImmutableObject` passed
 once on Go1.27.2 darwin/arm64 against the private bucket. It ensured the same 45-byte

@@ -2,7 +2,7 @@
 
 Status: accepted design. Use content-addressed immutable objects shared between
 generations within one authorized collection (option B). An internal S3 adapter now
-implements verified reuse/conditional creation. The private `concordance-data` R2
+implements verified reuse/conditional creation. The dedicated private R2
 bucket is provisioned. Its live creation/reuse/fresh-client-read probe passes;
 provider fault and complete recovery experiments remain open.
 
@@ -62,7 +62,7 @@ one shared object uses 1 MiB, excluding manifests/metadata and provider overhead
 Actual savings depend on identical serialized objects, not similarity of documents.
 
 The earlier recommendation favored separate objects for the first experiment.
-The user pointed out the storage benefit. Because automatic deletion is already
+The maintainer pointed out the storage benefit. Because automatic deletion is already
 deferred, sharing does not require implementing a complete cleanup system now.
 The chosen extension is collection-scoped naming and verified reuse. There is no
 measured storage-cost, throughput or latency advantage yet. Fresh small objects may
@@ -80,8 +80,9 @@ its concrete write/read/recovery sequence; collection policy is not a shared pri
 Revisit sharing granularity and read-before-write verification after measuring
 unchanged bytes, request counts, transferred bytes and recovery work on a real corpus.
 The accepted [article layout](article-storage.md) now chooses separate bounded
-article-data objects. It also records necessary scaling work. The user selected the
-direction to design [verification receipts](verification-receipts.md); the PostgreSQL-backed reuse component does not change strict Ensure/Read guarantees.
+article-data objects. It also records necessary scaling work. The maintainer selected
+the direction to design [verification receipts](verification-receipts.md); the
+PostgreSQL-backed reuse component does not change strict Ensure/Read guarantees.
 Define safe retention and reader lifetimes before deleting anything. Later streaming,
 multipart or range reads require their own bounds/integrity contracts; a full-object
 hash cannot validate an arbitrary isolated range by itself.

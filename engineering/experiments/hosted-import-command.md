@@ -19,7 +19,7 @@ collection and existing physical namespace were retained. A new local job owns i
 verified HTML/recipe copy and CLI-generated saved key. Original operation and capture
 descriptor hashes remained unchanged.
 
-Connections use the existing restricted droplet runtime login, native service and
+Connections use the existing restricted hosted-catalog runtime login, native service and
 password files, explicit R2 settings and an owned strictly checked SSH forward.
 Read-only preflight verified the exact database, user, catalog schema and active
 namespace at epoch 1. The existing target matched its retained selection; the new

@@ -1,8 +1,8 @@
 # First source and extension boundaries
 
 Status: accepted direction. Start with Markdown documentation from a specific Git
-commit. The user accepted Git first on the condition that other sources and content
-types remain possible. Bounded local Git capture now exists; content processors
+commit. The maintainer accepted Git first on the condition that other sources and
+content types remain possible. Bounded local Git capture now exists; content processors
 and other connectors are not implemented. This decision does not fix a public
 connector API or a universal passage schema.
 

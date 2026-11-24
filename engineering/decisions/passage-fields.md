@@ -2,7 +2,7 @@
 
 ## Decision
 
-The user chose all ancestor headings for the first retained-HTML field adapter,
+The maintainer chose all ancestor headings for the first retained-HTML field adapter,
 rather than only the nearest heading. A short paragraph can name a default while
 its ancestors name the product and feature. Preserving that context lets an
 explicit multi-term query qualify without changing the paragraph's quotation.

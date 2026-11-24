@@ -38,7 +38,7 @@ resolve it before publication. `TestLostCreateReplyIsResolvedByVerifiedRead` and
 `TestUncertainWriteIsNotObjectAbsence` cover the strict object's corresponding
 response/uncertainty classification. None is represented as an actual provider outage.
 
-The separate live [droplet experiment](droplet-catalog.md) publishes through real
+The separate live [hosted-catalog experiment](hosted-catalog.md) publishes through real
 PostgreSQL and R2 and reads from a fresh process. Its synthetic encrypted catalog
 restore quarantines old receipt namespaces and recovers a quote through strict
 reads of surviving R2 bodies. The [Kubernetes experiment](kubernetes-publication.md)

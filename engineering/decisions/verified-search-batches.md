@@ -1,6 +1,6 @@
 # Verify a complete quote batch before rendering results
 
-Status: accepted option A. The user chose verification of the whole requested
+Status: accepted option A. The maintainer chose verification of the whole requested
 batch before printing, rather than per-hit quote-unavailable output. This document
 specifies the implemented complete-all reader operation. The command now uses the
 [requested-batch operation](requested-quote-batches.md) by default and this complete

@@ -1,6 +1,6 @@
 # Return a requested batch of verified quotes
 
-Status: accepted option A. The user chose an interactive default of ten results,
+Status: accepted option A. The maintainer chose an interactive default of ten results,
 a positive --limit N, and explicit --all for complete output. This supersedes
 the command's former default of quoting every match. Every-word matching, BM25,
 exact edition selection and complete candidate admission remain unchanged.
@@ -90,5 +90,5 @@ flags before connection. Preserve exact ranking/scores/provenance and total coun
 from one Search; verify inclusive selected-byte limits, match overflow before
 article I/O, no read of an unselected hit, selected later-read/cancellation failure
 with empty result/stdout, owned independent results, empty selections, cleanup and
-short writes. Ordinary builds/tests remain independent of the private book/corpus.
-No hosted schema/data changes or live provider experiment are required.
+short writes. Ordinary builds/tests remain independent of private teaching notes and
+the corpus. No hosted schema/data changes or live provider experiment are required.

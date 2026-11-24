@@ -1,8 +1,8 @@
 # Compare captured inputs, not generated results
 
-Status: accepted. The user chose option A: a saved import key compares the complete
-captured inputs and processing rules. Derived article and edition-index bytes do
-not define whether two requests mean the same import.
+Status: accepted. The maintainer chose option A: a saved import key compares the
+complete captured inputs and processing rules. Derived article and edition-index
+bytes do not define whether two requests mean the same import.
 
 ## What must match
 

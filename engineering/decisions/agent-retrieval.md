@@ -137,7 +137,7 @@ read a newer source.
 Measure a complete concrete task before optimizing: source availability, candidate
 coverage, ranking, cold opening, body verification, model work and output. Compare
 misses, updates and failures as well as successful warm queries. Choose latency,
-freshness, concurrency and size requirements with the user; company headcount is
+freshness, concurrency and size requirements with the maintainer; company headcount is
 not a workload. Reopen this direction if actual tasks primarily need uncaptured
 live information, operational discovery becomes the primary requirement, or an
 established backend meets the same guarantees with materially lower total cost.

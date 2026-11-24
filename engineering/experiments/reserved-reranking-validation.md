@@ -1,6 +1,6 @@
 # Validate the frozen reranker on the reserved intents
 
-Status: completed the user-authorized frozen validation on the ten reserved
+Status: completed the maintainer-authorized frozen validation on the ten reserved
 information needs, both phrasings and all three pinned editions: 60 cases. The fixture's stored split label remains reserved and its hash is unchanged;
 after release it is observed validation evidence, never an untouched tuning set.
 The same queries may be recomputed for exact artifact verification and compatible

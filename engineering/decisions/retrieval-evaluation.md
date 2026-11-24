@@ -1,6 +1,6 @@
 # Evaluate known useful passages before changing retrieval
 
-Status: the user approved 30 authored question intents, two query phrasings and
+Status: the maintainer approved 30 authored question intents, two query phrasings and
 three pinned documentation editions, plus six negative controls. Labels received independent source-evidence review before freezing. The
 bounded offline runner receives its own implementation review before the baseline.
 A canonical passage can be long: the preStop answer is inside one outer list
@@ -19,7 +19,7 @@ sample-size recommendation or evidence of enterprise representativeness.
 
 Twenty whole intents are for development. Ten are reserved across both phrasings
 and every edition. The default initial run uses development plus controls: 138
-runs. The user subsequently released the remaining 60 for
+runs. The maintainer subsequently released the remaining 60 for
 [frozen reranker validation](../experiments/reserved-reranking-validation.md).
 They stay outside tuning and are now observed validation evidence, not untouched
 questions. The fixture keeps its original reserved split label and frozen hash.

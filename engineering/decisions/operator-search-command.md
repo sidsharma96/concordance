@@ -70,7 +70,7 @@ selection is explicit and separate. No performance conclusion follows from the d
 
 ## Accepted output and concrete implementation
 
-The user selected human-readable text first. JSON is deferred until its versioned
+The maintainer selected human-readable text first. JSON is deferred until its versioned
 result/citation fields have an actual consumer and a deliberate compatibility
 contract. The text display is not a stable script format or durable citation codec.
 Keep the existing separate library APIs available to programmatic callers.

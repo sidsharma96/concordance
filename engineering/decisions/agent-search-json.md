@@ -1,7 +1,7 @@
 # Agent search through optional JSON
 
 Status: accepted and implemented CLI contract. The
-user selected optional JSON from the existing trusted-operator command after
+maintainer selected optional JSON from the existing trusted-operator command after
 reviewing the concrete evidence proposal. This does not add an HTTP/MCP service,
 ordinary-user authentication, durable citation resolver or second source format.
 

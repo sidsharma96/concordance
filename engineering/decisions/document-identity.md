@@ -1,9 +1,9 @@
 # Document identity and observed location
 
-Status: accepted design. The user accepted refined option A after external research:
-separate document identity from location, use reliable source-provided identity where
-available, and start Git with explicit source-plus-path identity. The bounded
-Git/HTML manifest and prepared importer now bind these identities to complete
+Status: accepted design. The maintainer accepted refined option A after external
+research: separate document identity from location, use reliable source-provided
+identity where available, and start Git with explicit source-plus-path identity. The
+bounded Git/HTML manifest and prepared importer now bind these identities to complete
 captured inputs and publication. Source registration and rendering provenance
 remain trusted configuration/assertions; a cross-move registry is not implemented.
 

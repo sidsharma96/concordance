@@ -105,7 +105,8 @@ and never uploads that candidate. This is not observed renderer nondeterminism o
 permission to omit processor version updates. Invalid input never binds or uploads;
 new keys permit new publications, and completed retries survive quarantine.
 
-These are local invariant/failure checks. No new live R2/droplet run, source producer,
-cheap retry shortcut, durable capture journal, throughput or million-document evidence
-is claimed. Research and the alternative comparison are in the accepted decision;
-selected raw logs remain private under `.tools/reviews/captured-inputs-*`.
+These are local invariant/failure checks. No new live R2/hosted-catalog run, source
+producer, cheap retry shortcut, durable capture journal, throughput or
+million-document evidence is claimed. Research and the alternative comparison are in
+the accepted decision; selected raw logs remain private under
+`.tools/reviews/captured-inputs-*`.

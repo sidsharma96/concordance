@@ -1,6 +1,6 @@
 # One bounded manifest per generation
 
-Status: accepted design. The user chose one bounded, versioned immutable manifest
+Status: accepted design. The maintainer chose one bounded, versioned immutable manifest
 containing the generation's complete document metadata and object references, then
 selected explicit versioned JSON for its encoding. A bounded initial Git/HTML
 metadata codec now exists in `internal/generationmanifest`. The complete importer,

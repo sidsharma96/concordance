@@ -1,9 +1,9 @@
 # Compare recovery before extracting shared object I/O
 
 Status: implemented local recovery drill.
-This is not a shared API or approval to extract code. The user renewed this comparison
-while approving the retrieval evaluation set. Existing project acknowledgment,
-publication, authorization and retention contracts remain separate.
+This is not a shared API or approval to extract code. The maintainer renewed this
+comparison while approving the retrieval evaluation set. Existing project
+acknowledgment, publication, authorization and retention contracts remain separate.
 
 ## Current evidence and differences
 
@@ -21,7 +21,7 @@ no common API is selected.
 Its extraction record compares Concordance `10a92299c32e7995e74cfd9cbc43a11a1dcc869b`.
 Concordance's later target-setup change does not alter object contracts.
 
-Concordance has actual R2/droplet generation publication, saved-key recovery,
+Concordance has actual R2/hosted-catalog generation publication, saved-key recovery,
 fresh-process strict reads and exact quotes, plus an isolated synthetic catalog
 restore with surviving R2 bodies. That is different evidence from killing a writer
 or dropping the real PostgreSQL commit reply. The separately authorized [local counterpart drill](../experiments/writer-process-recovery.md)

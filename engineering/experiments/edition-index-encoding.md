@@ -1,10 +1,11 @@
 # Compare two explicit edition-index encoding samples
 
-The user accepted [counts and saved locations together](../decisions/edition-artifact-binding.md)
-without another ordered-word copy. The user selected binary with JSON inspection. The follow-up cost comparison below
-informed that choice; the [binary component experiment](binary-edition.md) describes
-the separately implemented codec.
-The retained-article JSON decision does not choose an index encoding. This comparison
+The maintainer accepted [counts and saved locations
+together](../decisions/edition-artifact-binding.md) without another ordered-word
+copy. The maintainer selected binary with JSON inspection. The follow-up cost
+comparison below informed that choice; the [binary component
+experiment](binary-edition.md) describes the separately implemented codec. The
+retained-article JSON decision does not choose an index encoding. This comparison
 uses disposable valid-input samples, not a production codec or recovered generation.
 
 ## Same information, two representations
@@ -77,10 +78,10 @@ tools. It is a credible alternative if smaller edition files are worth that work
 now. The initial size-only comparison measured no CPU, allocations, retained heap,
 cold-open latency or compressed sizes. The follow-up below adds scoped prototype
 measurements, not a production speed guarantee. The initial JSON baseline recommendation was an engineering trade-off, not a
-performance result. It was revised after the follow-up measurements and user
+performance result. It was revised after the follow-up measurements and maintainer
 discussion; the selected binary format includes readable JSON inspection.
 
-The user chose binary after comparing readability, implementation/recovery work and
+The maintainer chose binary after comparing readability, implementation/recovery work and
 observed bytes. Revisit compact encoding when measured edition sizes, cold-open costs
 or an explicit learning goal justify it. Neither encoding addresses a huge single
 edition, paged metadata, reader lifetime or safe deletion by itself. Do not extrapolate

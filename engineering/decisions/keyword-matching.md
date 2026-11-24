@@ -2,7 +2,7 @@
 
 ## Decision
 
-The user chose requiring every keyword for the first keyword-search baseline.
+The maintainer chose requiring every keyword for the first keyword-search baseline.
 A passage qualifies only when every distinct prepared query term occurs in its
 supplied body, heading or label terms. Terms in separate passages cannot combine.
 The same term repeated in the query is one requirement. Matching selects candidates;
@@ -24,12 +24,13 @@ rules apply, or whether to stem words or remove common words. The private compar
 rules are not automatically a product tokenizer. Format processors and their adapters
 still own passage structure, source locations and which context is supplied.
 
-The user subsequently chose to keep technical names such as `ContainerRestartRules`
-whole in the first text-preparation policy. Do not add `Container`, `Restart` and
-`Rules` as searchable terms merely because capital letters mark their boundaries.
-This policy is implemented by the separate [text preparer](text-preparation.md),
-not inside `MatchAll`. The user also chose lowercase, punctuation-preserving
-technical terms; that decision specifies the bounded grammar and Unicode limits.
+The maintainer subsequently chose to keep technical names such as
+`ContainerRestartRules` whole in the first text-preparation policy. Do not add
+`Container`, `Restart` and `Rules` as searchable terms merely because capital letters
+mark their boundaries. This policy is implemented by the separate [text
+preparer](text-preparation.md), not inside `MatchAll`. The maintainer also chose
+lowercase, punctuation-preserving technical terms; that decision specifies the
+bounded grammar and Unicode limits.
 
 Keeping the name whole gives a simple baseline for explicit feature-name queries.
 A query for the separate words `restart rules` cannot match that name alone; those
