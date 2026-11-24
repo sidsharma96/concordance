@@ -21,3 +21,13 @@ coverage.out
 __pycache__/
 *.pyc
 /design/
+# Private agent workflow and session tooling
+/AGENTS.md
+/agents/
+/.codex/
+/.entire/
+/.githooks/commit-msg
+/.githooks/post-commit
+/.githooks/post-rewrite
+/.githooks/pre-push
+/.githooks/prepare-commit-msg

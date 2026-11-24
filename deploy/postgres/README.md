@@ -1,14 +1,16 @@
-# PostgreSQL on the existing droplet
+# PostgreSQL catalog setup
 
-These files provision the first dedicated experimental catalog on PostgreSQL 16.
+These files provision a dedicated Concordance catalog on a PostgreSQL server. They
+were exercised on PostgreSQL 16 on a small remote host reached through SSH.
 They are not migrations and must not run against an existing Concordance database.
-Use an administrator on the existing host; leave Receipt's data and settings alone.
+Run them as the server's administrator; leave other databases on a shared server alone.
 Keep host names, credentials, backup references and execution evidence outside Git.
 
 ## Initial setup
 
-1. Verify the SSH host against its existing trusted key and check the live server's
-   version, database/role names, free disk/memory, service health and HBA parse errors.
+1. For a remote server, verify the SSH host against its trusted key. Check the live
+   server's version, database/role names, free disk/memory, service health and HBA
+   parse errors.
    Preserve a private copy of the current HBA file. Do not disable host checking.
 2. From a checkout with the same layout, run `psql -X -v ON_ERROR_STOP=1 -d postgres
    -f deploy/postgres/bootstrap.sql` as the PostgreSQL administrator. It uses the
@@ -32,8 +34,9 @@ Keep host names, credentials, backup references and execution evidence outside G
    forwarded transport; a local `sslmode=disable` connection relies on that tunnel.
 6. Test a real publication/retry and a fresh reader. Also test wrong-password and
    other-database rejection, denied table/schema creation and deletion, and the
-   four-connection limit. Confirm Receipt remains healthy and PostgreSQL still
-   listens only on loopback. Never run schema-creating test suites against this DB.
+   four-connection limit. Confirm other databases on the server remain healthy
+   and PostgreSQL still listens only on loopback. Never run schema-creating test
+   suites against this DB.
 
 The writer is trusted to use the catalog APIs. Its SQL privileges permit the DML
 those APIs need; they do not protect the catalog against a compromised writer.
@@ -75,7 +78,7 @@ option is OpenSSL CMS with explicit AES-256-GCM and an RSA-OAEP recipient certif
 validate decrypt roundtrip, corruption and wrong-key rejection with the installed
 versions. An encrypted archive does not authenticate a trustworthy producer by
 itself. Retain an independently verified immutable object reference for retrieval.
-A backup of Receipt does not include Concordance.
+A backup of another database on the same server does not include Concordance.
 
 Restore only a trusted archive into a uniquely named, administrator-owned clone.
 Revoke PUBLIC CONNECT before restoration; do not grant the application CONNECT or

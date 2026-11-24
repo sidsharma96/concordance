@@ -22,8 +22,11 @@ func main() {
 }
 
 func forbidden(name string) bool {
-	for _, prefix := range []string{"docs", "design", ".claude", ".tools", "review", ".wrangler", "scripts/utils", "bin", "__pycache__"} {
-		if name == prefix || strings.HasPrefix(name, prefix+"/") {
+	// AGENTS.md, agents/, .codex and .entire hold private local agent workflow and session data.
+	// Compare case-insensitively: default macOS filesystems would let "Agents.md" stand in for it.
+	lower := strings.ToLower(name)
+	for _, prefix := range []string{"docs", "design", ".claude", ".tools", "review", ".wrangler", "scripts/utils", "bin", "__pycache__", "agents.md", "agents", ".codex", ".entire"} {
+		if lower == prefix || strings.HasPrefix(lower, prefix+"/") {
 			return true
 		}
 	}
