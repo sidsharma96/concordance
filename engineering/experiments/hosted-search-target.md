@@ -7,7 +7,7 @@ and `1.35` remain exact selections inside that same generation.
 
 ## Setup and ownership
 
-The existing droplet runs PostgreSQL 16.15; the catalog schema belongs to
+The existing server runs PostgreSQL 16.15; the catalog schema belongs to
 `concordance_owner`. Read-only preflight found no target table. The reviewed
 `deploy/postgres/install-targets.sql` reused `internal/catalog/targets.sql` in one
 transaction and applied `target-grants.sql`. The administrator session used a
@@ -18,8 +18,8 @@ existing catalog-table ACLs stayed identical.
 The runtime has SELECT, INSERT and UPDATE only on collection, generation, default
 edition and revision. It cannot update the name, delete/truncate the table or create
 tables. These are accidental-operation safeguards for a trusted writer, not
-untrusted-user authorization. No roles, HBA rules, Receipt permissions/data, global
-configuration or service restarts changed.
+untrusted-user authorization. No roles, HBA rules, other-application
+permissions/data, global configuration or service restarts changed.
 
 Local PostgreSQL 14.17 checks exercised wrong-database refusal, rollback after a
 simulated grant-role failure following CREATE, unchanged base ACLs, permitted

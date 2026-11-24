@@ -1,6 +1,6 @@
 # Complete snapshot imports
 
-Status: accepted design. The user chose option A: an import describes the complete
+Status: accepted design. The maintainer chose option A: an import describes the complete
 intended scope, rather than a patch to a previous generation. The bounded prepared
 importer and generation manifest now implement this contract; the
 [historical update replay](../experiments/documentation-update.md) exercises changed

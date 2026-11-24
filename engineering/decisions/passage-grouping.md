@@ -2,9 +2,9 @@
 
 ## Decision
 
-The user chose structure-first passages: keep coherent authored paragraphs, notices,
-lists, tables, figures and code intact, with heading/context references. A passage
-is a candidate excerpt for retrieval, not a prescribed number of model tokens.
+The maintainer chose structure-first passages: keep coherent authored paragraphs,
+notices, lists, tables, figures and code intact, with heading/context references. A
+passage is a candidate excerpt for retrieval, not a prescribed number of model tokens.
 Its location belongs to the exact retained article and processing version.
 
 Fixed overlapping word windows and whole heading sections remain comparison

@@ -9,7 +9,7 @@ search/read output and reranker serialization unchanged, because those
 consumers already handle labelled notices. No stored format, profile field,
 processor version or downstream package changes.
 
-The user selected this option over a new `tab-panel` group kind and over
+The maintainer selected this option over a new `tab-panel` group kind and over
 keeping tab text as unlinked list text.
 
 ## One example

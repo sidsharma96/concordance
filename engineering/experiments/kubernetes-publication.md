@@ -22,13 +22,13 @@ are synced before remote work. Original HTML/recipe files and Git objects remain
 available. This is retained manual operator state, not a product journal, import
 command or locked host-loss rebuild plan.
 
-The probe uses the existing restricted droplet runtime login through an owned SSH
+The probe uses the existing restricted hosted-catalog runtime login through an owned SSH
 forward, pool two, catalog schema and private R2 bucket. No migrations, test schemas,
-grants or Receipt changes ran. Initial strict SSH authentication rejected an unknown
-domain-name entry before import effects. The sole resolved address's existing pinned
-key matched the presented key; using that address as HostKeyAlias succeeded with
-strict checking. No new key was accepted or global SSH configuration changed.
-Credentials and routing identifiers remain private.
+grants or other-application changes ran. Initial strict SSH authentication rejected
+an unknown domain-name entry before import effects. The sole resolved address's
+existing pinned key matched the presented key; using that address as HostKeyAlias
+succeeded with strict checking. No new key was accepted or global SSH configuration
+changed. Credentials and routing identifiers remain private.
 
 `BindNamespace` registers configuration before importer construction. The actual
 `ImportPrepared` builds all artifacts and runs publisher preflight before binding
@@ -91,7 +91,7 @@ than changing the catalog or extraction; they do not assign all import time to o
 cause.
 
 Environment: Go 1.27.2, macOS 26.6.2 arm64, eight logical CPUs/16 GiB host, existing
-droplet catalog and R2 target, 20-second HTTP timeout. Caches, host load, connection
+hosted catalog and R2 target, 20-second HTTP timeout. Caches, host load, connection
 reuse and provider conditions were uncontrolled. Successful small GETs do not model
 missing GETs, conditional PUTs, larger objects, throttling or complete publication.
 No full-import speedup, peak-memory or production capacity is measured.
@@ -109,8 +109,8 @@ The operator then retried the original saved operation with its exact capture, G
 pins, collection, namespace, candidate and key. It configured eight object chains
 within 32-object/16 MiB batches, keeping the 20-minute context, 20-second HTTP timeout
 and 768 MiB soft Go memory setting. No DDL, grants, migrations, cleanup, namespace
-reactivation or changes to Receipt ran. The saved operation file's SHA-256 remained
-unchanged before/after the retry.
+reactivation or changes to the other application ran. The saved operation file's
+SHA-256 remained unchanged before/after the retry.
 
 | Observation | Result |
 | --- | ---: |

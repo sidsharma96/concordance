@@ -2,8 +2,8 @@
 
 ## Decision
 
-The user chose references with quotes produced on demand (option B). Search returns
-complete bounded ranked matches as small handles; an explicit quote operation
+The maintainer chose references with quotes produced on demand (option B). Search
+returns complete bounded ranked matches as small handles; an explicit quote operation
 materializes only the passages a caller requests. Input remains borrowed under the
 [snapshot ownership decision](snapshot-ownership.md). An independent quote string
 can outlive that borrowed state; a reference keeps the state reachable.

@@ -86,7 +86,7 @@ on every open or exact intermediate debugging becomes a requirement. An offline
 rebuild audit is a separate alternative to paying that cost on every reader. Revisit
 index blocks/pages when measured edition size or cold opens exceed budgets. Persistent
 indexing, paged metadata and safe retention/deletion remain necessary scaling work.
-The user separately chose binary for the edition index, with JSON inspection;
+The maintainer separately chose binary for the edition index, with JSON inspection;
 article JSON remains unchanged. The [encoding samples](../experiments/edition-index-encoding.md)
 preserve the alternatives and limits of the evidence. Complete published-generation
 bindings and recovery remain the next integration work.

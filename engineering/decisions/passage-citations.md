@@ -1,10 +1,11 @@
 # Cite retained articles, with optional source locations
 
-Status: accepted direction. The user chose to keep original Git file/line locations
-optional. A bounded in-memory HTML structure processor now exists; the persisted
-[article format](article-json.md) and [saved body locations](saved-passage-locations.md)
-now have bounded components; the complete citation API remains open. The sketches below illustrate
-the choice rather than fix a schema.
+Status: accepted direction. The maintainer chose to keep original Git file/line
+locations optional. A bounded in-memory HTML structure processor now exists; the
+persisted [article format](article-json.md) and [saved body
+locations](saved-passage-locations.md) now have bounded components; the complete
+citation API remains open. The sketches below illustrate the choice rather than fix a
+schema.
 
 ## Required quote, optional origins
 

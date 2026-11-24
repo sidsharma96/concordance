@@ -1,6 +1,6 @@
 # Structure-first passage ranges
 
-The user chose [authored structure](../decisions/passage-grouping.md) over fixed
+The maintainer chose [authored structure](../decisions/passage-grouping.md) over fixed
 word windows or whole sections as the initial passage direction. The concrete
 `internal/htmlpassage` builder consumes a retained `htmlarticle.Article`. It does
 not rank, tokenize, persist, publish or interpret figures.

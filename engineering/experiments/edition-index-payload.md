@@ -57,7 +57,7 @@ store and, when using that check, read and hash. Verifying loaded postings again
 those fields would require additional traversal; retaining them alone does not
 prove the postings are semantically correct.
 
-The user selected count postings and their saved body locations in a single
+The maintainer selected count postings and their saved body locations in a single
 versioned edition artifact, with exact article references. A trusted canonical writer
 produces them together. A reader must verify the actual artifact bytes against its
 reference from the published generation, then validate its schema, counts/statistics,

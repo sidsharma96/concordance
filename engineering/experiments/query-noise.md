@@ -109,7 +109,7 @@ Neither upstream establishes our list, threshold, relevance or latency.
 
 The simplest alternative is to retain the existing two baselines and do no tuning.
 Compare whether either fixed control preserves useful first-page evidence while
-reducing weak matches. Discuss the observed failures with the user before changing
+reducing weak matches. Discuss the observed failures with the maintainer before changing
 product behavior, adding new thresholds, a learned query rewriter or semantic search.
 
 

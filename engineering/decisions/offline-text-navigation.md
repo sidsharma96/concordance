@@ -1,6 +1,6 @@
 # Read exact captured text after discovery
 
-Status: the user approved a shared Go lookup/find/read layer for the offline agent
+Status: the maintainer approved a shared Go lookup/find/read layer for the offline agent
 comparison. This is experiment tooling, not native RFC ingestion, a production
 read API or a universal document schema. No model evaluation or reserved-question
 run is part of this implementation.

@@ -80,8 +80,8 @@ fully supported, valid exact citations, and the requested RFC scope. One optiona
 unsupported assertion can fail an otherwise useful central answer. Report that
 strictness rather than interpreting a failed answer as entirely useless.
 
-All roles use the same named model, claude-opus-5-5 at low effort, in separate
-no-tools sessions through client 2.1.318. This is session separation, not independent
+All roles use the same named model and effort level, in separate no-tools
+sessions through one pinned client version. This is session separation, not independent
 model families or human validation. Immutable service weight revision and sampling
 temperature are unavailable. Up to five independent cases from one condition share
 a call, so batch effects are unmeasured. No answerer sees competing variants.

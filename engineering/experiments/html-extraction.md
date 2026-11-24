@@ -133,7 +133,7 @@ cancellation and CLI file/report boundaries. A short two-worker fuzz run exercis
 184,565 inputs without a failure; this is not proof about all malformed HTML.
 The full local verification includes PostgreSQL and uncached race tests. GitHub
 Actions stays disabled. Independent implementation review is separate from the
-earlier approved design plan and from private book review.
+earlier approved design plan and from review of private teaching notes.
 
 The accepted [media scope](../decisions/media-coverage.md) retains original figures
 and searches authored text first. Visual contents remain uninterpreted. The

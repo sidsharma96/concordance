@@ -5,7 +5,7 @@ immutable objects rather than one whole-generation article bundle. Keep one boun
 versioned generation manifest, as already chosen. The bounded HTML article
 [schema and JSON codec](article-json.md) now exist; provenance associations and
 complete searchable publication remain open.
-The user has since selected the direction to design
+The maintainer has since selected the direction to design
 [verified receipts and HEAD checks](verification-receipts.md). PostgreSQL placement and a bounded internal reuse component now exist; strict
 Ensure/Read remain unchanged.
 

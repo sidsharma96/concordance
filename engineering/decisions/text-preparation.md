@@ -2,7 +2,7 @@
 
 ## Decision
 
-The user chose punctuation-preserving technical terms for the first lexical
+The maintainer chose punctuation-preserving technical terms for the first lexical
 preparer, after choosing whole CamelCase names. Apply the same lowercase rules to
 source text and queries. Keep `C++` distinct from `C`, `readiness-probe` whole and
 `v1.35` whole. Do not emit component words, stem, remove common words or add synonyms.

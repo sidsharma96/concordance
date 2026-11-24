@@ -2,8 +2,8 @@
 
 ## Decision
 
-The user chose combined-field BM25 as the first ranking baseline. Keep the accepted
-`MatchAll` eligibility rule: every distinct prepared query term must occur in a
+The maintainer chose combined-field BM25 as the first ranking baseline. Keep the
+accepted `MatchAll` eligibility rule: every distinct prepared query term must occur in a
 passage's supplied body, ancestor headings or labels. Ranking orders these complete
 matches; it never admits a partial match or substitutes another edition.
 

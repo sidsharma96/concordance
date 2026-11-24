@@ -7,7 +7,7 @@ Search can use alt text, captions and surrounding prose. It does not interpret w
 arrows or relationships depicted only inside an image. Declare this capability scope
 per document and collection; do not describe the figures as understood.
 
-The user selected this option and deferred optional interpretation of highly
+The maintainer selected this option and deferred optional interpretation of highly
 informative images. That later capability needs a new processing version and
 published generation, with derived descriptions labeled separately from source
 quotes and with input, method/model and evaluation provenance. No interpretation

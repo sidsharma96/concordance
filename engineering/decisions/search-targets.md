@@ -134,7 +134,7 @@ specifying staleness; do not hide an unavailable catalog by switching generation
 
 ## Remaining checkpoint
 
-The user selected B and explicit default selection. A concrete default version,
+The maintainer selected B and explicit default selection. A concrete default version,
 connection/configuration and output formats, and public citation schema remain
 open. Automatic activation on import is not selected. The first implementation
 provides target resolution/activation for trusted internal callers; the user-facing

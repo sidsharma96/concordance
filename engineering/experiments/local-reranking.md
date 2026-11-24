@@ -1,6 +1,6 @@
 # Reorder a bounded lexical pool with a local model
 
-Status: completed user-authorized local BGE reranker v2-m3 development trial.
+Status: completed maintainer-authorized local BGE reranker v2-m3 development trial.
 Product search, preparation, indexes, storage and frozen positives remain unchanged.
 The original development method and outcomes below remain fixed; the separately
 authorized [reserved validation](reserved-reranking-validation.md) adds explicit

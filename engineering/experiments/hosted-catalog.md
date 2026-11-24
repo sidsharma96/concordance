@@ -2,7 +2,7 @@
 
 ## Question and workload
 
-Can the bounded publisher use the existing droplet catalog and real R2, and can an
+Can the bounded publisher use the existing hosted catalog and real R2, and can an
 encrypted off-host catalog backup recover a published quote without trusting old
 receipts? This is a controlled synthetic experiment, not the full Git importer.
 
@@ -10,8 +10,9 @@ Application baseline: PR25, `c3780cf3c93688688c200fd54c5d92824b99f810`.
 Server: Ubuntu 24.04, PostgreSQL/pg_dump 16.15, one vCPU and roughly 2 GiB RAM.
 The local ordinary-test baseline is PostgreSQL 14.17. Live tests use a dedicated
 Concordance database, NOLOGIN owner and runtime role, pool two, role limit four;
-Receipt shares the server. Current free resources justify a tiny fixture only.
-No PostgreSQL public listener, global tuning, service restart or Receipt ACL change.
+another application shares the server. Current free resources justify a tiny fixture
+only. No PostgreSQL public listener, global tuning, service restart or
+other-application ACL change.
 
 The fixture is the publisher test's two logical Markdown paths sharing one retained
 HTML article, a figure, a nonempty edition and a known-empty edition. Seven distinct
@@ -38,12 +39,14 @@ key/hash/length, opened the selected index, found two lexical matches and verifi
 its article before resolving `Pods\nRetry uploads safely.`. It fetched no figure or
 other edition body. These counts do not measure throughput, peak heap or capacity.
 
-Real authentication succeeded only for the intended database. Receipt and postgres
-connections and wrong-password authentication failed. Runtime table/schema creation,
-DELETE, receipt UPDATE and TEMP creation failed. The first four direct runtime
-sessions connected; a fifth failed. The runtime is a trusted SQL writer: narrower
-grants reduce privileges, but cannot establish immutable metadata against compromise.
-The HBA include parsed with zero errors, and PostgreSQL/Receipt/Caddy remained active.
+Real authentication succeeded only for the intended database. Other-application
+and postgres connections and wrong-password authentication failed. Runtime
+table/schema creation, DELETE, receipt UPDATE and TEMP creation failed. The first
+four direct runtime sessions connected; a fifth failed. The runtime is a trusted SQL
+writer: narrower grants reduce privileges, but cannot establish immutable metadata
+against compromise.
+The HBA include parsed with zero errors, and PostgreSQL and the other services
+remained active.
 The first operator installation used SQL-style single quotes around an HBA include
 filename; HBA parsing rejected it. The installer restored the original file while
 LOGIN remained disabled. The corrected unquoted filename parsed and reloaded without

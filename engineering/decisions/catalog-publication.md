@@ -1,14 +1,14 @@
 # Catalog and publication
 
 Status: accepted design. Use PostgreSQL for the authoritative publication catalog
-and R2 for immutable source, search-index and manifest objects. The user accepted
+and R2 for immutable source, search-index and manifest objects. The maintainer accepted
 this split with the requirement that failures between the stores are addressed.
 The PostgreSQL catalog and a bounded internal cross-store publisher are implemented
 and tested locally; read the [publication experiment](../experiments/generation-publication.md).
 The publisher consumes trusted fingerprint metadata; production input preparation,
 complete fingerprint construction and the full importer remain open. The S3 adapter
 has HTTP fixture tests and a passing live creation/reuse/fresh-client-read probe
-against the private `concordance-data` R2 bucket. Hosted PostgreSQL and real-provider
+against a dedicated private R2 bucket. Hosted PostgreSQL and real-provider
 cross-store recovery remain pending.
 
 ## Responsibilities

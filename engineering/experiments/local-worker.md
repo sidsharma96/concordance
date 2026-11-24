@@ -95,8 +95,8 @@ public hosting, statistical accuracy or million-document support.
 
 README contains the venv, pinned asset fetch, worker start and search commands.
 Ordinary local verification requires only Go, Python stdlib and a dedicated local
-PostgreSQL database, with live R2 disabled. GitHub Actions remains disabled. The
-book and task artifacts remain private, local and excluded from source review.
+PostgreSQL database, with live R2 disabled. GitHub Actions remains disabled. Private
+teaching notes and task artifacts remain local and excluded from source review.
 
 ## Private records
 

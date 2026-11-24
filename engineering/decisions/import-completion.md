@@ -1,6 +1,6 @@
 # Import completion
 
-Status: accepted design. The user chose synchronous publication after comparing
+Status: accepted design. The maintainer chose synchronous publication after comparing
 completion on publication with durable acceptance of a background job. The bounded
 prepared importer and trusted-operator CLI now implement it.
 
