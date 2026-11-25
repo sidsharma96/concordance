@@ -171,7 +171,7 @@ acquired-blob hashes, failed/successful preparation logs, selected output compar
 functional expected quotes, read-only hosted preflight and independent baseline
 review bindings. Baseline approvals cover the actual existing runtime/operator;
 normal source-change approvals remain separate. Live identifiers, routes, credentials
-and private teaching material are excluded from this record.
+and private notes are excluded from this record.
 
 No source algorithm, runtime dependency, schema or default changed. No golden-set
 query, model inference, agent evaluation, latency/billing benchmark, provider outage,

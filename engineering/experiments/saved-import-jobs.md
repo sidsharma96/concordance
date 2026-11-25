@@ -114,5 +114,5 @@ locally; remote object-sharing/receipt/publication protocols are unchanged.
 
 Next, compose source registration and namespace selection without accidental setup
 or credentials in the job, and preserve completed-key recovery under quarantine.
-Target activation remains an explicit separate command. Private teaching updates
-are local and excluded from source history and publication.
+Target activation remains an explicit separate command. Private documentation
+updates are local and excluded from source history and publication.

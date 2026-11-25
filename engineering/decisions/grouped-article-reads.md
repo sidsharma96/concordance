@@ -78,7 +78,7 @@ Option B also shares decoded articles and passage plans. That needs an immutable
 unforgeable verified-value contract across manifest and edition checks, including
 all logical slots. We choose A to remove demonstrated repeated downloads while
 preserving the simpler independent-check baseline. Revisit B on measured decode,
-hashing or allocation pressure, or a deliberate learning goal. A cross-query cache
+hashing or allocation pressure, or a deliberate design goal. A cross-query cache
 could avoid more reads but adds retained-byte admission, eviction, concurrent miss
 coordination and permission/lifetime policy; no such cache is selected.
 

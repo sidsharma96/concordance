@@ -2,7 +2,7 @@
 
 Use an existing small cloud server's PostgreSQL instance for the first synthetic
 publication and catalog-recovery experiments. The maintainer selected this instead of a
-new managed database account. This is a learning deployment, not a production
+new managed database account. This is an experimental deployment, not a production
 availability or capacity promise.
 
 ## Boundary

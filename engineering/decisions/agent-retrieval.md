@@ -3,7 +3,7 @@
 Status: accepted project direction. Build retrieval over deliberately captured
 collections, starting with documentation, then test the boundary with discovery
 of agent work recorded by Rewind. This preserves the documentation/RFC and Go
-algorithm, storage and recovery learning goals. It does not select a new API,
+algorithm, storage and recovery design goals. It does not select a new API,
 source schema, backend or deployment.
 
 ## Outcome and ownership
@@ -62,8 +62,8 @@ working retrieval task.
 Building a general search database is a separate responsibility choice underneath
 these products. Incremental writes, selective persistent reads, cache admission,
 compaction, retention and operations are substantial work. Using an existing
-backend can shorten application work but replaces some deliberate implementation
-learning. Keep the current scans and postings as correctness baselines; compare
+backend can shorten application work but gives up owning those implementations.
+Keep the current scans and postings as correctness baselines; compare
 existing systems on the same workload and guarantees before selecting a backend
 or claiming a performance advantage.
 

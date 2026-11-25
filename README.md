@@ -5,8 +5,8 @@ product version. Every result names the exact captured source behind it: the
 repository, commit, document and passage. Core search is written in Go; optional
 reranking uses a local Python worker.
 
-**Status:** a learning project, not a production service. It explores retrieval
-algorithms, storage and failure recovery deliberately, and the records under
+**Status:** experimental and not yet production-ready. It favors explicit,
+verifiable behavior in retrieval, storage and failure recovery, and the records under
 [`engineering/`](engineering/ARCHITECTURE.md) explain each decision and its limits.
 It has been run only on macOS with Apple silicon.
 
