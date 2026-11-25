@@ -47,7 +47,7 @@ the first experiment follow one operation through capture, external storage,
 publication, querying and recovery.
 
 It keeps the initial system small while exposing the storage problems we need to
-learn: incomplete uploads, orphan objects, ambiguous replies, consistent generations
+solve: incomplete uploads, orphan objects, ambiguous replies, consistent generations
 and recovery without local files. It does not make those problems disappear.
 
 ## Alternative considered

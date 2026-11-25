@@ -65,14 +65,14 @@ reference trust path, persistent index loader or remote recovery drill.
 
 The initial recommendation favored versioned JSON: explicit records are easy to inspect,
 and the existing article/location work already exercises strict JSON parsing and
-compatibility lessons. Its measured sample cost is more encoded bytes. A production
+compatibility handling. Its measured sample cost is more encoded bytes. A production
 reader still needs all schema, bounds, arithmetic, binding and ownership checks;
 using the standard library alone does not supply them. Versioning permits a later
 binary reader without changing source acquisition or ranking, but requires deliberate
 retained-format compatibility rather than silently reinterpreting old bytes.
 
-The binary sample demonstrates a real byte reduction on this workload and offers
-integer-encoding learning. It also introduces a custom diagnostic/compatibility
+The binary sample demonstrates a real byte reduction on this workload and exercises
+compact integer encoding. It also introduces a custom diagnostic/compatibility
 surface and needs independent malformed/truncation/overflow tests and inspection
 tools. It is a credible alternative if smaller edition files are worth that work
 now. The initial size-only comparison measured no CPU, allocations, retained heap,
@@ -83,7 +83,7 @@ discussion; the selected binary format includes readable JSON inspection.
 
 The maintainer chose binary after comparing readability, implementation/recovery work and
 observed bytes. Revisit compact encoding when measured edition sizes, cold-open costs
-or an explicit learning goal justify it. Neither encoding addresses a huge single
+or an explicit design goal justify it. Neither encoding addresses a huge single
 edition, paged metadata, reader lifetime or safe deletion by itself. Do not extrapolate
 this small corpus to a million-document storage bill.
 

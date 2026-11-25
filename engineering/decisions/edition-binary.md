@@ -3,7 +3,7 @@
 Status: accepted option B for the first edition-index encoding. Use an explicit
 binary format and a bounded tool that prints its contents as JSON. Compression is
 not selected. Retained articles remain versioned JSON. The earlier JSON baseline
-recommendation favored inspection; the follow-up measurements and storage-learning
+recommendation favored inspection; the follow-up measurements and storage-design
 priorities supported choosing binary. Prototype timings are not production promises.
 
 ## Bounded implementation

@@ -55,7 +55,7 @@ func TestIndexCannotHidePrivateOrOversizedStagedContent(t *testing.T) {
 	}
 }
 
-func TestIndexAcceptsSourceWithoutPrivateBook(t *testing.T) {
+func TestIndexAcceptsSourceWithoutPrivateDocs(t *testing.T) {
 	root := t.TempDir()
 	if _, err := git(root, "init", "-q"); err != nil {
 		t.Fatal(err)

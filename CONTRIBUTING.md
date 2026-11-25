@@ -76,5 +76,5 @@ Use plain, descriptive branch names such as `posting-intersection`.
 Keep pull requests focused. Explain the problem, resulting behavior, relevant
 checks and remaining limits. Include a simple baseline and reproducible workload
 when making performance claims. Do not commit credentials, generated data, local
-review configuration or private teaching notes. Application builds and ordinary checks
+review configuration or private notes. Application builds and ordinary checks
 must work without private documentation or external service credentials.

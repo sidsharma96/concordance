@@ -115,7 +115,7 @@ Use the dedicated test-database setup in CONTRIBUTING for the full package and
 `make verify`. Never run schema-creating tests on the shared hosted catalog.
 Selected local output/check/review evidence is ignored under
 `.tools/reviews/prepared-import-*`. No new live R2 writes, Kubernetes publication
-or Cloudflare book deployment is claimed.
+or Cloudflare documentation deployment is claimed.
 
 ## Complete replacements preserve earlier evidence
 

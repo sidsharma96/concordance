@@ -90,5 +90,5 @@ flags before connection. Preserve exact ranking/scores/provenance and total coun
 from one Search; verify inclusive selected-byte limits, match overflow before
 article I/O, no read of an unselected hit, selected later-read/cancellation failure
 with empty result/stdout, owned independent results, empty selections, cleanup and
-short writes. Ordinary builds/tests remain independent of private teaching notes and
+short writes. Ordinary builds/tests remain independent of private notes and
 the corpus. No hosted schema/data changes or live provider experiment are required.

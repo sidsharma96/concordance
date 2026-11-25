@@ -47,9 +47,9 @@ connection cleanup and short writes retain their existing contracts.
 Primary ignored records are .tools/reviews/result-batch/targeted-1.log,
 first-admission-failure.txt and verify-1.log. The toolchain is Go 1.27.2 on
 darwin/arm64 with the dedicated local PostgreSQL server. Ordinary builds/checks
-remain independent of private teaching notes and corpus material. Final independent
+remain independent of private notes and corpus material. Final independent
 code and architecture approvals must match the staged source and evidence before commit.
-Private teaching prose is checked separately; no book deployment follows.
+Private notes are checked separately; no documentation deployment follows.
 
 For H admitted matches and requested limit L, article reads are min(H,L), plus
 fresh manifest/index opening. Full ranking, decoded-index memory, per-article

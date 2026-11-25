@@ -85,7 +85,7 @@ An R2-only catalog would remove a service and suit isolated immutable snapshots.
 We chose PostgreSQL for the larger documentation system: related publication metadata
 can change together, and collection/version/import queries can use a conventional
 database instead of a growing custom metadata protocol. R2 still carries the bulk
-storage and the object-storage learning work.
+storage and the object-storage implementation work.
 
 This adds database operation, migrations, connections, backup and availability work.
 It does not prove a throughput or latency advantage. Metadata contention and catalog

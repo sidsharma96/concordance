@@ -122,4 +122,4 @@ uses channels and observed database lock state, not timing sleeps.
 Network-level loss of COMMIT acknowledgment, real R2 faults, restored catalog/receipt
 state, hosting/host-loss recovery, production source preparation, complete input
 fingerprints, full import/query APIs and large-workload capacity remain open. No WAL,
-automatic resume, object deletion or book deployment is introduced.
+automatic resume, object deletion or documentation deployment is introduced.

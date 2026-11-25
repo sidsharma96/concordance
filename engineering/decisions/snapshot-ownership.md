@@ -84,5 +84,5 @@ Tests exercise unchanged input, cross-state reference rejection, owned result
 storage, quote limits and concurrent read-only search/quotation under the race
 detector. The [component reference](../experiments/search-snapshot.md) records their
 scope; tests do not enforce the caller's lifetime discipline. A small
-private executable used for teaching notes demonstrates shared and shallow-copied
+private executable used for documentation demonstrates shared and shallow-copied
 slices; it is an illustrative language experiment, not snapshot runtime coverage.
